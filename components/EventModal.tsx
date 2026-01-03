@@ -73,7 +73,7 @@ export default function EventModal({
   const [selectedPhoto, setSelectedPhoto] =
     useState<ImagePicker.ImagePickerAsset | null>(null);
 
-  // القيود على الأنواع
+  
   const ALLOWED_MIME = new Set([
     "image/jpeg",
     "image/jpg",

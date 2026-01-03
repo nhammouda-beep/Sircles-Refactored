@@ -18,7 +18,7 @@ interface CircleCardProps {
   circle: Circle;
   onJoin: (circleId: string) => Promise<void> | void;
   onLeave?: (circleId: string) => Promise<void> | void;
-  onDismiss: (circleId: string) => void; // يزيل من السلايدر في الأب
+  onDismiss: (circleId: string) => void; 
   onSnooze: (circleId: string, days?: number) => void;
   initialJoined?: boolean;
 }
