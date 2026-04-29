@@ -18,6 +18,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { DatabaseService } from "@/lib/database";
 import EventModal from "@/components/EventModal";
+import { EventsSkeleton } from "@/components/SkeletonLoader";
 import { useFocusEffect } from "expo-router";
 
 interface Event {
@@ -79,16 +80,24 @@ export default function EventsScreen() {
   const [withPhoto, setWithPhoto] = useState(false);
   const [rsvpFilter, setRsvpFilter] = useState<RSVPFilter>("any");
 
-  useEffect(() => {
-    if (user) {
-      fetchEvents();
-      fetchUserCircles();
-    }
-  }, [user]);
+  const STALE_MS = 30_000;
+  const lastFetchRef = React.useRef<number>(0);
+  const isFirstMount = React.useRef(true);
+  const isStale = () => Date.now() - lastFetchRef.current > STALE_MS;
 
   useFocusEffect(
     useCallback(() => {
-      if (user) fetchEvents();
+      if (user) {
+        if (isFirstMount.current) {
+          fetchEvents();
+          fetchUserCircles();
+          isFirstMount.current = false;
+          lastFetchRef.current = Date.now();
+        } else if (isStale()) {
+          fetchEvents();
+          lastFetchRef.current = Date.now();
+        }
+      }
     }, [user])
   );
   
@@ -369,9 +378,7 @@ export default function EventsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {loading ? (
-          <View style={styles.loading}>
-            <ThemedText>Loading...</ThemedText>
-          </View>
+          <EventsSkeleton />
         ) : filteredSorted.length === 0 ? (
           <View style={styles.empty}>
             <ThemedText style={{ color: SUBTLE }}>No events yet</ThemedText>

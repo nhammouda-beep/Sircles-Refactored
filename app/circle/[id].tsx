@@ -1783,6 +1783,7 @@ export default function CircleScreen() {
               data={events}
               keyExtractor={(item) => item.id}
               showsVerticalScrollIndicator={false}
+              scrollEnabled={false}
               renderItem={({ item }) => (
                 <View
                   style={[

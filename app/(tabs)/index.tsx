@@ -25,6 +25,7 @@ import { DatabaseService } from "@/lib/database";
 import { CircleCard } from "@/components/CircleCard";
 import { useCirclesStore } from "@/stores/circlesStore";
 import EventModal from "@/components/EventModal";
+import { FeedSkeleton } from "@/components/SkeletonLoader";
 
 interface Post {
   id: string;
@@ -67,6 +68,11 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Staleness check — skip re-fetch if data is less than 30s old
+  const STALE_MS = 30_000;
+  const lastFetchRef = React.useRef<number>(0);
+  const isStale = () => Date.now() - lastFetchRef.current > STALE_MS;
 
   // create / edit post
   const [showPostModal, setShowPostModal] = useState(false);
@@ -147,13 +153,19 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (user) {
-        loadPosts();
-        loadSuggested();
-        loadEvents();
         if (isFirstMount.current) {
+          loadPosts();
+          loadSuggested();
+          loadEvents();
           loadUserCircles();
           loadUserInterests();
           isFirstMount.current = false;
+          lastFetchRef.current = Date.now();
+        } else if (isStale()) {
+          loadPosts();
+          loadSuggested();
+          loadEvents();
+          lastFetchRef.current = Date.now();
         }
       }
     }, [user])
@@ -316,6 +328,7 @@ export default function HomeScreen() {
       loadUserInterests(),
     ]);
     await loadSuggested();
+    lastFetchRef.current = Date.now();
     setRefreshing(false);
   }, [user, loadSuggested]);
 
@@ -674,9 +687,7 @@ export default function HomeScreen() {
       )}
 
       {loading ? (
-        <View style={[styles.content, styles.centeredContainer]}>
-          <ThemedText>{texts.loading || "Loading..."}</ThemedText>
-        </View>
+        <FeedSkeleton />
       ) : error ? (
         <View style={[styles.content, styles.centeredContainer]}>
           <IconSymbol

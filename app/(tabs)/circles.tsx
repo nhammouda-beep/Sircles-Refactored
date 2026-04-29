@@ -33,6 +33,7 @@ import {
 } from "@/lib/database";
 import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
+import { CirclesSkeleton } from "@/components/SkeletonLoader";
 
 interface Circle {
   id: string;
@@ -156,6 +157,10 @@ export default function CirclesScreen() {
   const [myCircles, setMyCircles] = useState<Circle[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const STALE_MS = 30_000;
+  const lastFetchRef = useRef<number>(0);
+  const isStale = () => Date.now() - lastFetchRef.current > STALE_MS;
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "my">("all");
   const [error, setError] = useState<string | null>(null);
@@ -238,6 +243,7 @@ export default function CirclesScreen() {
   const handleRefresh = async () => {
     setRefreshing(true);
     await loadCircles();
+    lastFetchRef.current = Date.now();
     setRefreshing(false);
   };
 
@@ -430,12 +436,14 @@ export default function CirclesScreen() {
     }
   };
 
-  useEffect(() => {
-    loadCircles();
-  }, [userProfile]);
   useFocusEffect(
     useCallback(() => {
-      loadCircles();
+      if (userProfile) {
+        if (lastFetchRef.current === 0 || isStale()) {
+          loadCircles();
+          lastFetchRef.current = Date.now();
+        }
+      }
     }, [userProfile])
   );
 
@@ -600,9 +608,7 @@ export default function CirclesScreen() {
         }
       >
         {loading ? (
-          <View style={styles.centerPad}>
-            <ThemedText>Loading...</ThemedText>
-          </View>
+          <CirclesSkeleton />
         ) : error ? (
           <View style={styles.centerPad}>
             <ThemedText style={styles.emptyText}>{error}</ThemedText>
