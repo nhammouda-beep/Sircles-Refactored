@@ -360,29 +360,36 @@ export default function CirclesScreen() {
     }
 
     if (circlePrivacy === "private") {
-      Alert.alert(
-        "Join Request",
-        `Send a request to join "${circleName}"?`,
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Send Request",
-            onPress: async () => {
-              const { error } = await DatabaseService.requestToJoinCircle(
-                userProfile!.id,
-                circleId,
-                ""
-              );
-              if (error) {
-                Alert.alert("Error", error.message || "Failed to send request");
-                return;
-              }
-              Alert.alert("Success", "Join request sent");
-              await loadCircles();
-            },
-          },
-        ]
-      );
+      const sendRequest = async (message: string) => {
+        const { error } = await DatabaseService.requestToJoinCircle(
+          userProfile!.id,
+          circleId,
+          message
+        );
+        if (error) {
+          Alert.alert("Error", error.message || "Failed to send request");
+          return;
+        }
+        Alert.alert("Success", "Join request sent");
+        await loadCircles();
+      };
+
+      if (Platform.OS === "web") {
+        const message = window.prompt(
+          `Send a request to join "${circleName}"`,
+          ""
+        );
+        if (message !== null) await sendRequest(message);
+      } else {
+        Alert.alert(
+          "Join Request",
+          `Send a request to join "${circleName}"?`,
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Send Request", onPress: () => sendRequest("") },
+          ]
+        );
+      }
       return;
     } else {
       const { error } = await joinCircle(userProfile.id, circleId);
@@ -399,25 +406,28 @@ export default function CirclesScreen() {
       Alert.alert("Error", "You must be logged in");
       return;
     }
-    Alert.alert(
-      "Delete Circle",
-      `Delete "${circleName}" permanently? This cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            const { error } = await DatabaseService.deleteCircle(circleId, user!.id);
-            if (error) {
-              Alert.alert("Error", error.message || "Failed to delete circle");
-              return;
-            }
-            await loadCircles();
-          },
-        },
-      ]
-    );
+    const doDelete = async () => {
+      const { error } = await DatabaseService.deleteCircle(circleId, user!.id);
+      if (error) {
+        Alert.alert("Error", error.message || "Failed to delete circle");
+        return;
+      }
+      await loadCircles();
+    };
+
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(`Delete "${circleName}" permanently?`);
+      if (confirmed) await doDelete();
+    } else {
+      Alert.alert(
+        "Delete Circle",
+        `Delete "${circleName}" permanently? This cannot be undone.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Delete", style: "destructive", onPress: doDelete },
+        ]
+      );
+    }
   };
 
   useEffect(() => {
