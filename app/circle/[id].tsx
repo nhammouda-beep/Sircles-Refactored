@@ -1528,6 +1528,13 @@ export default function CircleScreen() {
         </View>
       </View>
 
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
       <View style={[styles.circleInfo, { backgroundColor: surfaceColor }]}>
         <View style={styles.circleImageContainer}>
           {circle.circle_profile_url ? (
@@ -1725,13 +1732,6 @@ export default function CircleScreen() {
         )}
       </View>
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-      >
         {activeTab === "feed" && (
           <View style={styles.feedContainer}>
             {circle.isJoined || circle.privacy === "public" ? (
