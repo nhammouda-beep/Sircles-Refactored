@@ -630,9 +630,14 @@ export default function HomeScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
       {/* Header */}
       <View style={[styles.appHeader]}>
-        <ThemedText type="title" style={[styles.brand, { color: tintColor }]}>
-          Sircles
-        </ThemedText>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <ThemedText type="title" style={[styles.brand, { color: tintColor }]}>
+            Sircles
+          </ThemedText>
+          <View style={{ backgroundColor: tintColor, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+            <ThemedText style={{ color: "#fff", fontSize: 10, fontWeight: "800" }}>v2</ThemedText>
+          </View>
+        </View>
 
         <View style={styles.headerIcons}>
           <TouchableOpacity onPress={() => setShowSearch((s) => !s)}>
