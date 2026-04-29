@@ -7,11 +7,11 @@ import {
   Modal,
   TextInput,
   Alert,
-  Image,
   RefreshControl,
   FlatList,
-  Platform, // <-- added
+  Platform,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -1542,7 +1542,7 @@ export default function CircleScreen() {
               <Image
                 source={{ uri: circle.circle_profile_url }}
                 style={styles.circleHeaderImage}
-                resizeMode="cover"
+                contentFit="cover"
               />
               {circle.isAdmin && (
                 <TouchableOpacity
@@ -1870,7 +1870,7 @@ export default function CircleScreen() {
                     <Image
                       source={{ uri: item.photo_url }}
                       style={styles.eventPhoto}
-                      resizeMode="cover"
+                      contentFit="cover"
                     />
                   )}
 

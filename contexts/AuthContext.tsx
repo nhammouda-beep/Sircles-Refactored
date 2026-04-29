@@ -143,34 +143,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  // Mock loadUser function if it's intended to be used elsewhere, otherwise integrate logic directly
-  const loadUser = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching user profile in loadUser:', error);
-        return;
-      }
-
-      if (data) {
-        setUserProfile(data);
-        // Check first login status here as well if needed, or rely on loadUserAndCheckLogin
-        if (data.first_login) {
-          console.log('User logging in again, first_login is true.');
-          // Logic to redirect to interests page
-        }
-      }
-    } catch (error) {
-      console.error('Error in loadUser:', error);
-    }
-  };
-
-
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,

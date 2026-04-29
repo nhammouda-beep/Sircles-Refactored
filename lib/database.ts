@@ -2,6 +2,11 @@ import { supabase } from "./supabase";
 import { StorageService } from "./storage";
 import type { User, Circle, Event, Post, Interest } from "@/types/database";
 
+// Service modules — extracted from this file for maintainability
+export { UserService } from "./services/users";
+export { InterestService } from "./services/interests";
+export { NotificationService } from "./services/notifications";
+
 // Export individual functions for easier importing
 export const getUser = (id: string) => DatabaseService.getUser(id);
 export const updateUser = (id: string, updates: Partial<User>) =>
@@ -174,36 +179,30 @@ export const getCirclesByUser = async (userId: string) => {
   }
 };
 
+import { UserService } from "./services/users";
+import { InterestService } from "./services/interests";
+import { NotificationService } from "./services/notifications";
+
 export const DatabaseService = {
-  // User operations
-  async getUser(id: string) {
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", id)
-      .single();
-    return { data, error };
-  },
+  // User operations — delegated to UserService
+  getUser: UserService.getUser,
+  updateUser: UserService.updateUser,
+  updateUserAvatar: UserService.updateUserAvatar,
+  checkFirstLogin: UserService.checkFirstLogin,
+  updateFirstLogin: UserService.updateFirstLogin,
 
-  async updateUser(id: string, updates: Partial<User>) {
-    const { data, error } = await supabase
-      .from("users")
-      .update(updates)
-      .eq("id", id)
-      .select()
-      .single();
-    return { data, error };
-  },
+  // Interest operations — delegated to InterestService
+  getInterests: InterestService.getInterests,
+  getUserInterests: InterestService.getUserInterests,
+  getUserLookFor: InterestService.getUserLookFor,
+  getInterestsByCategory: InterestService.getInterestsByCategory,
+  createUserInterest: InterestService.createUserInterest,
+  createUserLookingFor: InterestService.createUserLookingFor,
 
-  async updateUserAvatar(id: string, avatarUrl: string) {
-    const { data, error } = await supabase
-      .from("users")
-      .update({ avatar_url: avatarUrl })
-      .eq("id", id)
-      .select()
-      .single();
-    return { data, error };
-  },
+  // Notification operations — delegated to NotificationService
+  getUserNotifications: NotificationService.getUserNotifications,
+  markNotificationAsRead: NotificationService.markNotificationAsRead,
+  markAllNotificationsAsRead: NotificationService.markAllNotificationsAsRead,
 
   // Circle operations
   async getCircles() {
