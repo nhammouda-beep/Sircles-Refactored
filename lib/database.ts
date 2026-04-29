@@ -207,12 +207,6 @@ export const DatabaseService = {
 
   // Circle operations
   async getCircles() {
-    // Verify user is authenticated
-    const { data: currentUser } = await supabase.auth.getUser();
-    if (!currentUser.user) {
-      return { data: null, error: new Error("Authentication required") };
-    }
-
     const { data, error } = await supabase
       .from("circles")
       .select(
@@ -232,12 +226,6 @@ export const DatabaseService = {
   },
 
   async getCircleInterests(circleId: string) {
-    // Verify user is authenticated
-    const { data: currentUser } = await supabase.auth.getUser();
-    if (!currentUser.user) {
-      return { data: [], error: new Error("Authentication required") };
-    }
-
     const { data, error } = await supabase
       .from("circle_interests")
       .select(
@@ -1160,12 +1148,6 @@ export const DatabaseService = {
 
   // Interest operations
   async getInterests() {
-    // Verify user is authenticated
-    const { data: currentUser } = await supabase.auth.getUser();
-    if (!currentUser.user) {
-      return { data: null, error: new Error("Authentication required") };
-    }
-
     const { data, error } = await supabase
       .from("interests")
       .select("id, title, category")
@@ -1230,12 +1212,6 @@ export const DatabaseService = {
   },
 
   async getInterestsByCategory() {
-    // Verify user is authenticated
-    const { data: currentUser } = await supabase.auth.getUser();
-    if (!currentUser.user) {
-      return { data: null, error: new Error("Authentication required") };
-    }
-
     const { data, error } = await supabase
       .from("interests")
       .select("id, title, category")
@@ -1258,12 +1234,6 @@ export const DatabaseService = {
 
   // Notification operations
   async getUserNotifications(userId: string) {
-    // Verify user is authenticated
-    const { data: currentUser } = await supabase.auth.getUser();
-    if (!currentUser.user) {
-      return { data: null, error: new Error("Authentication required") };
-    }
-
     const { data, error } = await supabase
       .from("notifications")
       .select("*")
@@ -1635,17 +1605,25 @@ export const DatabaseService = {
     }
   },
 
+  async getUserPendingRequestsBatch(circleIds: string[], userId: string) {
+    try {
+      if (circleIds.length === 0) return { data: [], error: null };
+      const { data, error } = await supabase
+        .from("circle_join_requests")
+        .select("circleid")
+        .eq("userid", userId)
+        .eq("status", "pending")
+        .in("circleid", circleIds);
+
+      if (error) return { data: [], error };
+      return { data: data || [], error: null };
+    } catch (error) {
+      return { data: [], error: error as Error };
+    }
+  },
+
   async getUserPendingRequest(circleId: string, userId: string) {
     try {
-      // Verify user is authenticated
-      const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser.user || currentUser.user.id !== userId) {
-        return { data: null, error: new Error("Authentication required") };
-      }
-
-      console.log("Checking for pending request:", { circleId, userId });
-
-      // Use array query with limit to avoid single row issues and add retry logic for newly created rows
       const { data, error } = await supabase
         .from("circle_join_requests")
         .select("*")
@@ -2295,6 +2273,32 @@ export const DatabaseService = {
     } catch (error) {
       console.error("Error in removeMemberFromCircle:", error);
       return { data: null, error: error as Error };
+    }
+  },
+
+  async getAdminCircleIds(circleIds: string[], userId: string) {
+    try {
+      if (circleIds.length === 0) return { data: [], error: null };
+
+      const { data: creatorCircles } = await supabase
+        .from("circles")
+        .select("id")
+        .in("id", circleIds)
+        .eq("creator", userId);
+
+      const { data: adminCircles } = await supabase
+        .from("circle_admins")
+        .select("circleid")
+        .in("circleid", circleIds)
+        .eq("userid", userId);
+
+      const ids = new Set([
+        ...(creatorCircles || []).map((c: any) => c.id),
+        ...(adminCircles || []).map((a: any) => a.circleid),
+      ]);
+      return { data: [...ids], error: null };
+    } catch (error) {
+      return { data: [], error: error as Error };
     }
   },
 

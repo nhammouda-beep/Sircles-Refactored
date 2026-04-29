@@ -4,7 +4,6 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  Image,
   RefreshControl,
   Alert,
   Modal,
@@ -13,6 +12,7 @@ import {
   useWindowDimensions,
   Animated,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -63,7 +63,6 @@ export default function HomeScreen() {
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [events, setEvents] = useState<any[]>([]);
-  const [feedItems, setFeedItems] = useState<any[]>([]);
   const [userInterests, setUserInterests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -143,12 +142,21 @@ export default function HomeScreen() {
     error: circlesError,
   } = useCirclesStore();
 
+  const isFirstMount = React.useRef(true);
+
   useFocusEffect(
     useCallback(() => {
-      loadPosts();
-      loadSuggested();
-      loadEvents();
-    }, [])
+      if (user) {
+        loadPosts();
+        loadSuggested();
+        loadEvents();
+        if (isFirstMount.current) {
+          loadUserCircles();
+          loadUserInterests();
+          isFirstMount.current = false;
+        }
+      }
+    }, [user])
   );
 
   const isOwner = useCallback(
@@ -246,39 +254,38 @@ export default function HomeScreen() {
     return itemInterests.filter((id) => userIds.includes(id)).length;
   };
 
-  const combineFeedItems = () => {
+  const feedItems = useMemo(() => {
     const combined = [
       ...posts.map((post) => ({
         ...post,
-        type: "post",
+        type: "post" as const,
         sortDate: new Date(post.creationdate),
+        interestScore: calculateInterestScore({ ...post, type: "post" }),
       })),
       ...events.map((event) => ({
         ...event,
-        type: "event",
+        type: "event" as const,
         sortDate: new Date(event.creationdate || event.date || Date.now()),
+        interestScore: calculateInterestScore({ ...event, type: "event" }),
       })),
     ];
-    combined.forEach((i) => (i.interestScore = calculateInterestScore(i)));
     combined.sort(
       (a, b) =>
         (b.interestScore || 0) - (a.interestScore || 0) ||
         (b.sortDate as any) - (a.sortDate as any)
     );
 
-    let withSuggested = combined;
     if (suggestedCircles && suggestedCircles.length > 0) {
       const insertAt = Math.min(3, combined.length);
-      withSuggested = [
+      return [
         ...combined.slice(0, insertAt),
-        { id: "suggested-section", type: "suggested" },
+        { id: "suggested-section", type: "suggested" as const },
         ...combined.slice(insertAt),
       ];
     }
 
-    setFeedItems(withSuggested);
-    setLoading(false);
-  };
+    return combined;
+  }, [posts, events, userInterests, suggestedCircles]);
 
   const loadUserInterests = async () => {
     if (!user?.id) return;
@@ -291,13 +298,10 @@ export default function HomeScreen() {
   const loadUserCircles = async () => {
     if (!user?.id) return;
     try {
-      const { data, error } = await DatabaseService.getUserJoinedCircles(
-        user.id
-      );
+      const { data, error } = await DatabaseService.getUserCircles(user.id);
       if (error) return;
-      const { data: allCircles } = await DatabaseService.getCircles();
       const joined = (data || [])
-        .map((uc: any) => allCircles?.find((c: any) => c.id === uc.circleid))
+        .map((uc: any) => uc.circles)
         .filter(Boolean);
       setUserCircles(joined);
     } catch {}
@@ -316,30 +320,13 @@ export default function HomeScreen() {
   }, [user, loadSuggested]);
 
   useEffect(() => {
-    if (user)
-      Promise.all([
-        loadPosts(),
-        loadEvents(),
-        loadUserCircles(),
-        loadUserInterests(),
-      ]);
-    else {
+    if (!user) {
       setPosts([]);
       setEvents([]);
-      setFeedItems([]);
       setUserInterests([]);
       setLoading(false);
     }
   }, [user]);
-
-  useEffect(() => {
-    if (posts.length || events.length || userInterests.length >= 0)
-      combineFeedItems();
-  }, [posts, events, userInterests, suggestedCircles]);
-
-  useEffect(() => {
-    if (user) loadSuggested();
-  }, [user?.id, userInterests.length, loadSuggested]);
 
   const formatTimeAgo = (dateString: string) => {
     if (!dateString) return "Unknown time";
@@ -681,62 +668,55 @@ export default function HomeScreen() {
         </View>
       )}
 
-      <ScrollView
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {loading ? (
-          <View style={styles.centeredContainer}>
-            <ThemedText>{texts.loading || "Loading..."}</ThemedText>
-          </View>
-        ) : error ? (
-          <View style={styles.centeredContainer}>
-            <IconSymbol
-              name="exclamationmark.triangle"
-              size={64}
-              color="#EF5350"
-            />
-            <ThemedText style={styles.emptyText}>{error}</ThemedText>
-            <TouchableOpacity
-              style={[styles.primaryBtn, { backgroundColor: tintColor }]}
-              onPress={() => {
-                loadPosts();
-                loadEvents();
-              }}
-            >
-              <ThemedText style={styles.primaryBtnText}>
-                {texts.retry || "Retry"}
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <FlatList
-            data={filteredFeed}
-            keyExtractor={(item) => `${item.type}-${item.id}`}
-            renderItem={({ item }) =>
-              item.type === "post"
-                ? renderPost({ item })
-                : item.type === "event"
-                ? renderEvent({ item })
-                : renderSuggestedSection()
-            }
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-            ListEmptyComponent={
-              <View style={styles.centeredContainer}>
-                <ThemedText style={styles.emptyText}>
-                  No posts or events yet
-                </ThemedText>
-              </View>
-            }
-            showsVerticalScrollIndicator={false}
+      {loading ? (
+        <View style={[styles.content, styles.centeredContainer]}>
+          <ThemedText>{texts.loading || "Loading..."}</ThemedText>
+        </View>
+      ) : error ? (
+        <View style={[styles.content, styles.centeredContainer]}>
+          <IconSymbol
+            name="exclamationmark.triangle"
+            size={64}
+            color="#EF5350"
           />
-        )}
-      </ScrollView>
+          <ThemedText style={styles.emptyText}>{error}</ThemedText>
+          <TouchableOpacity
+            style={[styles.primaryBtn, { backgroundColor: tintColor }]}
+            onPress={() => {
+              loadPosts();
+              loadEvents();
+            }}
+          >
+            <ThemedText style={styles.primaryBtnText}>
+              {texts.retry || "Retry"}
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          style={styles.content}
+          data={filteredFeed}
+          keyExtractor={(item) => `${item.type}-${item.id}`}
+          renderItem={({ item }) =>
+            item.type === "post"
+              ? renderPost({ item })
+              : item.type === "event"
+              ? renderEvent({ item })
+              : renderSuggestedSection()
+          }
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <View style={styles.centeredContainer}>
+              <ThemedText style={styles.emptyText}>
+                No posts or events yet
+              </ThemedText>
+            </View>
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
       {/* Three-dots Menu */}
       <Modal

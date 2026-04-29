@@ -9,11 +9,11 @@ import {
   TextInput,
   Alert,
   RefreshControl,
-  Image,
   Animated,
   Easing,
   LayoutChangeEvent,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -200,15 +200,19 @@ export default function CirclesScreen() {
         joinedIds = new Set(userCirclesResult?.map((uc) => uc.circleId) || []);
 
         if (allCircles) {
-          for (const circle of allCircles) {
-            if (circle.privacy === "private" && !joinedIds.has(circle.id)) {
-              const { data: pendingRequest } =
-                await DatabaseService.getUserPendingRequest(
-                  circle.id,
-                  userProfile.id
-                );
-              if (pendingRequest) pendingIds.add(circle.id);
-            }
+          const privateNotJoined = allCircles
+            .filter((c) => c.privacy === "private" && !joinedIds.has(c.id))
+            .map((c) => c.id);
+
+          if (privateNotJoined.length > 0) {
+            const { data: pendingResults } =
+              await DatabaseService.getUserPendingRequestsBatch(
+                privateNotJoined,
+                userProfile.id
+              );
+            pendingIds = new Set(
+              (pendingResults || []).map((r: any) => r.circleid)
+            );
           }
         }
       }
@@ -356,22 +360,30 @@ export default function CirclesScreen() {
     }
 
     if (circlePrivacy === "private") {
-      const message = window.prompt(
-        `Send a request to join "${circleName}"`,
-        ""
+      Alert.alert(
+        "Join Request",
+        `Send a request to join "${circleName}"?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Send Request",
+            onPress: async () => {
+              const { error } = await DatabaseService.requestToJoinCircle(
+                userProfile!.id,
+                circleId,
+                ""
+              );
+              if (error) {
+                Alert.alert("Error", error.message || "Failed to send request");
+                return;
+              }
+              Alert.alert("Success", "Join request sent");
+              await loadCircles();
+            },
+          },
+        ]
       );
-      if (message !== null) {
-        const { error } = await DatabaseService.requestToJoinCircle(
-          userProfile.id,
-          circleId,
-          message
-        );
-        if (error) {
-          Alert.alert("Error", error.message || "Failed to send request");
-          return;
-        }
-        Alert.alert("Success", "Join request sent");
-      }
+      return;
     } else {
       const { error } = await joinCircle(userProfile.id, circleId);
       if (error) {
@@ -387,14 +399,25 @@ export default function CirclesScreen() {
       Alert.alert("Error", "You must be logged in");
       return;
     }
-    const confirmed = window.confirm(`Delete "${circleName}" permanently?`);
-    if (!confirmed) return;
-    const { error } = await DatabaseService.deleteCircle(circleId, user.id);
-    if (error) {
-      Alert.alert("Error", error.message || "Failed to delete circle");
-      return;
-    }
-    await loadCircles();
+    Alert.alert(
+      "Delete Circle",
+      `Delete "${circleName}" permanently? This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            const { error } = await DatabaseService.deleteCircle(circleId, user!.id);
+            if (error) {
+              Alert.alert("Error", error.message || "Failed to delete circle");
+              return;
+            }
+            await loadCircles();
+          },
+        },
+      ]
+    );
   };
 
   useEffect(() => {
@@ -433,7 +456,7 @@ export default function CirclesScreen() {
           <Image
             source={{ uri: circle.circle_profile_url }}
             style={styles.cardImage}
-            resizeMode="cover"
+            contentFit="cover"
           />
         )}
 

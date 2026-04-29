@@ -1,0 +1,124 @@
+Sircles Code Review — Performance & Architecture
+==================================================
+Date: 2026-04-29
+Reviewed by: Claude Code
+
+
+1. FlatList nested inside ScrollView [CRITICAL]
+------------------------------------------------
+File: app/(tabs)/index.tsx, lines 684-738
+The home screen wraps a FlatList inside a ScrollView. This completely defeats
+FlatList's virtualization — every item renders at once, killing performance as
+the feed grows. Fix: use FlatList as the root scrollable (with ListHeaderComponent
+for the header content) or use ScrollView with manual rendering. Don't mix both.
+
+
+2. Waterfall API calls on every screen focus
+---------------------------------------------
+Files: app/(tabs)/index.tsx:146-151, circles.tsx:403-407, events.tsx:89-93
+useFocusEffect fires loadPosts(), loadSuggested(), loadEvents() every time
+the tab is focused. No caching or staleness check — every tab switch re-fetches
+everything from Supabase. Fix: add a staleness window (e.g. only re-fetch if
+data is older than 30 seconds) or use a data-fetching library with caching.
+
+
+3. N+1 query in Circles screen
+-------------------------------
+File: app/(tabs)/circles.tsx, lines 203-213
+For every private circle, a separate getUserPendingRequest query runs inside a
+for loop. With 50 private circles, that's 50 individual Supabase calls.
+Fix: batch into one query using .in() filter.
+
+
+4. N+1 query in Events screen
+-------------------------------
+File: app/(tabs)/events.tsx, lines 139-148
+checkDeletableEvents loops through every event and calls isCircleAdmin
+individually. Same N+1 problem. Fix: batch into a single query.
+
+
+5. Redundant auth checks in DatabaseService
+---------------------------------------------
+File: lib/database.ts (throughout)
+Almost every method starts with await supabase.auth.getUser(). This is a
+network call each time. Supabase RLS already enforces auth at the DB level,
+so these checks are redundant and add latency to every single DB operation.
+Fix: remove them, or cache the auth state and check locally.
+
+
+6. combineFeedItems rebuilds via state + effect instead of useMemo
+-------------------------------------------------------------------
+File: app/(tabs)/index.tsx, lines 249-281, 335-338
+This function sets state (setFeedItems) inside a useEffect. It also mutates
+items in place (combined.forEach(i => i.interestScore = ...)). Fix: replace
+with useMemo to derive feedItems directly from posts, events, userInterests,
+and suggestedCircles — no extra state or effect needed.
+
+
+7. Duplicate data loading on mount
+------------------------------------
+File: app/(tabs)/index.tsx, lines 146-151 vs 318-333
+Both useFocusEffect and useEffect([user]) call loadPosts() + loadEvents().
+On initial mount when the tab is focused, both fire, causing duplicate API
+calls. Fix: remove one of the two, or gate the useFocusEffect to skip on
+first mount.
+
+
+8. loadUserCircles fetches all circles then filters client-side
+----------------------------------------------------------------
+File: app/(tabs)/index.tsx, lines 291-304
+It first gets user joined circle IDs, then fetches ALL circles, then does a
+.find() in JS. This downloads every circle in the DB when you only need the
+ones the user joined. Fix: use the Supabase join that getUserCircles already
+returns, which includes the circle data.
+
+
+9. Dummy DatabaseService in AuthContext
+----------------------------------------
+File: contexts/AuthContext.tsx, lines 11-54
+There's a local DatabaseService object with dummy/simulated methods instead
+of importing the real one from @/lib/database. The checkFirstLogin method
+even does a real Supabase call, making this a confusing hybrid of mock and
+real code. Fix: import and use the real DatabaseService.
+
+
+10. window.prompt / window.confirm in React Native
+----------------------------------------------------
+File: app/(tabs)/circles.tsx, lines 359 and 391
+These are web-only APIs. They will not work on iOS/Android at all.
+Fix: use Alert.prompt (iOS) or a custom modal for cross-platform support.
+
+
+11. Images not optimized
+-------------------------
+Throughout all screens, Image from React Native is used instead of expo-image
+(which is already installed in the project). expo-image provides built-in
+caching, blurhash placeholders, and better memory management — especially
+important for feed screens with many images.
+Fix: replace Image with expo-image's Image component.
+
+
+12. Inline styles causing unnecessary re-renders
+--------------------------------------------------
+Throughout all screens, styles are created inline (e.g. { backgroundColor:
+tintColor + "26" }). These create new style objects on every render.
+Combined with the non-virtualized list, this compounds the performance hit.
+Fix: move dynamic styles to useMemo or StyleSheet where possible.
+
+
+13. No loading/skeleton states
+-------------------------------
+All screens show plain "Loading..." text. For perceived performance, skeleton
+screens or shimmer placeholders would make the app feel significantly faster.
+
+
+==================================================
+Priority Order for Fixes:
+==================================================
+1. FlatList inside ScrollView — immediate perf win
+2. N+1 queries (circles + events) — reduces API calls dramatically
+3. Remove redundant getUser() calls in DatabaseService
+4. Add caching/staleness to prevent re-fetching on every tab focus
+5. Fix window.prompt/window.confirm — broken on mobile
+6. Replace Image with expo-image — better memory + caching
+7. Fix AuthContext dummy DatabaseService — confusing and fragile

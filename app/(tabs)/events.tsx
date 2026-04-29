@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
-  Image,
   TextInput,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Linking from "expo-linking";
 
@@ -127,23 +127,33 @@ export default function EventsScreen() {
     fetchEvents();
   };
 
-  const checkIfCircleAdmin = async (circleIdX: string, userId: string) => {
-    try {
-      const { data } = await DatabaseService.isCircleAdmin(circleIdX, userId);
-      return data?.isAdmin || false;
-    } catch {
-      return false;
-    }
-  };
-
   const checkDeletableEvents = async (fetchedEvents: Event[]) => {
     if (!user) return;
     const deletable = new Set<string>();
+
+    // Add events created by the user
     for (const e of fetchedEvents) {
       if (e.createdby === user.id) deletable.add(e.id);
-      else if (e.circleid && (await checkIfCircleAdmin(e.circleid, user.id)))
-        deletable.add(e.id);
     }
+
+    // Batch check admin status for all circle events not owned by user
+    const circleIds = [
+      ...new Set(
+        fetchedEvents
+          .filter((e) => e.circleid && e.createdby !== user.id)
+          .map((e) => e.circleid!)
+      ),
+    ];
+
+    if (circleIds.length > 0) {
+      const { data: adminCircleIds } =
+        await DatabaseService.getAdminCircleIds(circleIds, user.id);
+      const adminSet = new Set(adminCircleIds || []);
+      for (const e of fetchedEvents) {
+        if (e.circleid && adminSet.has(e.circleid)) deletable.add(e.id);
+      }
+    }
+
     setDeletableEvents(deletable);
   };
 
@@ -383,7 +393,7 @@ export default function EventsScreen() {
                   <Image
                     source={{ uri: event.photo_url! }}
                     style={styles.cardImage}
-                    resizeMode="cover"
+                    contentFit="cover"
                   />
                 )}
 

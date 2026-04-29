@@ -3,55 +3,7 @@ import { Session, User as AuthUser } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@/types/database';
 import { router } from 'expo-router';
-
-// Assuming DatabaseService is correctly imported and has the necessary methods
-// import DatabaseService from '@/lib/databaseService'; // Placeholder for actual import
-
-// Dummy DatabaseService for demonstration purposes if not provided
-const DatabaseService = {
-  updateUser: async (userId: string, updates: Partial<User>) => {
-    console.log(`DatabaseService.updateUser called for ${userId} with`, updates);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 100));
-    // Simulate returning a user object similar to what supabase might return
-    const dummyUser: User = {
-      id: userId,
-      email: `${userId}@example.com`,
-      name: 'Dummy User',
-      phone: null,
-      dob: null,
-      gender: null,
-      address_apartment: null,
-      address_building: null,
-      address_block: null,
-      avatar_url: null,
-      creationdate: new Date().toISOString(),
-      first_login: false, // Defaulting to false for simulation
-      ...updates
-    };
-    return { data: dummyUser, error: null };
-  },
-  checkFirstLogin: async (userId: string) => {
-    console.log(`DatabaseService.checkFirstLogin called for ${userId}`);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 100));
-    // Simulate checking the first_login column
-    // In a real scenario, this would query the 'users' table for the user and return the 'first_login' value.
-    // For this example, let's assume we fetch the user profile and check it.
-    const { data, error } = await supabase
-      .from('users')
-      .select('first_login')
-      .eq('id', userId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-        console.error('Error checking first login:', error);
-        return { data: false, error: error };
-    }
-
-    return { data: data?.first_login || false, error: null };
-  }
-};
+import { DatabaseService } from '@/lib/database';
 
 
 interface AuthContextType {
@@ -111,24 +63,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data) {
         setUserProfile(data);
-        // Check first login status from fetched profile
         if (data.first_login) {
-          console.log('User is logging in for the first time. Will be directed to interests selection.');
-          // Check first login status
-          const { data: firstLoginData, error: firstLoginError } = await DatabaseService.checkFirstLogin(authUser.id);
-          console.log('First login check result:', { data: firstLoginData, error: firstLoginError });
-
-          if (firstLoginError) {
-            console.error('Error checking first login:', firstLoginError);
-          }
-
-          if (firstLoginData === true) {
-            console.log('User needs first-time setup, redirecting...');
-            router.replace('/first-time-setup');
-            return;
-          }
-
-          console.log('User has completed setup, proceeding to app...');
+          router.replace('/first-time-setup');
+          return;
         }
       } else {
         // Create user profile if it doesn't exist
