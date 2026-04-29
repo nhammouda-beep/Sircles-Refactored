@@ -100,7 +100,17 @@ export default function EventsScreen() {
       }
     }, [user])
   );
-  
+
+  // Trigger initial load when user becomes available after auth
+  useEffect(() => {
+    if (user && isFirstMount.current) {
+      fetchEvents();
+      fetchUserCircles();
+      isFirstMount.current = false;
+      lastFetchRef.current = Date.now();
+    }
+  }, [user]);
+
   const fetchEvents = async () => {
     if (!user) return;
     setLoading(true);

@@ -338,6 +338,15 @@ export default function HomeScreen() {
       setEvents([]);
       setUserInterests([]);
       setLoading(false);
+    } else if (isFirstMount.current) {
+      // Trigger initial load when user becomes available after auth
+      loadPosts();
+      loadSuggested();
+      loadEvents();
+      loadUserCircles();
+      loadUserInterests();
+      isFirstMount.current = false;
+      lastFetchRef.current = Date.now();
     }
   }, [user]);
 
