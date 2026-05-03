@@ -188,7 +188,7 @@ export default function CirclesScreen() {
     try {
       setLoading(true);
       setError(null);
-      const { data: allCircles, error: circlesError } = await getCircles();
+      const { data: allCircles, error: circlesError } = await getCircles() as { data: any[] | null; error: any };
       if (circlesError) {
         setError("Unable to load circles. Please try again.");
         setCircles([]);
@@ -284,12 +284,13 @@ export default function CirclesScreen() {
     }
 
     try {
-      const { data, error } = await createCircle({
+      const { data: rawData, error } = await createCircle({
         name: newCircle.name.trim(),
         description: newCircle.description.trim(),
         privacy: newCircle.privacy,
         creator: user.id,
-      });
+      } as any);
+      const data = rawData as any;
       if (error) {
         Alert.alert("Error", "Failed to create circle");
         return;
@@ -305,16 +306,16 @@ export default function CirclesScreen() {
         circleProfileUrl = uploadData?.publicUrl || null;
       }
       if (circleProfileUrl && data) {
-        await supabase
-          .from("circles")
+        await (supabase
+          .from("circles") as any)
           .update({ circle_profile_url: circleProfileUrl })
           .eq("id", data.id);
       }
 
       if (data && newCircle.interests.length) {
         for (const interestId of newCircle.interests) {
-          await supabase
-            .from("circle_interests")
+          await (supabase
+            .from("circle_interests") as any)
             .insert({ circleid: data.id, interestid: interestId });
         }
       }
@@ -1118,4 +1119,15 @@ const styles = StyleSheet.create({
   btnPrimaryTxt: { color: "#fff", fontWeight: "800" },
 
   rtl: { textAlign: "right" },
+
+  centerPad: { paddingVertical: 40, alignItems: "center" as const },
+  emptyText: { opacity: 0.6, textAlign: "center" as const },
+  retryBtn: {
+    marginTop: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: COLORS.primary,
+  },
+  retryTxt: { color: "#fff", fontWeight: "700" as const },
 });

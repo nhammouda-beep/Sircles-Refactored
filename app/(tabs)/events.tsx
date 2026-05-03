@@ -716,7 +716,7 @@ export default function EventsScreen() {
       >
         <View style={styles.sheetOverlay}>
           <View style={[styles.sheet, { backgroundColor: BG }]}>
-            <View className="header" style={styles.sheetHeader}>
+            <View style={styles.sheetHeader}>
               <ThemedText type="subtitle" style={{ color: TEXT }}>
                 Filters
               </ThemedText>

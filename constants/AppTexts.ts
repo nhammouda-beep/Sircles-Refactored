@@ -139,6 +139,23 @@ export const AppTexts = {
     reportsReview: 'Reports Review',
     searchManage: 'Search & Manage',
 
+    // Circles
+    circles: 'Circles',
+    allCircles: 'All Circles',
+    createCircle: 'New Circle',
+    profilePicture: 'Add a circle image',
+    name: 'Circle name',
+    enterCircleName: 'e.g. Sport Circle',
+    privacy: 'Privacy',
+    interests: 'Interests',
+
+    // Events
+    upcoming: 'Upcoming',
+    past: 'Past',
+
+    // Time
+    justNow: 'Just now',
+
     // Add more text constants as needed
     retry: 'Retry',
 
@@ -288,6 +305,25 @@ export const AppTexts = {
     noCirclesJoined: 'لم تنضم لأي دوائر بعد',
     exploreCirclesToJoin: 'استكشف الدوائر للانضمام لأول مجتمع',
     exploreCircles: 'استكشف الدوائر',
+
+    // Circles
+    circles: 'الدوائر',
+    allCircles: 'كل الدوائر',
+    createCircle: 'دائرة جديدة',
+    profilePicture: 'إضافة صورة الدائرة',
+    name: 'اسم الدائرة',
+    enterCircleName: 'مثال: دائرة الرياضة',
+    privacy: 'الخصوصية',
+    interests: 'الاهتمامات',
+
+    // Events
+    upcoming: 'القادمة',
+    past: 'السابقة',
+
+    // Time
+    justNow: 'الآن',
+
+    retry: 'إعادة المحاولة',
 
     // Admin
     adminDashboard: 'لوحة تحكم الإدارة',

@@ -97,11 +97,11 @@ export const deleteEvent = (eventId: string) =>
   DatabaseService.deleteEvent(eventId);
 export const createEventRsvp = (
   eventId: string,
-  status: "going" | "maybe" | "no_going"
+  status: "going" | "maybe" | "not_going"
 ) => DatabaseService.createEventRsvp(eventId, status);
 export const updateEventRsvp = (
   eventId: string,
-  status: "going" | "maybe" | "no_going"
+  status: "going" | "maybe" | "not_going"
 ) => DatabaseService.updateEventRsvp(eventId, status);
 export const deleteEventRsvp = (eventId: string) =>
   DatabaseService.deleteEventRsvp(eventId);
@@ -2541,7 +2541,7 @@ export const DatabaseService = {
   // Event RSVP operations
   async createEventRsvp(
     eventId: string,
-    status: "going" | "maybe" | "no_going"
+    status: "going" | "maybe" | "not_going"
   ) {
     try {
       // Verify user is authenticated
@@ -2575,7 +2575,7 @@ export const DatabaseService = {
 
   async updateEventRsvp(
     eventId: string,
-    status: "going" | "maybe" | "no_going"
+    status: "going" | "maybe" | "not_going"
   ) {
     try {
       // Verify user is authenticated

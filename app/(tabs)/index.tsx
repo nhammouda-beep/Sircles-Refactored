@@ -42,6 +42,7 @@ interface Post {
   likes: any[];
   comments: any[];
   likes_count?: number;
+  comments_count?: number;
   userLiked?: boolean;
 }
 
