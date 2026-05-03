@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
   Alert,
   Modal,
   TextInput,
@@ -68,6 +69,12 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination
+  const PAGE_SIZE = 20;
+  const [postsPage, setPostsPage] = useState(0);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Staleness check — skip re-fetch if data is less than 30s old
   const STALE_MS = 30_000;
@@ -176,19 +183,25 @@ export default function HomeScreen() {
     [user?.id]
   );
 
-  const loadPosts = async () => {
+  const loadPosts = async (page = 0) => {
     if (!user?.id) {
       setPosts([]);
       setLoading(false);
       return;
     }
     try {
-      setLoading(true);
-      setError(null);
-      const { data, error } = await DatabaseService.getHomePagePosts(user.id);
+      if (page === 0) {
+        setLoading(true);
+        setError(null);
+      }
+      const { data, error, hasMore } = await DatabaseService.getHomePagePosts(
+        user.id,
+        page,
+        PAGE_SIZE
+      );
       if (error) {
         setError("Unable to load posts. Please try again.");
-        setPosts([]);
+        if (page === 0) setPosts([]);
       } else {
         const postsWithLikes = (data || []).map((post: any) => ({
           ...post,
@@ -197,11 +210,24 @@ export default function HomeScreen() {
             post.userLiked ??
             (post.likes?.some((like: any) => like.userid === user.id) || false),
         }));
-        setPosts(postsWithLikes);
+        if (page === 0) {
+          setPosts(postsWithLikes);
+        } else {
+          setPosts((prev) => [...prev, ...postsWithLikes]);
+        }
+        setHasMorePosts(hasMore ?? false);
+        setPostsPage(page);
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadMorePosts = async () => {
+    if (!hasMorePosts || loadingMore || loading) return;
+    setLoadingMore(true);
+    await loadPosts(postsPage + 1);
+    setLoadingMore(false);
   };
 
   const loadEvents = async () => {
@@ -321,8 +347,10 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    setPostsPage(0);
+    setHasMorePosts(true);
     await Promise.all([
-      loadPosts(),
+      loadPosts(0),
       loadEvents(),
       loadUserCircles(),
       loadUserInterests(),
@@ -738,6 +766,15 @@ export default function HomeScreen() {
                 No posts or events yet
               </ThemedText>
             </View>
+          }
+          onEndReached={loadMorePosts}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={{ paddingVertical: 20, alignItems: "center" }}>
+                <ActivityIndicator size="small" color={tintColor} />
+              </View>
+            ) : null
           }
           showsVerticalScrollIndicator={false}
         />

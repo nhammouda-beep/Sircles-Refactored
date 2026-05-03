@@ -2339,7 +2339,7 @@ export const DatabaseService = {
     }
   },
 
-  async getHomePagePosts(userId: string) {
+  async getHomePagePosts(userId: string, page = 0, limit = 20) {
     try {
       // First get the user's joined circles
       const { data: userCircles, error: circlesError } = await supabase
@@ -2349,10 +2349,12 @@ export const DatabaseService = {
 
       if (circlesError) {
         console.error("Error fetching user circles:", circlesError);
-        return { data: [], error: circlesError };
+        return { data: [], error: circlesError, hasMore: false };
       }
 
       const circleIds = userCircles?.map((uc) => uc.circleid) || [];
+      const from = page * limit;
+      const to = from + limit - 1;
 
       // Get posts from user's circles or general posts (where circleid is null)
       const { data: posts, error } = await supabase
@@ -2389,11 +2391,14 @@ export const DatabaseService = {
             ? `circleid.is.null,circleid.in.(${circleIds.join(",")})`
             : "circleid.is.null"
         )
-        .order("creationdate", { ascending: false });
+        .order("creationdate", { ascending: false })
+        .range(from, to);
 
       if (error || !posts) {
-        return { data: [], error };
+        return { data: [], error, hasMore: false };
       }
+
+      const hasMore = posts.length === limit;
 
       // Get likes and comments data separately for better control
       if (posts.length > 0) {
@@ -2440,13 +2445,13 @@ export const DatabaseService = {
           comments: [], // Add empty comments array for compatibility
         }));
 
-        return { data: transformedPosts, error: null };
+        return { data: transformedPosts, error: null, hasMore };
       }
 
-      return { data: posts || [], error: null };
+      return { data: posts || [], error: null, hasMore };
     } catch (error) {
       console.error("Error in getHomePagePosts:", error);
-      return { data: [], error: error as Error };
+      return { data: [], error: error as Error, hasMore: false };
     }
   },
 
