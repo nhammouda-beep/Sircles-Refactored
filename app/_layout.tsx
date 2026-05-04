@@ -10,6 +10,7 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 import { PaperProvider, MD3LightTheme } from "react-native-paper";
 import { en, registerTranslation } from "react-native-paper-dates";
@@ -38,6 +39,7 @@ export default function RootLayout() {
     colorScheme === "dark" ? NavigationDarkTheme : NavigationDefaultTheme;
 
   return (
+    <ErrorBoundary>
     <PaperProvider theme={MyCustomLightTheme}>
       <AuthProvider>
         <LanguageProvider>
@@ -70,5 +72,6 @@ export default function RootLayout() {
         </LanguageProvider>
       </AuthProvider>
     </PaperProvider>
+    </ErrorBoundary>
   );
 }

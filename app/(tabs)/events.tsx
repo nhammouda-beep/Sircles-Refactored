@@ -7,6 +7,7 @@ import {
   Alert,
   Modal,
   TextInput,
+  RefreshControl,
 } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -64,6 +65,7 @@ export default function EventsScreen() {
 
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [circles, setCircles] = useState<{ id: string; name: string }[]>([]);
   const [deletableEvents, setDeletableEvents] = useState<Set<string>>(
     new Set()
@@ -386,6 +388,17 @@ export default function EventsScreen() {
       <ScrollView
         style={styles.eventsList}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true);
+              await fetchEvents();
+              lastFetchRef.current = Date.now();
+              setRefreshing(false);
+            }}
+          />
+        }
       >
         {loading ? (
           <EventsSkeleton />

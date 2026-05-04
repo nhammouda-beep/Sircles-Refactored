@@ -159,7 +159,6 @@ export const getCirclesByUser = async (userId: string) => {
     if (error) {
       // Handle RLS policy errors
       if (error.code === "PGRST001" || error.code === "42501") {
-        console.log("RLS policy prevented access to user circles");
         return { data: [], error: null }; // Return empty array instead of error
       }
       return { data: null, error };
@@ -259,7 +258,6 @@ export const DatabaseService = {
       if (error) {
         // Handle RLS policy errors
         if (error.code === "PGRST001" || error.code === "42501") {
-          console.log("RLS policy prevented access to user circles");
           return { data: [], error: null };
         }
         return { data: null, error };
@@ -681,15 +679,10 @@ export const DatabaseService = {
       // Extract interests and photo from event object and create clean event data
       const { interests, photoAsset, location_url, ...eventDataClean } = event;
 
-      console.log("Database: Creating event with interests:", interests);
-      console.log("Database: Creating event with photo:", !!photoAsset);
-      console.log("Database: Creating event with location_url:", location_url);
-
       let eventPhotoUrl = null;
 
       // Upload photo if provided
       if (photoAsset) {
-        console.log("Uploading event photo...");
         const { data: uploadData, error: uploadError } =
           await StorageService.uploadEventPhoto(
             eventId,
@@ -704,7 +697,6 @@ export const DatabaseService = {
 
         if (uploadData?.publicUrl) {
           eventPhotoUrl = uploadData.publicUrl;
-          console.log("Event photo uploaded successfully:", eventPhotoUrl);
         }
       }
 
@@ -773,8 +765,6 @@ export const DatabaseService = {
           })
           .filter(Boolean); // Remove null entries
 
-        console.log("Database: Inserting event interests:", eventInterests);
-
         const { error: interestsError } = await supabase
           .from("event_interests")
           .insert(eventInterests);
@@ -793,8 +783,6 @@ export const DatabaseService = {
   },
 
   async deleteEvent(eventId: string) {
-    console.log("🗑️ DELETE EVENT START: eventId =", eventId);
-
     try {
       // Check authentication
       const { data: currentUser } = await supabase.auth.getUser();
@@ -803,12 +791,7 @@ export const DatabaseService = {
         return { data: null, error: new Error("Authentication required") };
       }
 
-      console.log("🗑️ DELETE EVENT: Authenticated user =", currentUser.user.id);
-
       // First, get the event details to check permissions manually
-      console.log(
-        "🗑️ DELETE EVENT: Fetching event details for permission check..."
-      );
       const { data: eventData, error: fetchError } = await supabase
         .from("events")
         .select("id, createdby, circleid")
@@ -820,26 +803,16 @@ export const DatabaseService = {
         return { data: null, error: new Error("Event not found") };
       }
 
-      console.log("🗑️ DELETE EVENT: Event details:", eventData);
-
       // Check if user has permission to delete
       let hasPermission = false;
 
       // 1. Event creator can delete
       if (eventData.createdby === currentUser.user.id) {
         hasPermission = true;
-        console.log(
-          "🗑️ DELETE EVENT: Permission granted - user is event creator"
-        );
       }
 
       // 2. If it's a circle event, check if user is circle creator or admin
       if (!hasPermission && eventData.circleid) {
-        console.log(
-          "🗑️ DELETE EVENT: Checking circle permissions for circleid:",
-          eventData.circleid
-        );
-
         // Check if user is circle creator
         const { data: circleData } = await supabase
           .from("circles")
@@ -849,9 +822,6 @@ export const DatabaseService = {
 
         if (circleData?.creator === currentUser.user.id) {
           hasPermission = true;
-          console.log(
-            "🗑️ DELETE EVENT: Permission granted - user is circle creator"
-          );
         }
 
         // Check if user is circle admin
@@ -865,9 +835,6 @@ export const DatabaseService = {
 
           if (adminData) {
             hasPermission = true;
-            console.log(
-              "🗑️ DELETE EVENT: Permission granted - user is circle admin"
-            );
           }
         }
       }
@@ -881,24 +848,11 @@ export const DatabaseService = {
       }
 
       // Now attempt to delete with service role to bypass RLS
-      console.log(
-        "🗑️ DELETE EVENT: Attempting delete with verified permissions..."
-      );
-
       const { data, error } = await supabase
         .from("events")
         .delete()
         .eq("id", eventId)
         .select();
-
-      console.log("🗑️ DELETE EVENT RESULT:", {
-        success: !error,
-        hasData: !!data,
-        dataLength: data?.length || 0,
-        errorCode: error?.code,
-        errorMessage: error?.message,
-        data: data,
-      });
 
       if (error) {
         console.error("🗑️ DELETE EVENT FAILED:", error);
@@ -912,7 +866,6 @@ export const DatabaseService = {
         return { data: null, error: new Error("Event not found") };
       }
 
-      console.log("🗑️ DELETE EVENT SUCCESS: Event deleted");
       return { data: data[0], error: null };
     } catch (error) {
       console.error("🗑️ DELETE EVENT CATCH:", error);
@@ -1088,7 +1041,6 @@ export const DatabaseService = {
 
       // Upload photo if provided
       if (photoAsset) {
-        console.log("Uploading post photo...");
         const { data: uploadData, error: uploadError } =
           await StorageService.uploadPostPhoto(
             postId,
@@ -1103,7 +1055,6 @@ export const DatabaseService = {
 
         if (uploadData?.publicUrl) {
           imageUrl = uploadData.publicUrl;
-          console.log("Post photo uploaded successfully:", imageUrl);
         }
       }
 
@@ -1169,7 +1120,6 @@ export const DatabaseService = {
       if (error) {
         // Handle RLS policy errors
         if (error.code === "PGRST001" || error.code === "42501") {
-          console.log("RLS policy prevented access to user interests");
           return { data: [], error: null };
         }
         return { data: null, error };
@@ -1197,7 +1147,6 @@ export const DatabaseService = {
       if (error) {
         // Handle RLS policy errors
         if (error.code === "PGRST001" || error.code === "42501") {
-          console.log("RLS policy prevented access to user look_for");
           return { data: [], error: null };
         }
         return { data: null, error };
@@ -1632,14 +1581,6 @@ export const DatabaseService = {
         .order("created_at", { ascending: false })
         .limit(1);
 
-      console.log("Pending request query result:", {
-        hasData: !!data && data.length > 0,
-        dataLength: data?.length || 0,
-        hasError: !!error,
-        errorCode: error?.code,
-        errorMessage: error?.message,
-      });
-
       if (error) {
         console.error("Error checking pending request:", error);
         return { data: null, error };
@@ -1647,8 +1588,6 @@ export const DatabaseService = {
 
       // Get the most recent pending request if any exists
       const pendingRequest = data && data.length > 0 ? data[0] : null;
-      const hasPending = !!pendingRequest;
-      console.log("Final pending status:", hasPending);
       return { data: pendingRequest, error: null };
     } catch (error) {
       console.error("Error in getUserPendingRequest:", error);
@@ -1717,13 +1656,6 @@ export const DatabaseService = {
 
   async deleteCircle(circleId: string, userId: string) {
     try {
-      console.log(
-        "Starting delete process for circle:",
-        circleId,
-        "by user:",
-        userId
-      );
-
       // Check if user is the creator
       const { data: circle, error: circleError } = await supabase
         .from("circles")
@@ -1755,7 +1687,6 @@ export const DatabaseService = {
         return { data: null, error: deleteError };
       }
 
-      console.log("Circle deleted successfully");
       return { data: { success: true }, error: null };
     } catch (error) {
       console.error("Error in deleteCircle:", error);
@@ -1816,16 +1747,7 @@ export const DatabaseService = {
     userId: string,
     requestingAdminId: string
   ) {
-    console.log("🔵 DATABASE FUNCTION ENTRY: addCircleAdmin called");
-    console.log("🔵 IMMEDIATE ENTRY LOG - Function definitely started");
     try {
-      console.log("=== DATABASE: addCircleAdmin function started ===");
-      console.log("INPUT Parameters:", {
-        circleId: circleId || "undefined",
-        userId: userId || "undefined",
-        requestingAdminId: requestingAdminId || "undefined",
-      });
-
       // Validate inputs
       if (!circleId) {
         console.error("VALIDATION ERROR: circleId is required");
@@ -1843,23 +1765,12 @@ export const DatabaseService = {
         };
       }
 
-      console.log("INPUT VALIDATION: All parameters are valid");
-
       // Get circle creator
-      console.log("STEP 1: Fetching circle creator...");
       const { data: circle, error: circleError } = await supabase
         .from("circles")
         .select("creator")
         .eq("id", circleId)
         .single();
-
-      console.log("STEP 1 RESULT:", {
-        hasCircleData: !!circle,
-        creator: circle?.creator,
-        hasError: !!circleError,
-        errorMessage: circleError?.message,
-        errorCode: circleError?.code,
-      });
 
       if (circleError) {
         console.error("STEP 1 FAILED: Error fetching circle:", circleError);
@@ -1876,30 +1787,15 @@ export const DatabaseService = {
 
       // Verify requesting user is the main admin (creator) OR a regular admin
       const isCreator = circle.creator === requestingAdminId;
-      console.log("STEP 2: Permission check - isCreator:", isCreator);
-      console.log("STEP 2: Creator comparison:", {
-        circleCreator: circle.creator,
-        requestingAdminId: requestingAdminId,
-        areEqual: circle.creator === requestingAdminId,
-      });
 
       if (!isCreator) {
         // Check if requesting user is at least an admin
-        console.log("STEP 2A: User is not creator, checking admin status...");
         const { data: adminCheck, error: adminError } = await supabase
           .from("circle_admins")
           .select("userid")
           .eq("circleid", circleId)
           .eq("userid", requestingAdminId)
           .single();
-
-        console.log("STEP 2A RESULT:", {
-          hasAdminData: !!adminCheck,
-          adminUserId: adminCheck?.userid,
-          hasError: !!adminError,
-          errorMessage: adminError?.message,
-          errorCode: adminError?.code,
-        });
 
         if (adminError || !adminCheck) {
           console.error(
@@ -1910,14 +1806,9 @@ export const DatabaseService = {
             error: new Error("Only circle admins can manage admin privileges"),
           };
         }
-
-        console.log("STEP 2A PASSED: User is confirmed as admin");
-      } else {
-        console.log("STEP 2 PASSED: User is creator, has permission");
       }
 
       // Check if user is already an admin
-      console.log("STEP 3: Checking if target user is already an admin...");
       const { data: existingAdmin, error: existingError } = await supabase
         .from("circle_admins")
         .select("userid")
@@ -1925,30 +1816,11 @@ export const DatabaseService = {
         .eq("userid", userId)
         .single();
 
-      console.log("STEP 3 RESULT:", {
-        hasExistingAdmin: !!existingAdmin,
-        existingUserId: existingAdmin?.userid,
-        hasError: !!existingError,
-        errorMessage: existingError?.message,
-        errorCode: existingError?.code,
-      });
-
       if (existingAdmin) {
-        console.log("STEP 3 RESULT: User is already an admin, returning early");
         return { data: null, error: new Error("User is already an admin") };
       }
 
-      console.log(
-        "STEP 3 PASSED: User is not currently an admin, proceeding with insert"
-      );
-
       // Perform the insert
-      console.log("STEP 4: Attempting to insert new admin...");
-      console.log("STEP 4: Insert payload:", {
-        circleid: circleId,
-        userid: userId,
-      });
-
       const { data, error } = await supabase
         .from("circle_admins")
         .insert({
@@ -1956,17 +1828,6 @@ export const DatabaseService = {
           userid: userId,
         })
         .select();
-
-      console.log("STEP 4 RESULT:", {
-        hasData: !!data,
-        dataLength: data?.length || 0,
-        data: data,
-        hasError: !!error,
-        errorCode: error?.code,
-        errorMessage: error?.message,
-        errorDetails: error?.details,
-        errorHint: error?.hint,
-      });
 
       if (error) {
         console.error("STEP 4 FAILED: Error inserting circle admin:", error);
@@ -1976,10 +1837,6 @@ export const DatabaseService = {
         };
       }
 
-      console.log("STEP 4 PASSED: Successfully added circle admin");
-      console.log(
-        "=== DATABASE: addCircleAdmin function completed successfully ==="
-      );
       return { data, error: null };
     } catch (error) {
       console.error("=== DATABASE: UNEXPECTED ERROR in addCircleAdmin ===");
@@ -2002,16 +1859,7 @@ export const DatabaseService = {
     userId: string,
     requestingAdminId: string
   ) {
-    console.log("🔴 DATABASE FUNCTION ENTRY: removeCircleAdmin called");
-    console.log("🔴 IMMEDIATE ENTRY LOG - Function definitely started");
     try {
-      console.log("=== DATABASE: removeCircleAdmin function started ===");
-      console.log("INPUT Parameters:", {
-        circleId: circleId || "undefined",
-        userId: userId || "undefined",
-        requestingAdminId: requestingAdminId || "undefined",
-      });
-
       // Validate inputs
       if (!circleId) {
         console.error("VALIDATION ERROR: circleId is required");
@@ -2029,23 +1877,12 @@ export const DatabaseService = {
         };
       }
 
-      console.log("INPUT VALIDATION: All parameters are valid");
-
       // Get circle creator
-      console.log("STEP 1: Fetching circle creator...");
       const { data: circle, error: circleError } = await supabase
         .from("circles")
         .select("creator")
         .eq("id", circleId)
         .single();
-
-      console.log("STEP 1 RESULT:", {
-        hasCircleData: !!circle,
-        creator: circle?.creator,
-        hasError: !!circleError,
-        errorMessage: circleError?.message,
-        errorCode: circleError?.code,
-      });
 
       if (circleError) {
         console.error("STEP 1 FAILED: Error fetching circle:", circleError);
@@ -2061,39 +1898,22 @@ export const DatabaseService = {
       }
 
       // Cannot remove the main admin (creator)
-      console.log("STEP 2: Checking if trying to remove creator...");
       if (circle.creator === userId) {
         console.error("STEP 2 FAILED: Cannot remove the main admin (creator)");
         return { data: null, error: new Error("Cannot remove the main admin") };
       }
-      console.log("STEP 2 PASSED: Not trying to remove creator");
 
       // Verify requesting user is the main admin (creator) OR a regular admin
       const isCreator = circle.creator === requestingAdminId;
-      console.log("STEP 3: Permission check - isCreator:", isCreator);
-      console.log("STEP 3: Creator comparison:", {
-        circleCreator: circle.creator,
-        requestingAdminId: requestingAdminId,
-        areEqual: circle.creator === requestingAdminId,
-      });
 
       if (!isCreator) {
         // Check if requesting user is at least an admin
-        console.log("STEP 3A: User is not creator, checking admin status...");
         const { data: adminCheck, error: adminError } = await supabase
           .from("circle_admins")
           .select("userid")
           .eq("circleid", circleId)
           .eq("userid", requestingAdminId)
           .single();
-
-        console.log("STEP 3A RESULT:", {
-          hasAdminData: !!adminCheck,
-          adminUserId: adminCheck?.userid,
-          hasError: !!adminError,
-          errorMessage: adminError?.message,
-          errorCode: adminError?.code,
-        });
 
         if (adminError || !adminCheck) {
           console.error(
@@ -2104,34 +1924,14 @@ export const DatabaseService = {
             error: new Error("Only circle admins can manage admin privileges"),
           };
         }
-
-        console.log("STEP 3A PASSED: User is confirmed as admin");
-      } else {
-        console.log("STEP 3 PASSED: User is creator, has permission");
       }
 
       // Perform the delete
-      console.log("STEP 4: Attempting to remove admin...");
-      console.log("STEP 4: Delete conditions:", {
-        circleid: circleId,
-        userid: userId,
-      });
-
       const { data, error } = await supabase
         .from("circle_admins")
         .delete()
         .eq("circleid", circleId)
         .eq("userid", userId);
-
-      console.log("STEP 4 RESULT:", {
-        hasData: !!data,
-        data: data,
-        hasError: !!error,
-        errorCode: error?.code,
-        errorMessage: error?.message,
-        errorDetails: error?.details,
-        errorHint: error?.hint,
-      });
 
       if (error) {
         console.error("STEP 4 FAILED: Error removing circle admin:", error);
@@ -2141,10 +1941,6 @@ export const DatabaseService = {
         };
       }
 
-      console.log("STEP 4 PASSED: Successfully removed circle admin");
-      console.log(
-        "=== DATABASE: removeCircleAdmin function completed successfully ==="
-      );
       return { data, error: null };
     } catch (error) {
       console.error("=== DATABASE: UNEXPECTED ERROR in removeCircleAdmin ===");
@@ -2168,12 +1964,6 @@ export const DatabaseService = {
     adminId: string
   ) {
     try {
-      console.log("removeMemberFromCircle called:", {
-        circleId,
-        userId,
-        adminId,
-      });
-
       // First check if requesting user is the creator
       const { data: circle, error: circleError } = await supabase
         .from("circles")
@@ -2190,12 +1980,6 @@ export const DatabaseService = {
       }
 
       const isCreator = circle?.creator === adminId;
-      console.log(
-        "Admin check - isCreator:",
-        isCreator,
-        "circle creator:",
-        circle?.creator
-      );
 
       if (!isCreator) {
         // Check if user is admin
@@ -2236,7 +2020,6 @@ export const DatabaseService = {
         };
       }
 
-      console.log("Removing user from circle...");
       // Remove from circle
       const { data, error } = await supabase
         .from("user_circles")
@@ -2252,7 +2035,6 @@ export const DatabaseService = {
         };
       }
 
-      console.log("Removing admin status if exists...");
       // Also remove admin status if they had it (ignore errors here as they might not be admin)
       const { error: adminRemoveError } = await supabase
         .from("circle_admins")
@@ -2260,14 +2042,6 @@ export const DatabaseService = {
         .eq("circleid", circleId)
         .eq("userid", userId);
 
-      if (adminRemoveError) {
-        console.log(
-          "Note: Could not remove admin status (user might not be admin):",
-          adminRemoveError
-        );
-      }
-
-      console.log("Successfully removed member from circle");
       return { data, error: null };
     } catch (error) {
       console.error("Error in removeMemberFromCircle:", error);
@@ -2480,7 +2254,6 @@ export const DatabaseService = {
       if (error) {
         // Handle RLS policy errors
         if (error.code === "PGRST001" || error.code === "42501") {
-          console.log("RLS policy prevented access to circle messages");
           return { data: [], error: null }; // Return empty array for non-members
         }
         return { data: null, error };
@@ -2827,14 +2600,6 @@ export const DatabaseService = {
       const commentId = crypto.randomUUID();
       const now = new Date().toISOString();
 
-      console.log("Creating comment with data:", {
-        id: commentId,
-        postid: postId,
-        userid: userId,
-        text: text.substring(0, 50) + "...",
-        timestamp: now,
-      });
-
       const { data, error } = await supabase
         .from("comments")
         .insert({
@@ -2866,7 +2631,6 @@ export const DatabaseService = {
         author: userInfo || { name: "Unknown User", avatar_url: null },
       };
 
-      console.log("Comment created successfully:", transformedData.id);
       return { data: transformedData, error: null };
     } catch (error) {
       console.error("Error in createComment:", error);
@@ -2876,8 +2640,6 @@ export const DatabaseService = {
 
   async getPostComments(postId: string) {
     try {
-      console.log("Fetching comments for post:", postId);
-
       const { data, error } = await supabase
         .from("comments")
         .select("*")
@@ -2888,8 +2650,6 @@ export const DatabaseService = {
         console.error("Error getting comments:", error);
         return { data: [], error };
       }
-
-      console.log("Raw comments data:", data?.length || 0, "comments found");
 
       if (!data || data.length === 0) {
         return { data: [], error: null };
@@ -2917,7 +2677,6 @@ export const DatabaseService = {
         },
       }));
 
-      console.log("Transformed comments:", transformedData.length);
       return { data: transformedData, error: null };
     } catch (error) {
       console.error("Error in getPostComments:", error);
@@ -2976,8 +2735,6 @@ export const DatabaseService = {
   },
 
   async deleteComment(commentId: string, userId: string) {
-    console.log("🗑️ deleteComment called:", { commentId, userId });
-
     try {
       // Verify user is authenticated
       const { data: currentUser, error: authError } =
@@ -2992,8 +2749,6 @@ export const DatabaseService = {
         console.error("🗑️ User ID mismatch");
         return { data: null, error: new Error("Authentication mismatch") };
       }
-
-      console.log("🗑️ Auth verified, checking permissions...");
 
       // Get comment and related permissions in one query
       const { data: commentData, error: fetchError } = await supabase
@@ -3028,13 +2783,11 @@ export const DatabaseService = {
       // 1. Comment owner can delete their own comment
       if (commentData.userid === userId) {
         hasPermission = true;
-        console.log("🗑️ Permission: comment owner");
       }
 
       // 2. Post owner can delete comments on their post
       if (commentData.posts?.userid === userId) {
         hasPermission = true;
-        console.log("🗑️ Permission: post owner");
       }
 
       // 3. Circle admin or creator can delete comments in their circle
@@ -3042,13 +2795,11 @@ export const DatabaseService = {
         const circle = commentData.posts.circles;
         if (circle?.creator === userId) {
           hasPermission = true;
-          console.log("🗑️ Permission: circle creator");
         }
 
         const circleAdmins = circle?.circle_admins || [];
         if (circleAdmins.some((admin: any) => admin.userid === userId)) {
           hasPermission = true;
-          console.log("🗑️ Permission: circle admin");
         }
       }
 
@@ -3059,8 +2810,6 @@ export const DatabaseService = {
           error: new Error("You do not have permission to delete this comment"),
         };
       }
-
-      console.log("🗑️ Permission verified, deleting comment...");
 
       // Delete the comment
       const { data, error } = await supabase
@@ -3085,7 +2834,6 @@ export const DatabaseService = {
         };
       }
 
-      console.log("🗑️ Comment deleted successfully");
       return { data: { success: true, deletedComment: data[0] }, error: null };
     } catch (error) {
       console.error("🗑️ Unexpected error:", error);
@@ -3097,35 +2845,10 @@ export const DatabaseService = {
   },
 
   async deletePost(postId: string, userId: string) {
-    console.log(
-      "🗑️ ═══════════════════════════════════════════════════════════"
-    );
-    console.log("🗑️ DELETE POST FUNCTION STARTED");
-    console.log(
-      "🗑️ ═══════════════════════════════════════════════════════════"
-    );
-    console.log("🗑️ STEP 0: Initial parameters");
-    console.log("🗑️ - postId:", postId);
-    console.log("🗑️ - userId:", userId);
-    console.log("🗑️ - postId type:", typeof postId);
-    console.log("🗑️ - userId type:", typeof userId);
-    console.log("🗑️ - postId length:", postId?.length);
-    console.log("🗑️ - userId length:", userId?.length);
-
     try {
-      console.log("🗑️ STEP 1: Starting authentication check...");
-
       // Verify user is authenticated
       const { data: currentUser, error: authError } =
         await supabase.auth.getUser();
-
-      console.log("🗑️ STEP 1 RESULT: Authentication check completed");
-      console.log("🗑️ - hasCurrentUser:", !!currentUser);
-      console.log("🗑️ - hasCurrentUserUser:", !!currentUser?.user);
-      console.log("🗑️ - currentUserId:", currentUser?.user?.id);
-      console.log("🗑️ - authError:", authError);
-      console.log("🗑️ - authErrorMessage:", authError?.message);
-      console.log("🗑️ - authErrorCode:", authError?.code);
 
       if (!currentUser?.user || authError) {
         console.error("🗑️ STEP 1 FAILED: Authentication failed");
@@ -3134,13 +2857,6 @@ export const DatabaseService = {
         console.error("🗑️ - Auth error details:", authError);
         return { data: null, error: new Error("Authentication required") };
       }
-
-      console.log("🗑️ STEP 1 PASSED: User authenticated");
-      console.log("🗑️ - Authenticated user ID:", currentUser.user.id);
-      console.log("🗑️ - Provided user ID:", userId);
-      console.log("🗑️ - IDs match:", currentUser.user.id === userId);
-
-      console.log("🗑️ STEP 2: Fetching post details for permission check...");
 
       // Get post details first to understand permissions
       const { data: postDetails, error: fetchError } = await supabase
@@ -3162,24 +2878,6 @@ export const DatabaseService = {
         )
         .eq("id", postId)
         .single();
-      console.log("🗑️ STEP 2 RESULT: Post details fetch completed");
-      console.log("🗑️ - hasPostDetails:", !!postDetails);
-      console.log("🗑️ - fetchError:", fetchError);
-      console.log("🗑️ - fetchErrorCode:", fetchError?.code);
-      console.log("🗑️ - fetchErrorMessage:", fetchError?.message);
-
-      if (postDetails) {
-        console.log("🗑️ - Post owner ID:", postDetails.userid);
-        console.log("🗑️ - Post circle ID:", postDetails.circleid);
-        console.log("🗑️ - Post content length:", postDetails.content?.length);
-        console.log("🗑️ - Post creation date:", postDetails.creationdate);
-
-        if (postDetails.circles) {
-          console.log("🗑️ - Circle name:", postDetails.circles.name);
-          console.log("🗑️ - Circle creator:", postDetails.circles.creator);
-          console.log("🗑️ - Circle admins:", postDetails.circles.circle_admins);
-        }
-      }
 
       if (fetchError || !postDetails) {
         console.error("🗑️ STEP 2 FAILED: Post not found or fetch error");
@@ -3192,10 +2890,6 @@ export const DatabaseService = {
         };
       }
 
-      console.log("🗑️ STEP 2 PASSED: Post details fetched successfully");
-
-      console.log("🗑️ STEP 3: Checking permissions...");
-
       let hasPermission = false;
       let permissionReason = "none";
 
@@ -3203,20 +2897,14 @@ export const DatabaseService = {
       if (postDetails.userid === currentUser.user.id) {
         hasPermission = true;
         permissionReason = "post_owner";
-        console.log("🗑️ - Permission granted: User is post owner");
       }
 
       // Check circle permissions if post is in a circle
       if (!hasPermission && postDetails.circleid && postDetails.circles) {
-        console.log("🗑️ - Checking circle permissions...");
-        console.log("🗑️ - Circle creator:", postDetails.circles.creator);
-        console.log("🗑️ - Current user:", currentUser.user.id);
-
         // Check if user is circle creator
         if (postDetails.circles.creator === currentUser.user.id) {
           hasPermission = true;
           permissionReason = "circle_creator";
-          console.log("🗑️ - Permission granted: User is circle creator");
         }
 
         // Check if user is circle admin
@@ -3227,14 +2915,9 @@ export const DatabaseService = {
           if (isAdmin) {
             hasPermission = true;
             permissionReason = "circle_admin";
-            console.log("🗑️ - Permission granted: User is circle admin");
           }
         }
       }
-
-      console.log("🗑️ STEP 3 RESULT: Permission check completed");
-      console.log("🗑️ - hasPermission:", hasPermission);
-      console.log("🗑️ - permissionReason:", permissionReason);
 
       if (!hasPermission) {
         console.error("🗑️ STEP 3 FAILED: Permission denied");
@@ -3248,39 +2931,12 @@ export const DatabaseService = {
         };
       }
 
-      console.log("🗑️ STEP 3 PASSED: Permission check successful");
-
-      console.log("🗑️ STEP 4: Attempting to delete post...");
-      console.log("🗑️ - Post ID to delete:", postId);
-      console.log(
-        "🗑️ - Using RLS with authenticated user:",
-        currentUser.user.id
-      );
-
       // Perform the delete
       const { data, error } = await supabase
         .from("posts")
         .delete()
         .eq("id", postId)
         .select("*");
-
-      console.log("🗑️ STEP 4 RESULT: Delete operation completed");
-      console.log("🗑️ - hasData:", !!data);
-      console.log("🗑️ - dataLength:", data?.length || 0);
-      console.log("🗑️ - hasError:", !!error);
-      console.log("🗑️ - errorCode:", error?.code);
-      console.log("🗑️ - errorMessage:", error?.message);
-      console.log("🗑️ - errorDetails:", error?.details);
-      console.log("🗑️ - errorHint:", error?.hint);
-
-      if (data && data.length > 0) {
-        console.log("🗑️ - Deleted post details:", {
-          id: data[0].id,
-          content: data[0].content?.substring(0, 50) + "...",
-          userid: data[0].userid,
-          circleid: data[0].circleid,
-        });
-      }
 
       if (error) {
         console.error("🗑️ STEP 4 FAILED: Delete operation failed");
@@ -3309,15 +2965,6 @@ export const DatabaseService = {
           error: new Error("Post not found or already deleted"),
         };
       }
-
-      console.log("🗑️ STEP 4 PASSED: Delete operation successful");
-      console.log(
-        "🗑️ ═══════════════════════════════════════════════════════════"
-      );
-      console.log("🗑️ DELETE POST FUNCTION COMPLETED SUCCESSFULLY");
-      console.log(
-        "🗑️ ═══════════════════════════════════════════════════════════"
-      );
 
       return { data: { success: true, deletedPost: data[0] }, error: null };
     } catch (error) {
