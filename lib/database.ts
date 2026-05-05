@@ -6,6 +6,7 @@ import type { User, Circle, Event, Post, Interest } from "@/types/database";
 export { UserService } from "./services/users";
 export { InterestService } from "./services/interests";
 export { NotificationService } from "./services/notifications";
+export { CircleService } from "./services/circles";
 
 // Export individual functions for easier importing
 export const getUser = (id: string) => DatabaseService.getUser(id);
@@ -181,6 +182,7 @@ export const getCirclesByUser = async (userId: string) => {
 import { UserService } from "./services/users";
 import { InterestService } from "./services/interests";
 import { NotificationService } from "./services/notifications";
+import { CircleService } from "./services/circles";
 
 export const DatabaseService = {
   // User operations — delegated to UserService
@@ -202,6 +204,31 @@ export const DatabaseService = {
   getUserNotifications: NotificationService.getUserNotifications,
   markNotificationAsRead: NotificationService.markNotificationAsRead,
   markAllNotificationsAsRead: NotificationService.markAllNotificationsAsRead,
+
+  // Circle operations — delegated to CircleService
+  getCircles: CircleService.getCircles,
+  getCircleInterests: CircleService.getCircleInterests,
+  getUserCircles: CircleService.getUserCircles,
+  createCircle: CircleService.createCircle,
+  updateCircle: CircleService.updateCircle,
+  updateCircleInterests: CircleService.updateCircleInterests,
+  joinCircle: CircleService.joinCircle,
+  leaveCircle: CircleService.leaveCircle,
+  requestToJoinCircle: CircleService.requestToJoinCircle,
+  getCircleJoinRequests: CircleService.getCircleJoinRequests,
+  getUserPendingRequestsBatch: CircleService.getUserPendingRequestsBatch,
+  getUserPendingRequest: CircleService.getUserPendingRequest,
+  handleJoinRequest: CircleService.handleJoinRequest,
+  deleteCircle: CircleService.deleteCircle,
+  getCircleMembers: CircleService.getCircleMembers,
+  addCircleAdmin: CircleService.addCircleAdmin,
+  removeCircleAdmin: CircleService.removeCircleAdmin,
+  removeMemberFromCircle: CircleService.removeMemberFromCircle,
+  getAdminCircleIds: CircleService.getAdminCircleIds,
+  isCircleAdmin: CircleService.isCircleAdmin,
+  getUserJoinedCircles: CircleService.getUserJoinedCircles,
+  getCircleMessages: CircleService.getCircleMessages,
+  sendMessage: CircleService.sendMessage,
 
   // Circle operations
   async getCircles() {
