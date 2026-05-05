@@ -7,6 +7,8 @@ export { UserService } from "./services/users";
 export { InterestService } from "./services/interests";
 export { NotificationService } from "./services/notifications";
 export { CircleService } from "./services/circles";
+export { PostService } from "./services/posts";
+export { EventService } from "./services/events";
 
 // Export individual functions for easier importing
 export const getUser = (id: string) => DatabaseService.getUser(id);
@@ -183,6 +185,8 @@ import { UserService } from "./services/users";
 import { InterestService } from "./services/interests";
 import { NotificationService } from "./services/notifications";
 import { CircleService } from "./services/circles";
+import { PostService } from "./services/posts";
+import { EventService } from "./services/events";
 
 export const DatabaseService = {
   // User operations — delegated to UserService
@@ -229,6 +233,34 @@ export const DatabaseService = {
   getUserJoinedCircles: CircleService.getUserJoinedCircles,
   getCircleMessages: CircleService.getCircleMessages,
   sendMessage: CircleService.sendMessage,
+
+  // Event operations — delegated to EventService
+  getEvents: EventService.getEvents,
+  getUserCircleIds: EventService.getUserCircleIds,
+  getEventsByCircle: EventService.getEventsByCircle,
+  createEvent: EventService.createEvent,
+  deleteEvent: EventService.deleteEvent,
+  updateEvent: EventService.updateEvent,
+  updateEventInterests: EventService.updateEventInterests,
+  getEvent: EventService.getEvent,
+  createEventRsvp: EventService.createEventRsvp,
+  updateEventRsvp: EventService.updateEventRsvp,
+  deleteEventRsvp: EventService.deleteEventRsvp,
+  getEventRsvp: EventService.getEventRsvp,
+  getEventRsvps: EventService.getEventRsvps,
+
+  // Post operations — delegated to PostService
+  getPosts: PostService.getPosts,
+  createPost: PostService.createPost,
+  getPost: PostService.getPost,
+  getHomePagePosts: PostService.getHomePagePosts,
+  updatePost: PostService.updatePost,
+  deletePost: PostService.deletePost,
+  likePost: PostService.likePost,
+  unlikePost: PostService.unlikePost,
+  createComment: PostService.createComment,
+  getPostComments: PostService.getPostComments,
+  deleteComment: PostService.deleteComment,
 
   // Circle operations
   async getCircles() {
