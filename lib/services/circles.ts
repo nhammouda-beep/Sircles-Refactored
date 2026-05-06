@@ -733,15 +733,12 @@ export const CircleService = {
     try {
       // Validate inputs
       if (!circleId) {
-        console.error("VALIDATION ERROR: circleId is required");
         return { data: null, error: new Error("Circle ID is required") };
       }
       if (!userId) {
-        console.error("VALIDATION ERROR: userId is required");
         return { data: null, error: new Error("User ID is required") };
       }
       if (!requestingAdminId) {
-        console.error("VALIDATION ERROR: requestingAdminId is required");
         return {
           data: null,
           error: new Error("Requesting admin ID is required"),
@@ -756,7 +753,6 @@ export const CircleService = {
         .single();
 
       if (circleError) {
-        console.error("STEP 1 FAILED: Error fetching circle:", circleError);
         return {
           data: null,
           error: new Error(`Failed to fetch circle: ${circleError.message}`),
@@ -764,7 +760,6 @@ export const CircleService = {
       }
 
       if (!circle) {
-        console.error("STEP 1 FAILED: Circle not found");
         return { data: null, error: new Error("Circle not found") };
       }
 
@@ -781,9 +776,6 @@ export const CircleService = {
           .single();
 
         if (adminError || !adminCheck) {
-          console.error(
-            "STEP 2A FAILED: Permission denied - requesting user is not an admin"
-          );
           return {
             data: null,
             error: new Error("Only circle admins can manage admin privileges"),
@@ -813,7 +805,6 @@ export const CircleService = {
         .select();
 
       if (error) {
-        console.error("STEP 4 FAILED: Error inserting circle admin:", error);
         return {
           data: null,
           error: new Error(`Failed to add admin: ${error.message}`),
@@ -822,17 +813,6 @@ export const CircleService = {
 
       return { data, error: null };
     } catch (error) {
-      console.error("=== DATABASE: UNEXPECTED ERROR in addCircleAdmin ===");
-      console.error("Caught error:", error);
-      console.error("Error type:", typeof error);
-      console.error(
-        "Error message:",
-        error instanceof Error ? error.message : String(error)
-      );
-      console.error(
-        "Error stack:",
-        error instanceof Error ? error.stack : "No stack"
-      );
       return { data: null, error: error as Error };
     }
   },
@@ -845,15 +825,12 @@ export const CircleService = {
     try {
       // Validate inputs
       if (!circleId) {
-        console.error("VALIDATION ERROR: circleId is required");
         return { data: null, error: new Error("Circle ID is required") };
       }
       if (!userId) {
-        console.error("VALIDATION ERROR: userId is required");
         return { data: null, error: new Error("User ID is required") };
       }
       if (!requestingAdminId) {
-        console.error("VALIDATION ERROR: requestingAdminId is required");
         return {
           data: null,
           error: new Error("Requesting admin ID is required"),
@@ -868,7 +845,6 @@ export const CircleService = {
         .single();
 
       if (circleError) {
-        console.error("STEP 1 FAILED: Error fetching circle:", circleError);
         return {
           data: null,
           error: new Error(`Failed to fetch circle: ${circleError.message}`),
@@ -876,13 +852,11 @@ export const CircleService = {
       }
 
       if (!circle) {
-        console.error("STEP 1 FAILED: Circle not found");
         return { data: null, error: new Error("Circle not found") };
       }
 
       // Cannot remove the main admin (creator)
       if (circle.creator === userId) {
-        console.error("STEP 2 FAILED: Cannot remove the main admin (creator)");
         return { data: null, error: new Error("Cannot remove the main admin") };
       }
 
@@ -899,9 +873,6 @@ export const CircleService = {
           .single();
 
         if (adminError || !adminCheck) {
-          console.error(
-            "STEP 3A FAILED: Permission denied - requesting user is not an admin"
-          );
           return {
             data: null,
             error: new Error("Only circle admins can manage admin privileges"),
@@ -917,7 +888,6 @@ export const CircleService = {
         .eq("userid", userId);
 
       if (error) {
-        console.error("STEP 4 FAILED: Error removing circle admin:", error);
         return {
           data: null,
           error: new Error(`Failed to remove admin: ${error.message}`),
@@ -926,17 +896,6 @@ export const CircleService = {
 
       return { data, error: null };
     } catch (error) {
-      console.error("=== DATABASE: UNEXPECTED ERROR in removeCircleAdmin ===");
-      console.error("Caught error:", error);
-      console.error("Error type:", typeof error);
-      console.error(
-        "Error message:",
-        error instanceof Error ? error.message : String(error)
-      );
-      console.error(
-        "Error stack:",
-        error instanceof Error ? error.stack : "No stack"
-      );
       return { data: null, error: error as Error };
     }
   },
@@ -955,7 +914,6 @@ export const CircleService = {
         .single();
 
       if (circleError) {
-        console.error("Error fetching circle for removeMember:", circleError);
         return {
           data: null,
           error: new Error(`Failed to fetch circle: ${circleError.message}`),
@@ -974,7 +932,6 @@ export const CircleService = {
           .single();
 
         if (adminError) {
-          console.error("Error checking admin status:", adminError);
           return {
             data: null,
             error: new Error(
@@ -984,7 +941,6 @@ export const CircleService = {
         }
 
         if (!adminCheck) {
-          console.error("User is not an admin and not the creator");
           return {
             data: null,
             error: new Error(
@@ -996,7 +952,6 @@ export const CircleService = {
 
       // Cannot remove the creator from their own circle
       if (circle?.creator === userId) {
-        console.error("Cannot remove the circle creator");
         return {
           data: null,
           error: new Error("Cannot remove the circle creator"),
@@ -1011,7 +966,6 @@ export const CircleService = {
         .eq("userid", userId);
 
       if (error) {
-        console.error("Error removing member from circle:", error);
         return {
           data: null,
           error: new Error(`Failed to remove member: ${error.message}`),

@@ -398,10 +398,6 @@ export const PostService = {
         await supabase.auth.getUser();
 
       if (!currentUser?.user || authError) {
-        console.error("🗑️ STEP 1 FAILED: Authentication failed");
-        console.error("🗑️ - Missing user object:", !currentUser?.user);
-        console.error("🗑️ - Has auth error:", !!authError);
-        console.error("🗑️ - Auth error details:", authError);
         return { data: null, error: new Error("Authentication required") };
       }
 
@@ -427,8 +423,6 @@ export const PostService = {
         .single();
 
       if (fetchError || !postDetails) {
-        console.error("🗑️ STEP 2 FAILED: Post not found or fetch error");
-        console.error("🗑️ - Error details:", fetchError);
         return {
           data: null,
           error: new Error(
@@ -467,11 +461,6 @@ export const PostService = {
       }
 
       if (!hasPermission) {
-        console.error("🗑️ STEP 3 FAILED: Permission denied");
-        console.error("🗑️ - User ID:", currentUser.user.id);
-        console.error("🗑️ - Post owner ID:", postDetails.userid);
-        console.error("🗑️ - Circle ID:", postDetails.circleid);
-        console.error("🗑️ - Circle creator:", postDetails.circles?.creator);
         return {
           data: null,
           error: new Error("You do not have permission to delete this post"),
@@ -486,11 +475,6 @@ export const PostService = {
         .select("*");
 
       if (error) {
-        console.error("🗑️ STEP 4 FAILED: Delete operation failed");
-        console.error(
-          "🗑️ - Full error object:",
-          JSON.stringify(error, null, 2)
-        );
         return {
           data: null,
           error: new Error(
@@ -500,13 +484,6 @@ export const PostService = {
       }
 
       if (!data || data.length === 0) {
-        console.error("🗑️ STEP 4 FAILED: No rows affected by delete");
-        console.error("🗑️ - This could indicate:");
-        console.error("🗑️   1. Post ID does not exist");
-        console.error("🗑️   2. RLS policy is blocking the delete");
-        console.error("🗑️   3. Post was already deleted");
-        console.error("🗑️ - Post ID attempted:", postId);
-        console.error("🗑️ - User ID:", currentUser.user.id);
         return {
           data: null,
           error: new Error("Post not found or already deleted"),
@@ -515,28 +492,6 @@ export const PostService = {
 
       return { data: { success: true, deletedPost: data[0] }, error: null };
     } catch (error) {
-      console.error(
-        "🗑️ ═══════════════════════════════════════════════════════════"
-      );
-      console.error("🗑️ DELETE POST FUNCTION FAILED WITH EXCEPTION");
-      console.error(
-        "🗑️ ═══════════════════════════════════════════════════════════"
-      );
-      console.error("🗑️ EXCEPTION DETAILS:");
-      console.error("🗑️ - Error type:", typeof error);
-      console.error(
-        "🗑️ - Error message:",
-        error instanceof Error ? error.message : String(error)
-      );
-      console.error(
-        "🗑️ - Error stack:",
-        error instanceof Error ? error.stack : "No stack trace"
-      );
-      console.error("🗑️ - Error object:", error);
-      console.error(
-        "🗑️ ═══════════════════════════════════════════════════════════"
-      );
-
       return {
         data: null,
         error: error instanceof Error ? error : new Error(String(error)),
@@ -701,12 +656,10 @@ export const PostService = {
         await supabase.auth.getUser();
 
       if (!currentUser?.user || authError) {
-        console.error("🗑️ Authentication failed:", authError);
         return { data: null, error: new Error("Authentication required") };
       }
 
       if (currentUser.user.id !== userId) {
-        console.error("🗑️ User ID mismatch");
         return { data: null, error: new Error("Authentication mismatch") };
       }
 
@@ -733,7 +686,6 @@ export const PostService = {
         .single();
 
       if (fetchError || !commentData) {
-        console.error("🗑️ Comment not found:", fetchError);
         return { data: null, error: new Error("Comment not found") };
       }
 
@@ -764,7 +716,6 @@ export const PostService = {
       }
 
       if (!hasPermission) {
-        console.error("🗑️ Permission denied");
         return {
           data: null,
           error: new Error("You do not have permission to delete this comment"),
@@ -779,7 +730,6 @@ export const PostService = {
         .select("*");
 
       if (error) {
-        console.error("🗑️ Delete failed:", error);
         return {
           data: null,
           error: new Error(`Failed to delete comment: ${error.message}`),
@@ -787,7 +737,6 @@ export const PostService = {
       }
 
       if (!data || data.length === 0) {
-        console.error("🗑️ No rows affected");
         return {
           data: null,
           error: new Error("Comment not found or already deleted"),
@@ -796,7 +745,6 @@ export const PostService = {
 
       return { data: { success: true, deletedComment: data[0] }, error: null };
     } catch (error) {
-      console.error("🗑️ Unexpected error:", error);
       return {
         data: null,
         error: error instanceof Error ? error : new Error(String(error)),

@@ -282,7 +282,6 @@ export const EventService = {
       // Check authentication
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) {
-        console.error("🗑️ DELETE EVENT: No authenticated user");
         return { data: null, error: new Error("Authentication required") };
       }
 
@@ -294,7 +293,6 @@ export const EventService = {
         .single();
 
       if (fetchError || !eventData) {
-        console.error("🗑️ DELETE EVENT: Event not found:", fetchError);
         return { data: null, error: new Error("Event not found") };
       }
 
@@ -335,7 +333,6 @@ export const EventService = {
       }
 
       if (!hasPermission) {
-        console.error("🗑️ DELETE EVENT: Permission denied");
         return {
           data: null,
           error: new Error("You do not have permission to delete this event"),
@@ -350,20 +347,15 @@ export const EventService = {
         .select();
 
       if (error) {
-        console.error("🗑️ DELETE EVENT FAILED:", error);
         return { data: null, error };
       }
 
       if (!data || data.length === 0) {
-        console.error(
-          "🗑️ DELETE EVENT: No rows affected - event may not exist"
-        );
         return { data: null, error: new Error("Event not found") };
       }
 
       return { data: data[0], error: null };
     } catch (error) {
-      console.error("🗑️ DELETE EVENT CATCH:", error);
       return {
         data: null,
         error: error instanceof Error ? error : new Error(String(error)),
