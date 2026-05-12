@@ -172,6 +172,32 @@ export const AppTexts = {
     circleSnoozed: 'Circle Snoozed',
     undone: 'Undone',
     circlePreferenceUndone: 'Circle preference has been undone',
+
+    // Notifications
+    all: 'All',
+    unread: 'Unread',
+    noNotifications: 'No notifications yet',
+    noUnreadNotifications: 'No unread notifications',
+    notificationsWillAppear: 'Notifications will appear here when you have updates',
+
+    // Admin / Circles
+    joinRequests: 'Join Requests',
+    leaveCircle: 'Leave Circle',
+
+    // Setup password
+    setupPassword: 'Set up your password',
+    setupPasswordSubtitle: 'Create a secure password for your account',
+    enterEmail: 'Enter your email',
+    enterPassword: 'Enter your password',
+    confirmPasswordPlaceholder: 'Confirm your password',
+    passwordRequirements: 'Password requirements',
+    minLength: 'At least 8 characters',
+    uppercase: 'At least one uppercase letter',
+    lowercase: 'At least one lowercase letter',
+    number: 'At least one number',
+    special: 'At least one special character',
+    settingUp: 'Setting up...',
+    setupAccount: 'Set up account',
   },
 
   ar: {
@@ -324,6 +350,32 @@ export const AppTexts = {
     justNow: 'الآن',
 
     retry: 'إعادة المحاولة',
+
+    // Notifications
+    all: 'الكل',
+    unread: 'غير مقروءة',
+    noNotifications: 'لا توجد إشعارات بعد',
+    noUnreadNotifications: 'لا توجد إشعارات غير مقروءة',
+    notificationsWillAppear: 'ستظهر الإشعارات هنا عند وجود تحديثات',
+
+    // Admin / Circles
+    joinRequests: 'طلبات الانضمام',
+    leaveCircle: 'مغادرة الدائرة',
+
+    // Setup password
+    setupPassword: 'قم بإعداد كلمة المرور',
+    setupPasswordSubtitle: 'أنشئ كلمة مرور آمنة لحسابك',
+    enterEmail: 'أدخل بريدك الإلكتروني',
+    enterPassword: 'أدخل كلمة المرور',
+    confirmPasswordPlaceholder: 'أعد إدخال كلمة المرور',
+    passwordRequirements: 'متطلبات كلمة المرور',
+    minLength: 'على الأقل 8 أحرف',
+    uppercase: 'حرف كبير واحد على الأقل',
+    lowercase: 'حرف صغير واحد على الأقل',
+    number: 'رقم واحد على الأقل',
+    special: 'رمز خاص واحد على الأقل',
+    settingUp: 'جارٍ الإعداد...',
+    setupAccount: 'إعداد الحساب',
 
     // Admin
     adminDashboard: 'لوحة تحكم الإدارة',

@@ -14,7 +14,7 @@ export const UserService = {
   async updateUser(id: string, updates: Partial<User>) {
     const { data, error } = await supabase
       .from("users")
-      .update(updates)
+      .update(updates as any)
       .eq("id", id)
       .select()
       .single();

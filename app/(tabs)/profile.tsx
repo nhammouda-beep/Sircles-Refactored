@@ -176,7 +176,7 @@ export default function ProfileScreen() {
 
       await DatabaseService.updateUserAvatar(user.id, raw);
       setAvatarUrl(view);
-      if (updateUserProfile) await updateUserProfile({ avatar: raw });
+      if (updateUserProfile) await updateUserProfile({ avatar_url: raw });
 
       Alert.alert("Success", "Avatar updated successfully");
     } catch (e: any) {
@@ -198,12 +198,12 @@ export default function ProfileScreen() {
       checkExistingAvatar();
     }
     fetchAvailableInterests();
-  }, [user?.id, userProfile?.avatar]);
+  }, [user?.id, userProfile?.avatar_url]);
 
   const checkExistingAvatar = async () => {
     if (!user?.id) return;
-    if (userProfile?.avatar) {
-      setAvatarUrl(`${userProfile.avatar}?t=${Date.now()}`);
+    if (userProfile?.avatar_url) {
+      setAvatarUrl(`${userProfile.avatar_url}?t=${Date.now()}`);
       return;
     }
     const { exists, extension } = await StorageService.checkAvatarExists(
@@ -339,9 +339,9 @@ export default function ProfileScreen() {
             style={styles.avatarWrap}
           >
             <View style={styles.avatarGreen}>
-              {avatarUrl || userProfile?.avatar ? (
+              {avatarUrl || userProfile?.avatar_url ? (
                 <Image
-                  source={{ uri: avatarUrl || userProfile?.avatar }}
+                  source={{ uri: avatarUrl || userProfile?.avatar_url || undefined }}
                   style={styles.avatarImg}
                 />
               ) : (

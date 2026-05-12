@@ -45,7 +45,7 @@ export const StorageService = {
               "Blob is empty - asset may not have been processed correctly"
             );
           }
-        } catch (fetchError) {
+        } catch (fetchError: any) {
           console.error("Error processing asset - FULL DETAILS:", {
             error: fetchError,
             message: fetchError?.message,
@@ -90,7 +90,7 @@ export const StorageService = {
       if (error) {
         console.error("Supabase upload error details:", {
           message: error.message,
-          statusCode: error.statusCode,
+          statusCode: (error as any).statusCode,
           error: error,
         });
         return { data: null, error };
@@ -118,7 +118,7 @@ export const StorageService = {
         },
         error: null,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("=== STORAGE SERVICE ERROR - FULL DETAILS ===");
       console.error("Error object:", error);
       console.error("Error message:", error?.message);
@@ -233,7 +233,7 @@ export const StorageService = {
               "Blob is empty - asset may not have been processed correctly"
             );
           }
-        } catch (fetchError) {
+        } catch (fetchError: any) {
           console.error("Error processing asset - FULL DETAILS:", {
             error: fetchError,
             message: fetchError?.message,
@@ -278,7 +278,7 @@ export const StorageService = {
       if (error) {
         console.error("Supabase upload error details:", {
           message: error.message,
-          statusCode: error.statusCode,
+          statusCode: (error as any).statusCode,
           error: error,
         });
         return { data: null, error };
@@ -475,7 +475,7 @@ export const StorageService = {
               "Blob is empty - asset may not have been processed correctly"
             );
           }
-        } catch (fetchError) {
+        } catch (fetchError: any) {
           console.error("Error processing asset - FULL DETAILS:", {
             error: fetchError,
             message: fetchError?.message,
@@ -528,7 +528,7 @@ export const StorageService = {
       if (error) {
         console.error("Supabase upload error details:", {
           message: error.message,
-          statusCode: error.statusCode,
+          statusCode: (error as any).statusCode,
           error: error,
         });
         return { data: null, error };
@@ -666,7 +666,7 @@ export const StorageService = {
               "Blob is empty - asset may not have been processed correctly"
             );
           }
-        } catch (fetchError) {
+        } catch (fetchError: any) {
           // (Error handling code...)
           console.error("Error processing asset - FULL DETAILS:", {
             error: fetchError,
@@ -721,7 +721,7 @@ export const StorageService = {
       if (error) {
         console.error("Supabase upload error details:", {
           message: error.message,
-          statusCode: error.statusCode,
+          statusCode: (error as any).statusCode,
           error: error,
         });
         return { data: null, error };

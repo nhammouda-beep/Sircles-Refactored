@@ -248,7 +248,7 @@ export default function NotificationsScreen() {
               </ThemedText>
 
               {isRead ? (
-                <View className="read-pill" style={styles.readPill} />
+                <View style={styles.readPill} />
               ) : (
                 <View
                   style={[styles.unreadDot, { backgroundColor: baseGreen }]}
@@ -279,7 +279,7 @@ export default function NotificationsScreen() {
       </View>
 
       {/* Tabs: All / Unread */}
-      <View className="tabs" style={styles.tabsContainer}>
+      <View style={styles.tabsContainer}>
         <TouchableOpacity onPress={() => setFilter("all")}>
           <ThemedText
             style={[styles.tabText, filter === "all" && styles.activeTabText]}

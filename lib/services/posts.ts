@@ -71,6 +71,7 @@ export const PostService = {
       // Calculate comments count for each post
       const commentsCountMap =
         commentsCount?.reduce((acc, comment) => {
+          if (!comment.postid) return acc;
           acc[comment.postid] = (acc[comment.postid] || 0) + 1;
           return acc;
         }, {} as Record<string, number>) || {};
@@ -317,6 +318,7 @@ export const PostService = {
         // Calculate comments count for each post
         const commentsCountMap =
           commentsCount?.reduce((acc, comment) => {
+            if (!comment.postid) return acc;
             acc[comment.postid] = (acc[comment.postid] || 0) + 1;
             return acc;
           }, {} as Record<string, number>) || {};
@@ -621,7 +623,13 @@ export const PostService = {
       }
 
       // Get user info for each comment
-      const userIds = [...new Set(data.map((comment) => comment.userid))];
+      const userIds = [
+        ...new Set(
+          data
+            .map((comment) => comment.userid)
+            .filter((id): id is string => !!id)
+        ),
+      ];
       const { data: users } = await supabase
         .from("users")
         .select("id, name, avatar_url")
@@ -636,7 +644,7 @@ export const PostService = {
       // Transform the response to match expected format
       const transformedData = data.map((comment) => ({
         ...comment,
-        author: userMap[comment.userid] || {
+        author: (comment.userid && userMap[comment.userid]) || {
           name: "Unknown User",
           avatar_url: null,
         },

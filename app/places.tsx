@@ -211,7 +211,7 @@ export default function PlacesScreen() {
                   <View style={styles.locationContainer}>
                     <IconSymbol name="location" size={16} color={textColor + '80'} />
                     <ThemedText style={styles.locationText}>
-                      {place.location.address || place.location.city || 'Location available'}
+                      {place.location || 'Location available'}
                     </ThemedText>
                   </View>
                 )}

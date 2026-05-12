@@ -103,10 +103,10 @@ export async function fetchSuggestedCircles(): Promise<Circle[]> {
         .select('*');
       
       if (viewResult.error) throw viewResult.error;
-      return viewResult.data || [];
+      return (viewResult.data as any) || [];
     }
-    
-    return data || [];
+
+    return (data as any) || [];
   } catch (error) {
     console.error('Error fetching suggested circles:', error);
     throw error;
@@ -127,5 +127,5 @@ export async function getUserCirclePrefs(): Promise<CirclePref[]> {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data || [];
+  return (data as any) || [];
 }

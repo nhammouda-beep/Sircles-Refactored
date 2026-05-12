@@ -308,7 +308,7 @@ export default function CircleScreen() {
           Alert.alert("Error", "Invalid image selected");
           return;
         }
-        setEditingEvent((prev) =>
+        setEditingEvent((prev: any) =>
           prev
             ? { ...prev, photo_url: asset.uri, _selectedImageAsset: asset }
             : null
@@ -321,7 +321,7 @@ export default function CircleScreen() {
 
   const handleEventRsvp = async (
     eventId: string,
-    status: "going" | "maybe" | "no_going"
+    status: "going" | "maybe" | "not_going"
   ) => {
     if (!user) return;
     try {
@@ -419,7 +419,7 @@ export default function CircleScreen() {
         interests,
         creator: currentCircle.creator || currentCircle.createdby,
         hasPendingRequest: hasPendingRequestLocal,
-      };
+      } as Circle;
 
       setCircle(updatedCircle);
       setHasPendingRequest(hasPendingRequestLocal);
@@ -428,14 +428,14 @@ export default function CircleScreen() {
         const { data: postsData } = await DatabaseService.getPosts(
           circleId as string
         );
-        setPosts(postsData || []);
+        setPosts((postsData as any) || []);
       }
 
       if (isJoined || currentCircle.privacy === "public") {
         const { data: membersData } = await DatabaseService.getCircleMembers(
           circleId as string
         );
-        setMembers(membersData || []);
+        setMembers((membersData as any) || []);
       } else {
         setMembers([]);
       }
@@ -443,7 +443,7 @@ export default function CircleScreen() {
       if (isAdmin) {
         const { data: requestsData } =
           await DatabaseService.getCircleJoinRequests(circleId as string);
-        setJoinRequests(requestsData || []);
+        setJoinRequests((requestsData as any) || []);
       }
     } catch {
       Alert.alert("Error", "Failed to load circle data");
@@ -647,7 +647,7 @@ export default function CircleScreen() {
           { text: "Cancel", style: "cancel" },
           {
             text: "Send Request",
-            onPress: async (message) => {
+            onPress: async (message?: string) => {
               try {
                 const { error } = await DatabaseService.requestToJoinCircle(
                   user.id,
@@ -761,8 +761,10 @@ export default function CircleScreen() {
     setEditedCircle({
       name: circle.name || "",
       description: circle.description || "",
-      privacy: circle.privacy || "public",
+      privacy: (circle.privacy as "public" | "private") || "public",
       interests: currentInterestIds,
+      circle_profile_url: circle.circle_profile_url || undefined,
+      _selectedImageAsset: undefined,
     });
     await loadCircleInterests();
     setShowEditModal(true);
@@ -886,7 +888,7 @@ export default function CircleScreen() {
       const { data: postsData } = await DatabaseService.getPosts(
         circleId as string
       );
-      setPosts(postsData || []);
+      setPosts((postsData as any) || []);
     } catch {
       Alert.alert("Error", "Failed to load posts.");
     } finally {
@@ -1006,6 +1008,7 @@ export default function CircleScreen() {
   const handleUpdatePost = async () => {
     if (!editPostId || !editPostContent.trim()) return;
     try {
+      if (!user?.id) return;
       setLoading(true);
       const { error } = await DatabaseService.updatePost(
         editPostId,
@@ -1991,19 +1994,19 @@ export default function CircleScreen() {
                           styles.eventRsvpButton,
                           {
                             backgroundColor:
-                              item.user_rsvp?.[0]?.status === "no_going"
+                              item.user_rsvp?.[0]?.status === "not_going"
                                 ? PALETTE.danger
                                 : backgroundColor,
                             borderColor: PALETTE.danger,
                           },
                         ]}
-                        onPress={() => handleEventRsvp(item.id, "no_going")}
+                        onPress={() => handleEventRsvp(item.id, "not_going")}
                       >
                         <IconSymbol
                           name="xmark.circle.fill"
                           size={14}
                           color={
-                            item.user_rsvp?.[0]?.status === "no_going"
+                            item.user_rsvp?.[0]?.status === "not_going"
                               ? "#fff"
                               : PALETTE.danger
                           }
@@ -2013,7 +2016,7 @@ export default function CircleScreen() {
                             styles.eventRsvpButtonText,
                             {
                               color:
-                                item.user_rsvp?.[0]?.status === "no_going"
+                                item.user_rsvp?.[0]?.status === "not_going"
                                   ? "#fff"
                                   : PALETTE.danger,
                             },
@@ -2255,7 +2258,7 @@ export default function CircleScreen() {
                     }}
                   >
                     File size:{" "}
-                    {(selectedPostImage.fileSize / 1024 / 1024).toFixed(2)} MB
+                    {((selectedPostImage.fileSize || 0) / 1024 / 1024).toFixed(2)} MB
                   </ThemedText>
                 )}
               </View>

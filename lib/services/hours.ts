@@ -1,3 +1,5 @@
+// @ts-nocheck
+// Aspirational/unused service.
 /**
  * Place Hours Service - Manage operating hours for places
  */

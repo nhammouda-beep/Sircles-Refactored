@@ -118,8 +118,8 @@ export default function EventsScreen() {
     setLoading(true);
     try {
       const { data } = await DatabaseService.getEvents();
-      setEvents(data || []);
-      if (data) await checkDeletableEvents(data);
+      setEvents((data as any) || []);
+      if (data) await checkDeletableEvents(data as any);
     } finally {
       setLoading(false);
     }

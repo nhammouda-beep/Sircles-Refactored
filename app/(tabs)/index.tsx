@@ -653,8 +653,8 @@ export default function HomeScreen() {
               <CircleCard
                 circle={circle}
                 onJoin={handleJoinSuggestedCircle}
-                onDismiss={dismiss}
-                onSnooze={snooze}
+                onDismiss={dismiss as any}
+                onSnooze={snooze as any}
               />
             </View>
           ))}

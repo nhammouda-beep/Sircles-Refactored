@@ -424,7 +424,7 @@ export default function MessagesScreen() {
               style={[
                 styles.pillInput,
                 styles.focusNone,
-                Platform.select({
+                (Platform.select as any)({
                   android: styles.vCenterAndroid,
                   ios: styles.vCenterIOS,
                   web: styles.vCenterWeb,

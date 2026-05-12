@@ -1,0 +1,61 @@
+Sircles - Load Testing & Scalability Notes
+============================================
+Date: 2026-04-29
+
+
+Q: Is there any AI tool that can automate testing for 1000 users to check
+   if the app can perform well with a big number of users?
+
+A: Yes. The best approach is to load test the backend (Supabase), not the
+   frontend. The frontend is static files served by Vercel, which handles
+   millions of requests easily. The bottleneck is the database/API layer.
+
+
+What matters for 1000 users
+-----------------------------
+- Frontend (web files): Handled by Vercel — no concern.
+- Database/API (Supabase): This is the bottleneck — connection limits,
+  query speed, and row-level security overhead.
+
+
+Recommended tool: k6 (free, by Grafana)
+------------------------------------------
+k6 can simulate thousands of users hitting Supabase APIs simultaneously.
+A load test script would:
+  - Simulate users logging in
+  - Fetch posts, events, circles
+  - Like posts, create RSVPs
+  - Measure response times and error rates
+
+Website: https://k6.io
+Install: npm install -g k6 (or download from website)
+Usage: k6 run load-test.js
+
+
+Other tools available
+-----------------------
+- Artillery (Node-based, easy to script)
+- Locust (Python-based, good UI dashboard)
+- Apache JMeter (older, powerful, Java-based)
+
+
+Supabase plan limits (important!)
+-----------------------------------
+  Plan              Max connections    Good for
+  ----              ---------------    --------
+  Free              ~60 connections    ~50-100 users
+  Pro ($25/mo)      ~200 connections   ~500-1000 users
+  Team/Enterprise   Custom             1000+ users
+
+If on the free tier, 1000 concurrent users will hit the connection limit
+before anything else. Upgrading the Supabase plan is required for large-
+scale testing.
+
+
+Next steps
+------------
+1. Check current Supabase plan
+2. Set up k6 load test script targeting Supabase endpoints
+3. Run with increasing user counts (50 -> 100 -> 500 -> 1000)
+4. Monitor response times, error rates, and connection limits
+5. Optimize queries or upgrade plan based on results

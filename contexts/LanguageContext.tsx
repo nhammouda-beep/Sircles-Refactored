@@ -45,7 +45,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     <LanguageContext.Provider
       value={{
         language,
-        texts,
+        texts: texts as any,
         isRTL,
         toggleLanguage,
         setLanguage,

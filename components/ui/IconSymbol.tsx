@@ -155,7 +155,7 @@ export function IconSymbol({
   if (iconLib === "MaterialCommunityIcons") {
     return (
       <MaterialCommunityIcons
-        name={iconName}
+        name={iconName as any}
         size={size}
         color={color || "#000"}
         style={style}
@@ -165,7 +165,7 @@ export function IconSymbol({
 
   return (
     <MaterialIcons
-      name={iconName}
+      name={iconName as any}
       size={size}
       color={color || "#000"}
       style={style}

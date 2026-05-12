@@ -1,7 +1,37 @@
-// src/types.ts
-// ===== Helpers =====
-// type Maybe<T> = T | null | undefined;
+// Domain types — aligned with the database schema (snake_case)
+// For full DB schema types, see types/supabase.ts (auto-generated)
+import type { Database } from "./supabase";
 
+// ===== Re-exports from generated DB schema (Place, Booking, Blackout, etc.) =====
+export type Place = Database["public"]["Tables"]["places"]["Row"];
+export type CreatePlaceInput = Database["public"]["Tables"]["places"]["Insert"];
+export type UpdatePlaceInput = Database["public"]["Tables"]["places"]["Update"];
+
+export type Booking = Database["public"]["Tables"]["bookings"]["Row"];
+export type CreateBookingInput = Database["public"]["Tables"]["bookings"]["Insert"];
+export type UpdateBookingInput = Database["public"]["Tables"]["bookings"]["Update"];
+export type BookingFilter = {
+  user_id?: string;
+  place_id?: string;
+  space_id?: string; // alias for place_id (legacy)
+  status?: string;
+  from?: string;
+  to?: string;
+  date_from?: string;
+  date_to?: string;
+};
+export type AvailableSlot = {
+  slot_start: string;
+  slot_end: string;
+};
+
+export type Blackout = Database["public"]["Tables"]["blackouts"]["Row"];
+export type CreateBlackoutInput = Database["public"]["Tables"]["blackouts"]["Insert"];
+
+export type PlaceHours = Database["public"]["Tables"]["place_hours"]["Row"];
+export type CreatePlaceHoursInput = Database["public"]["Tables"]["place_hours"]["Insert"];
+
+// ===== Helpers =====
 const toBool = (v: any) =>
   v === true || v === "true"
     ? true
@@ -10,14 +40,14 @@ const toBool = (v: any) =>
     : !!v;
 
 // ===== Users =====
-export interface UserRow {
+export interface User {
   id: string;
   name?: string | null;
   email?: string | null;
   dob?: string | null;
   gender?: string | null;
   language?: string | null;
-  avatar?: string | null;
+  avatar_url?: string | null;
   phone?: string | null;
   address_apartment?: string | null;
   address_building?: string | null;
@@ -27,105 +57,34 @@ export interface UserRow {
   first_login?: boolean | null;
 }
 
-export interface User {
-  id: string;
-  name?: string;
-  email?: string;
-  dob?: string;
-  gender?: string;
-  language?: string;
-  avatar?: string;
-  phone?: string;
-  addressApartment?: string;
-  addressBuilding?: string;
-  addressBlock?: string;
-  role?: string;
-  creationDate?: string;
-  firstLogin?: boolean | null;
-}
-
-export const fromDbUser = (r: UserRow): User => ({
-  id: r.id,
-  name: r.name ?? undefined,
-  email: r.email ?? undefined,
-  dob: r.dob ?? undefined,
-  gender: r.gender ?? undefined,
-  language: r.language ?? undefined,
-  avatar: r.avatar ?? undefined,
-  phone: r.phone ?? undefined,
-  addressApartment: r.address_apartment ?? undefined,
-  addressBuilding: r.address_building ?? undefined,
-  addressBlock: r.address_block ?? undefined,
-  role: r.role ?? undefined,
-  creationDate: r.creationdate ?? undefined,
-  firstLogin: r.first_login ?? null,
-});
-
-export const toDbUser = (u: Partial<User>): Partial<UserRow> => ({
-  id: u.id!,
-  name: u.name,
-  email: u.email,
-  dob: u.dob,
-  gender: u.gender,
-  language: u.language,
-  avatar: u.avatar,
-  phone: u.phone,
-  address_apartment: u.addressApartment,
-  address_building: u.addressBuilding,
-  address_block: u.addressBlock,
-  role: u.role,
-});
+// Legacy alias for backward compatibility
+export type UserRow = User;
 
 // ===== Interests =====
-export interface InterestRow {
-  id: string;
-  title: string;
-  category: string;
-  creationdate?: string | null;
-}
 export interface Interest {
   id: string;
   title: string;
   category: string;
-  creationDate?: string;
+  creationdate?: string | null;
 }
-export const fromDbInterest = (r: InterestRow): Interest => ({
-  id: r.id,
-  title: r.title,
-  category: r.category,
-  creationDate: r.creationdate ?? undefined,
-});
+export type InterestRow = Interest;
 
 // ===== Circles =====
-export interface CircleRow {
+export interface Circle {
   id: string;
   name?: string | null;
   description?: string | null;
-  privacy?: "public" | "private" | string | null;
+  privacy?: string | null;
   creationdate?: string | null;
   circle_profile_url?: string | null;
-}
-export interface Circle {
-  id: string;
-  name?: string;
-  description?: string;
-  privacy?: string;
-  creationDate?: string;
-  circle_profile_url?: string;
-  // optional helper scores in app state
+  creator?: string | null;
+  member_count?: number | null;
   score?: number;
 }
-export const fromDbCircle = (r: CircleRow): Circle => ({
-  id: r.id,
-  name: r.name ?? undefined,
-  description: r.description ?? undefined,
-  privacy: r.privacy ?? undefined,
-  creationDate: r.creationdate ?? undefined,
-  circle_profile_url: r.circle_profile_url ?? undefined,
-});
+export type CircleRow = Circle;
 
 // ===== Events =====
-export interface EventRow {
+export interface Event {
   id: string;
   title?: string | null;
   date?: string | null;
@@ -139,91 +98,24 @@ export interface EventRow {
   creationdate?: string | null;
   photo_url?: string | null;
 }
-export interface Event {
-  id: string;
-  title?: string;
-  date?: string;
-  time?: string;
-  location?: string;
-  location_url?: string;
-  circleId?: string;
-  visibility?: string;
-  description?: string;
-  createdBy?: string;
-  creationDate?: string;
-  photo_url?: string;
-}
-export const fromDbEvent = (r: EventRow): Event => ({
-  id: r.id,
-  title: r.title ?? undefined,
-  date: r.date ?? undefined,
-  time: r.time ?? undefined,
-  location: r.location ?? undefined,
-  location_url: r.location_url ?? undefined,
-  circleId: r.circleid ?? undefined,
-  visibility: r.visibility ?? undefined,
-  description: r.description ?? undefined,
-  createdBy: r.createdby ?? undefined,
-  creationDate: r.creationdate ?? undefined,
-  photo_url: r.photo_url ?? undefined,
-});
-export const toDbEvent = (e: Partial<Event>): Partial<EventRow> => ({
-  id: e.id!,
-  title: e.title,
-  date: e.date,
-  time: e.time,
-  location: e.location,
-  location_url: e.location_url,
-  circleid: e.circleId,
-  visibility: e.visibility,
-  description: e.description,
-  createdby: e.createdBy,
-});
+export type EventRow = Event;
 
 // ===== Posts =====
-export interface PostRow {
+export interface Post {
   id: string;
   userid?: string | null;
   content?: string | null;
   image?: string | null;
   circleid?: string | null;
-  createdat?: string | null; // لو موجود
-  creationdate?: string | null; // أو ده
-  comments_count?: number | null;
-  likes_count?: number | null;
-}
-export interface Post {
-  id: string;
-  userId?: string;
-  content?: string;
-  image?: string;
-  circleId?: string;
-  createdAt?: string;
-  creationDate?: string;
+  createdat?: string | null;
+  creationdate?: string | null;
   comments_count?: number;
   likes_count?: number;
 }
-export const fromDbPost = (r: PostRow): Post => ({
-  id: r.id,
-  userId: r.userid ?? undefined,
-  content: r.content ?? undefined,
-  image: r.image ?? undefined,
-  circleId: r.circleid ?? undefined,
-  createdAt: r.createdat ?? undefined,
-  creationDate: r.creationdate ?? undefined,
-  comments_count: r.comments_count ?? undefined,
-  likes_count: r.likes_count ?? undefined,
-});
-export const toDbPost = (p: Partial<Post>): Partial<PostRow> => ({
-  id: p.id!,
-  userid: p.userId,
-  content: p.content,
-  image: p.image,
-  circleid: p.circleId,
-});
+export type PostRow = Post;
 
 // ===== Comments =====
-export interface CommentRow {
+export interface Comment {
   id: string;
   postid?: string | null;
   userid?: string | null;
@@ -231,31 +123,10 @@ export interface CommentRow {
   timestamp?: string | null;
   creationdate?: string | null;
 }
-export interface Comment {
-  id: string;
-  postId?: string;
-  userId?: string;
-  text?: string;
-  timestamp?: string;
-  creationDate?: string;
-}
-export const fromDbComment = (r: CommentRow): Comment => ({
-  id: r.id,
-  postId: r.postid ?? undefined,
-  userId: r.userid ?? undefined,
-  text: r.text ?? undefined,
-  timestamp: r.timestamp ?? undefined,
-  creationDate: r.creationdate ?? undefined,
-});
-export const toDbComment = (c: Partial<Comment>): Partial<CommentRow> => ({
-  id: c.id!,
-  postid: c.postId,
-  userid: c.userId,
-  text: c.text,
-});
+export type CommentRow = Comment;
 
 // ===== Circle Messages =====
-export interface CircleMessageRow {
+export interface CircleMessage {
   id: string;
   circleid?: string | null;
   senderid?: string | null;
@@ -265,29 +136,10 @@ export interface CircleMessageRow {
   timestamp?: string | null;
   creationdate?: string | null;
 }
-export interface CircleMessage {
-  id: string;
-  circleId?: string;
-  senderId?: string;
-  content?: string;
-  type?: string;
-  attachment?: string;
-  timestamp?: string;
-  creationDate?: string;
-}
-export const fromDbCircleMessage = (r: CircleMessageRow): CircleMessage => ({
-  id: r.id,
-  circleId: r.circleid ?? undefined,
-  senderId: r.senderid ?? undefined,
-  content: r.content ?? undefined,
-  type: r.type ?? undefined,
-  attachment: r.attachment ?? undefined,
-  timestamp: r.timestamp ?? undefined,
-  creationDate: r.creationdate ?? undefined,
-});
+export type CircleMessageRow = CircleMessage;
 
 // ===== Notifications =====
-export interface NotificationRow {
+export interface Notification {
   id: string;
   userid?: string | null;
   type?: string | null;
@@ -298,42 +150,10 @@ export interface NotificationRow {
   linkeditemtype?: string | null;
   creationdate?: string | null;
 }
-export interface Notification {
-  id: string;
-  userId?: string;
-  type?: string;
-  content?: string;
-  read?: boolean;
-  timestamp?: string;
-  linkedItemId?: string;
-  linkedItemType?: string;
-  creationDate?: string;
-}
-export const fromDbNotification = (r: NotificationRow): Notification => ({
-  id: r.id,
-  userId: r.userid ?? undefined,
-  type: r.type ?? undefined,
-  content: r.content ?? undefined,
-  read: toBool(r.read),
-  timestamp: r.timestamp ?? undefined,
-  linkedItemId: r.linkeditemid ?? undefined,
-  linkedItemType: r.linkeditemtype ?? undefined,
-  creationDate: r.creationdate ?? undefined,
-});
-export const toDbNotification = (
-  n: Partial<Notification>
-): Partial<NotificationRow> => ({
-  id: n.id!,
-  userid: n.userId,
-  type: n.type,
-  content: n.content,
-  read: n.read,
-  linkeditemid: n.linkedItemId,
-  linkeditemtype: n.linkedItemType,
-});
+export type NotificationRow = Notification;
 
 // ===== Reports =====
-export interface ReportRow {
+export interface Report {
   id: string;
   userid?: string | null;
   type?: string | null;
@@ -344,107 +164,42 @@ export interface ReportRow {
   timestamp?: string | null;
   creationdate?: string | null;
 }
-export interface Report {
-  id: string;
-  userId?: string;
-  type?: string;
-  targetId?: string;
-  message?: string;
-  status?: string;
-  adminResponse?: string;
-  timestamp?: string;
-  creationDate?: string;
-}
-export const fromDbReport = (r: ReportRow): Report => ({
-  id: r.id,
-  userId: r.userid ?? undefined,
-  type: r.type ?? undefined,
-  targetId: r.targetid ?? undefined,
-  message: r.message ?? undefined,
-  status: r.status ?? undefined,
-  adminResponse: r.adminresponse ?? undefined,
-  timestamp: r.timestamp ?? undefined,
-  creationDate: r.creationdate ?? undefined,
-});
+export type ReportRow = Report;
 
 // ===== Join tables =====
-export interface UserInterestRow {
+export interface UserInterest {
   userid: string;
   interestid: string;
 }
-export interface UserInterest {
-  userId: string;
-  interestId: string;
-}
-export const toDbUserInterest = (x: UserInterest): UserInterestRow => ({
-  userid: x.userId,
-  interestid: x.interestId,
-});
+export type UserInterestRow = UserInterest;
 
-export interface UserCircleRow {
+export interface UserCircle {
   userid: string;
   circleid: string;
   status?: string | null;
 }
-export interface UserCircle {
-  userId: string;
-  circleId: string;
-  status?: string;
-}
-export const toDbUserCircle = (x: UserCircle): UserCircleRow => ({
-  userid: x.userId,
-  circleid: x.circleId,
-  status: x.status ?? null,
-});
+export type UserCircleRow = UserCircle;
 
-export interface CircleInterestRow {
+export interface CircleInterest {
   circleid: string;
   interestid: string;
 }
-export interface CircleInterest {
-  circleId: string;
-  interestId: string;
-}
-export const toDbCircleInterest = (x: CircleInterest): CircleInterestRow => ({
-  circleid: x.circleId,
-  interestid: x.interestId,
-});
+export type CircleInterestRow = CircleInterest;
 
-export interface CircleAdminRow {
+export interface CircleAdmin {
   circleid: string;
   userid: string;
 }
-export interface CircleAdmin {
-  circleId: string;
-  userId: string;
-}
-export const toDbCircleAdmin = (x: CircleAdmin): CircleAdminRow => ({
-  circleid: x.circleId,
-  userid: x.userId,
-});
+export type CircleAdminRow = CircleAdmin;
 
-export interface EventInterestRow {
+export interface EventInterest {
   eventid: string;
   interestid: string;
 }
-export interface EventInterest {
-  eventId: string;
-  interestId: string;
-}
-export const toDbEventInterest = (x: EventInterest): EventInterestRow => ({
-  eventid: x.eventId,
-  interestid: x.interestId,
-});
+export type EventInterestRow = EventInterest;
 
-export interface PostLikeRow {
+export interface PostLike {
   postid: string;
   userid: string;
 }
-export interface PostLike {
-  postId: string;
-  userId: string;
-}
-export const toDbPostLike = (x: PostLike): PostLikeRow => ({
-  postid: x.postId,
-  userid: x.userId,
-});
+export type PostLikeRow = PostLike;

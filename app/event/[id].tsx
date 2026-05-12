@@ -39,7 +39,7 @@ interface Event {
     };
   }>;
   user_rsvp?: Array<{
-    status: 'going' | 'maybe' | 'no_going';
+    status: 'going' | 'maybe' | 'not_going';
   }>;
   going_count?: number;
   maybe_count?: number;
@@ -72,7 +72,7 @@ export default function EventScreen() {
         return;
       }
 
-      setEvent(data);
+      setEvent(data as any);
     } catch (error) {
       console.error('Error loading event:', error);
       Alert.alert('Error', 'Failed to load event');
@@ -81,14 +81,14 @@ export default function EventScreen() {
     }
   };
 
-  const handleEventRsvp = async (status: 'going' | 'maybe' | 'no_going') => {
+  const handleEventRsvp = async (status: 'going' | 'maybe' | 'not_going') => {
     if (!user || !event) return;
 
     try {
       const hasExistingRsvp = event.user_rsvp && event.user_rsvp.length > 0;
 
       if (hasExistingRsvp) {
-        const currentStatus = event.user_rsvp[0].status;
+        const currentStatus = event.user_rsvp![0].status;
         if (currentStatus === status) {
           // Same status clicked - remove RSVP
           const { error } = await DatabaseService.deleteEventRsvp(event.id);
@@ -311,20 +311,20 @@ export default function EventScreen() {
                 style={[
                   styles.rsvpButton,
                   { 
-                    backgroundColor: event.user_rsvp?.[0]?.status === 'no_going' ? '#f44336' : backgroundColor,
+                    backgroundColor: event.user_rsvp?.[0]?.status === 'not_going' ? '#f44336' : backgroundColor,
                     borderColor: '#f44336' 
                   }
                 ]}
-                onPress={() => handleEventRsvp('no_going')}
+                onPress={() => handleEventRsvp('not_going')}
               >
                 <IconSymbol 
                   name="xmark.circle.fill" 
                   size={16} 
-                  color={event.user_rsvp?.[0]?.status === 'no_going' ? '#fff' : '#f44336'} 
+                  color={event.user_rsvp?.[0]?.status === 'not_going' ? '#fff' : '#f44336'} 
                 />
                 <ThemedText style={[
                   styles.rsvpButtonText,
-                  { color: event.user_rsvp?.[0]?.status === 'no_going' ? '#fff' : '#f44336' }
+                  { color: event.user_rsvp?.[0]?.status === 'not_going' ? '#fff' : '#f44336' }
                 ]}>
                   Can't Go ({event.no_going_count || 0})
                 </ThemedText>

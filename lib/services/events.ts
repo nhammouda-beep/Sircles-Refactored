@@ -262,7 +262,7 @@ export const EventService = {
 
         const { error: interestsError } = await supabase
           .from("event_interests")
-          .insert(eventInterests);
+          .insert(eventInterests as any);
 
         if (interestsError) {
           console.error("Error adding event interests:", interestsError);

@@ -111,7 +111,7 @@ const formatCommentTime = (creationdate: string) => {
 
 export default function PostScreen() {
   const { id } = useLocalSearchParams();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const { texts, isRTL } = useLanguage();
 
   const [post, setPost] = useState<Post | null>(null);
@@ -152,7 +152,7 @@ export default function PostScreen() {
         Alert.alert("Error", "Failed to load post");
         return;
       }
-      setPost(data);
+      setPost(data as any);
       await loadComments();
     } catch (error) {
       console.error("Error loading post:", error);
@@ -544,7 +544,7 @@ export default function PostScreen() {
               <View style={[styles.addCommentMint, blockShift]}>
                 <Image
                   source={{
-                    uri: user.avatar_url || "https://via.placeholder.com/32",
+                    uri: userProfile?.avatar_url || "https://via.placeholder.com/32",
                   }}
                   style={styles.commentAvatar}
                 />

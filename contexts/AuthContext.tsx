@@ -11,12 +11,14 @@ interface AuthContextType {
   userProfile: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ data: { session: Session | null; user: AuthUser } | null; error: any }>;
-  signUp: (email: string, password: string) => Promise<{ data: { session: Session | null; user: AuthUser } | null; error: any }>;
+  signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
+  signUp: (email: string, password: string) => Promise<{ data: any; error: any }>;
   signOut: () => Promise<void>;
   updateUserProfile: (profile: Partial<User>) => Promise<{ error: any }>;
   checkUserExists: (email: string) => Promise<{ exists: boolean; error: any }>;
-  checkFirstLogin: () => Promise<{ data: boolean; error: any }>; // Added checkFirstLogin
+  checkFirstLogin: () => Promise<{ data: any; error: any }>;
+  setupInitialPassword: (email: string, password: string) => Promise<{ data: any; error: any }>;
+  setupFirstTimePassword: (email: string, password: string) => Promise<{ data: any; error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -29,7 +31,9 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   updateUserProfile: async () => ({ error: null }),
   checkUserExists: async () => ({ exists: false, error: null }),
-  checkFirstLogin: async () => ({ data: false, error: null }), 
+  checkFirstLogin: async () => ({ data: false, error: null }),
+  setupInitialPassword: async () => ({ data: null, error: null }),
+  setupFirstTimePassword: async () => ({ data: null, error: null }),
 });
 
 export const useAuth = () => {
@@ -86,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const { data: insertedUser, error: insertError } = await supabase
           .from('users')
-          .insert(newProfile)
+          .insert(newProfile as any)
           .select()
           .single();
 
@@ -183,7 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const { error: insertError } = await supabase
           .from('users')
-          .insert(newProfile);
+          .insert(newProfile as any);
 
         if (insertError) {
           console.error('Error creating user profile after signup:', insertError);
@@ -205,7 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('users')
-        .update(profile)
+        .update(profile as any)
         .eq('id', user.id)
         .select()
         .single();
@@ -279,6 +283,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Aliases for setup screens
+  const setupInitialPassword = signUp;
+  const setupFirstTimePassword = signUp;
+
   const value = {
     user,
     userProfile,
@@ -289,7 +297,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     updateUserProfile,
     checkUserExists,
-    checkFirstLogin, // Export checkFirstLogin
+    checkFirstLogin,
+    setupInitialPassword,
+    setupFirstTimePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
