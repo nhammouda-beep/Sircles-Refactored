@@ -23,6 +23,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { DatabaseService } from "@/lib/database";
+import { Avatar } from "@/components/Avatar";
 import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
 import EventModal from "@/components/EventModal";
@@ -1181,10 +1182,10 @@ export default function CircleScreen() {
     >
       <View style={[styles.postHeader, isRTL && styles.postHeaderRTL]}>
         <View style={[styles.authorInfo, isRTL && styles.authorInfoRTL]}>
-          <Image
-            source={{
-              uri: post.author?.avatar_url || "https://via.placeholder.com/40",
-            }}
+          <Avatar
+            uri={post.author?.avatar_url}
+            name={post.author?.name}
+            size={40}
             style={styles.authorAvatar}
           />
           <View style={styles.authorDetails}>
@@ -1277,10 +1278,10 @@ export default function CircleScreen() {
       ]}
     >
       <View style={[styles.memberInfo, isRTL && styles.memberInfoRTL]}>
-        <Image
-          source={{
-            uri: member.avatar_url || "https://via.placeholder.com/40",
-          }}
+        <Avatar
+          uri={member.avatar_url}
+          name={member.name}
+          size={40}
           style={styles.memberAvatar}
         />
         <View style={styles.memberDetails}>
@@ -1320,10 +1321,10 @@ export default function CircleScreen() {
       ]}
     >
       <View style={[styles.requestInfo, isRTL && styles.requestInfoRTL]}>
-        <Image
-          source={{
-            uri: request.users.avatar || "https://via.placeholder.com/40",
-          }}
+        <Avatar
+          uri={(request.users as any).avatar_url || (request.users as any).avatar}
+          name={request.users.name}
+          size={40}
           style={styles.requestAvatar}
         />
         <View style={styles.requestDetails}>
@@ -1370,10 +1371,10 @@ export default function CircleScreen() {
       <View
         style={[styles.adminMemberInfo, isRTL && styles.adminMemberInfoRTL]}
       >
-        <Image
-          source={{
-            uri: member.avatar_url || "https://via.placeholder.com/40",
-          }}
+        <Avatar
+          uri={member.avatar_url}
+          name={member.name}
+          size={40}
           style={styles.adminMemberAvatar}
         />
         <View style={styles.adminMemberDetails}>

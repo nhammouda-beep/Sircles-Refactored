@@ -27,6 +27,7 @@ import { CircleCard } from "@/components/CircleCard";
 import { useCirclesStore } from "@/stores/circlesStore";
 import EventModal from "@/components/EventModal";
 import { FeedSkeleton } from "@/components/SkeletonLoader";
+import { Avatar } from "@/components/Avatar";
 
 interface Post {
   id: string;
@@ -1368,12 +1369,10 @@ export default function HomeScreen() {
       <View style={[styles.card, { backgroundColor: surfaceColor }]}>
         <View style={styles.cardHeader}>
           <View style={styles.headerLeft}>
-            <Image
-              source={{
-                uri:
-                  item.author?.avatar_url || "https://via.placeholder.com/40",
-              }}
-              style={styles.avatarImg}
+            <Avatar
+              uri={item.author?.avatar_url}
+              name={item.author?.name}
+              size={36}
             />
             <View style={styles.headerTextWrap}>
               <ThemedText style={[styles.headerTitle, { color: TEXT }]}>

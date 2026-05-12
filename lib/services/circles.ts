@@ -1130,4 +1130,46 @@ export const CircleService = {
       return { data: null, error: error as Error };
     }
   },
+
+  async getCirclesByUser(userId: string) {
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) {
+        return { data: [], error: new Error("Authentication required") };
+      }
+
+      const { data, error } = await supabase
+        .from("user_circles")
+        .select(
+          `
+          circleid,
+          circles!inner(
+            id,
+            name,
+            description
+          )
+        `
+        )
+        .eq("userid", userId);
+
+      if (error) {
+        if (error.code === "PGRST001" || error.code === "42501") {
+          return { data: [], error: null };
+        }
+        return { data: null, error };
+      }
+
+      return {
+        data:
+          data?.map((uc: any) => ({
+            circleId: uc.circleid,
+            circles: uc.circles,
+          })) || [],
+        error: null,
+      };
+    } catch (error) {
+      console.error("Error in getCirclesByUser:", error);
+      return { data: [], error: null };
+    }
+  },
 };

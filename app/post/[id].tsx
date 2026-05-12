@@ -18,6 +18,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { DatabaseService } from "@/lib/database";
+import { Avatar } from "@/components/Avatar";
 
 /* =========================
    DESIGN TOKENS (edit here)
@@ -432,12 +433,10 @@ export default function PostScreen() {
             {/* Post Header */}
             <View style={[styles.postHeader, isRTL && styles.postHeaderRTL]}>
               <View style={[styles.authorInfo, isRTL && styles.authorInfoRTL]}>
-                <Image
-                  source={{
-                    uri:
-                      post.author?.avatar_url ||
-                      "https://via.placeholder.com/40",
-                  }}
+                <Avatar
+                  uri={post.author?.avatar_url}
+                  name={post.author?.name}
+                  size={40}
                   style={styles.authorAvatar}
                 />
                 <View style={styles.authorDetails}>
@@ -542,10 +541,10 @@ export default function PostScreen() {
             {/* Add Comment */}
             {user && (
               <View style={[styles.addCommentMint, blockShift]}>
-                <Image
-                  source={{
-                    uri: userProfile?.avatar_url || "https://via.placeholder.com/32",
-                  }}
+                <Avatar
+                  uri={userProfile?.avatar_url}
+                  name={userProfile?.name}
+                  size={32}
                   style={styles.commentAvatar}
                 />
 
@@ -590,12 +589,10 @@ export default function PostScreen() {
                 const canDelete = user?.id === comment.userid;
                 return (
                   <View key={comment.id} style={styles.commentItem}>
-                    <Image
-                      source={{
-                        uri:
-                          comment.author?.avatar_url ||
-                          "https://via.placeholder.com/32",
-                      }}
+                    <Avatar
+                      uri={comment.author?.avatar_url}
+                      name={comment.author?.name}
+                      size={32}
                       style={styles.commentAvatar}
                     />
                     <View style={styles.commentContent}>

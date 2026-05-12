@@ -12,6 +12,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { DatabaseService } from '@/lib/database';
+import { Avatar } from '@/components/Avatar';
 
 interface Event {
   id: string;
@@ -236,8 +237,10 @@ export default function EventScreen() {
           <View style={styles.creatorSection}>
             <ThemedText style={styles.sectionTitle}>Organized by</ThemedText>
             <View style={styles.creatorInfo}>
-              <Image
-                source={{ uri: event.creator?.avatar_url || 'https://via.placeholder.com/40' }}
+              <Avatar
+                uri={event.creator?.avatar_url}
+                name={event.creator?.name}
+                size={40}
                 style={styles.creatorAvatar}
               />
               <View style={styles.creatorDetails}>
