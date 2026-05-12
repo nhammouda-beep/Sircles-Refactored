@@ -66,6 +66,7 @@ export default function EventsScreen() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingRsvp, setPendingRsvp] = useState<Set<string>>(new Set());
   const [circles, setCircles] = useState<{ id: string; name: string }[]>([]);
   const [deletableEvents, setDeletableEvents] = useState<Set<string>>(
     new Set()
@@ -183,16 +184,47 @@ export default function EventsScreen() {
     status: "going" | "maybe" | "not_going"
   ) => {
     if (!user) return;
+    if (pendingRsvp.has(eventId)) return; // prevent double-tap
+
     const event = events.find((e) => e.id === eventId);
     const current = event?.userRsvpStatus;
+    const newStatus = current === status ? null : status;
+
+    // Mark as pending and apply optimistic update
+    setPendingRsvp((prev) => new Set(prev).add(eventId));
+    setEvents((prev) =>
+      prev.map((e) => {
+        if (e.id !== eventId) return e;
+        const next = { ...e };
+        // Adjust counts: decrement old status, increment new status
+        if (current === "going") next.going_count = Math.max(0, (next.going_count || 1) - 1);
+        if (current === "maybe") next.maybe_count = Math.max(0, (next.maybe_count || 1) - 1);
+        if (current === "not_going") next.not_going_count = Math.max(0, (next.not_going_count || 1) - 1);
+        if (newStatus === "going") next.going_count = (next.going_count || 0) + 1;
+        if (newStatus === "maybe") next.maybe_count = (next.maybe_count || 0) + 1;
+        if (newStatus === "not_going") next.not_going_count = (next.not_going_count || 0) + 1;
+        next.userRsvpStatus = newStatus;
+        return next;
+      })
+    );
+
     let error;
     if (current) {
       if (current === status)
         ({ error } = await DatabaseService.deleteEventRsvp(eventId));
       else ({ error } = await DatabaseService.updateEventRsvp(eventId, status));
     } else ({ error } = await DatabaseService.createEventRsvp(eventId, status));
-    if (error) return Alert.alert("Error", "Failed to update RSVP");
-    fetchEvents();
+
+    setPendingRsvp((prev) => {
+      const next = new Set(prev);
+      next.delete(eventId);
+      return next;
+    });
+
+    if (error) {
+      Alert.alert("Error", "Failed to update RSVP");
+      fetchEvents(); // revert by reloading
+    }
   };
 
   const canEditEvent = async (event: Event) => {

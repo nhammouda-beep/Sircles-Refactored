@@ -416,8 +416,12 @@ export default function HomeScreen() {
     setSelectedPostImage(asset!);
   };
 
+  const pendingLikes = React.useRef<Set<string>>(new Set());
+
   const handleLikePost = async (postId: string) => {
     if (!user?.id) return Alert.alert("Error", "Login first");
+    if (pendingLikes.current.has(postId)) return; // prevent double-tap
+
     const i = posts.findIndex((p) => p.id === postId);
     if (i === -1) return;
     const original = [...posts];
@@ -429,9 +433,13 @@ export default function HomeScreen() {
       likes_count: (p.likes_count || 0) + (p.userLiked ? -1 : 1),
     };
     setPosts(next);
+
+    pendingLikes.current.add(postId);
     const { error } = p.userLiked
       ? await DatabaseService.unlikePost(postId, user.id)
       : await DatabaseService.likePost(postId, user.id);
+    pendingLikes.current.delete(postId);
+
     if (error) {
       setPosts(original);
       Alert.alert("Error", "Failed to update like");
@@ -532,8 +540,11 @@ export default function HomeScreen() {
     }
   };
 
+  const pendingJoins = React.useRef<Set<string>>(new Set());
+
   const handleJoinSuggestedCircle = async (circleId: string) => {
     if (!user?.id) return Alert.alert("Error", "Login first");
+    if (pendingJoins.current.has(circleId)) return; // prevent double-tap
 
     const circleToJoinAndDismiss = suggestedCircles.find(
       (c) => c.id === circleId
@@ -543,7 +554,10 @@ export default function HomeScreen() {
       return;
     }
 
+    pendingJoins.current.add(circleId);
     const { error } = await DatabaseService.joinCircle(user.id, circleId);
+    pendingJoins.current.delete(circleId);
+
     if (error) {
       if (error.message?.includes("private")) {
       } else {
