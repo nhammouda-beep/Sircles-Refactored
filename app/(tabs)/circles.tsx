@@ -34,6 +34,8 @@ import {
 import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
 import { CirclesSkeleton } from "@/components/SkeletonLoader";
+import { useDebounced } from "@/hooks/useDebounced";
+import { optimizeImageForUpload } from "@/lib/imageOptimize";
 
 interface Circle {
   id: string;
@@ -165,6 +167,7 @@ export default function CirclesScreen() {
   const [activeTab, setActiveTab] = useState<"all" | "my">("all");
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounced(query, 200);
 
   const [newCircle, setNewCircle] = useState({
     name: "",
@@ -180,8 +183,8 @@ export default function CirclesScreen() {
 
   const filtered = (activeTab === "all" ? circles : myCircles).filter(
     (c) =>
-      c.name?.toLowerCase().includes(query.trim().toLowerCase()) ||
-      c.description?.toLowerCase().includes(query.trim().toLowerCase())
+      c.name?.toLowerCase().includes(debouncedQuery.trim().toLowerCase()) ||
+      c.description?.toLowerCase().includes(debouncedQuery.trim().toLowerCase())
   );
 
   const loadCircles = async () => {
@@ -298,10 +301,11 @@ export default function CirclesScreen() {
 
       let circleProfileUrl: string | null = null;
       if (selectedImage && data) {
+        const optimized = await optimizeImageForUpload(selectedImage);
         const { data: uploadData } =
           await StorageService.uploadCircleProfilePicture(
             data.id,
-            selectedImage
+            optimized as any
           );
         circleProfileUrl = uploadData?.publicUrl || null;
       }

@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DatabaseService } from "@/lib/database";
 import EventModal from "@/components/EventModal";
 import { EventsSkeleton } from "@/components/SkeletonLoader";
+import { useDebounced } from "@/hooks/useDebounced";
 import { useFocusEffect } from "expo-router";
 
 interface Event {
@@ -74,6 +75,7 @@ export default function EventsScreen() {
 
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounced(query, 200);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [circleId, setCircleId] = useState<string | "any">("any");
@@ -282,7 +284,7 @@ export default function EventsScreen() {
 
   const filteredSorted = useMemo(() => {
     const now = new Date();
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
     const base = events.filter((e) =>
       tab === "upcoming"
         ? toDate(e) >= startOfDay(now)
@@ -320,7 +322,7 @@ export default function EventsScreen() {
     return byFilters.sort((a, b) =>
       tab === "upcoming" ? +toDate(a) - +toDate(b) : +toDate(b) - +toDate(a)
     );
-  }, [events, tab, query, circleId, selectedInterests, withPhoto, rsvpFilter]);
+  }, [events, tab, debouncedQuery, circleId, selectedInterests, withPhoto, rsvpFilter]);
 
   const toggleInterest = (id: string) => {
     setSelectedInterests((prev) => {

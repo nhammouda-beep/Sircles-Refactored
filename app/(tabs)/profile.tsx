@@ -22,6 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DatabaseService } from "@/lib/database";
 import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
+import { optimizeImageForUpload } from "@/lib/imageOptimize";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 
 interface UserProfile {
@@ -142,14 +143,10 @@ export default function ProfileScreen() {
 
     setUploading(true);
     try {
-      let ext = detectExt(asset);
-      let uploadUri = asset.uri;
-
-      // أي صيغة غير jpg/png تتحول إلى jpg
-      if (ext !== "jpg" && ext !== "png") {
-        uploadUri = await normalizeToJpg(asset.uri);
-        ext = "jpg";
-      }
+      // Resize + compress to ~1080px JPEG for faster upload
+      const optimized = await optimizeImageForUpload(asset);
+      const uploadUri = optimized.uri;
+      const ext = "jpg";
 
       // web: File | native: { uri }
       let fileForUpload: any = { uri: uploadUri };

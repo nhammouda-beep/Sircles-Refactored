@@ -28,6 +28,8 @@ import { useCirclesStore } from "@/stores/circlesStore";
 import EventModal from "@/components/EventModal";
 import { FeedSkeleton } from "@/components/SkeletonLoader";
 import { Avatar } from "@/components/Avatar";
+import { useDebounced } from "@/hooks/useDebounced";
+import { optimizeImageForUpload } from "@/lib/imageOptimize";
 
 interface Post {
   id: string;
@@ -109,6 +111,7 @@ export default function HomeScreen() {
   // search
   const [showSearch, setShowSearch] = useState(false);
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounced(query, 200);
   const PALETTE = {
     background: "#FFFFFF",
     surface: "#FFFFFF",
@@ -462,13 +465,18 @@ export default function HomeScreen() {
     }
 
     try {
+      // Optimize image before upload (resize to 1080px max, 80% quality JPEG)
+      const optimizedImage = selectedPostImage
+        ? await optimizeImageForUpload(selectedPostImage)
+        : undefined;
+
       const { error } = await DatabaseService.createPost(
         {
           userid: user.id,
           content: newPostContent.trim(),
           circleid: selectedCircle,
         },
-        selectedPostImage || undefined
+        optimizedImage
       );
 
       if (error) {
@@ -590,7 +598,7 @@ export default function HomeScreen() {
   };
 
   const filteredFeed = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
     if (!q) return feedItems;
     return feedItems.filter((item: any) => {
       if (item.type === "post") {
@@ -607,7 +615,7 @@ export default function HomeScreen() {
       }
       return true;
     });
-  }, [feedItems, query]);
+  }, [feedItems, debouncedQuery]);
 
   if (!user) {
     return (

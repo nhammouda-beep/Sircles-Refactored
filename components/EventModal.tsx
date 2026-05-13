@@ -17,6 +17,7 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useAuth } from "@/contexts/AuthContext";
 import { DatabaseService } from "@/lib/database";
 import { StorageService } from "@/lib/storage";
+import { optimizeImageForUpload } from "@/lib/imageOptimize";
 interface EventModalProps {
   visible: boolean;
   onClose: () => void;
@@ -277,11 +278,14 @@ export default function EventModal({
         if (hasNewPhoto) {
           console.log("New photo selected for update, uploading now...");
 
+          // Optimize before upload
+          const optimizedPhoto = await optimizeImageForUpload(selectedPhoto);
+
           // 1. Upload the new photo first to get the public URL
           const { data: uploadData, error: uploadError } =
             await StorageService.uploadEventPhoto(
               editingEvent.id, // Use the existing event ID
-              selectedPhoto, // The new photo asset
+              optimizedPhoto as any, // The new photo asset (optimized)
               user.id
             );
 
@@ -325,12 +329,17 @@ export default function EventModal({
           interestid: interestId,
         }));
 
+        // Optimize photo before upload (resize 1080px, JPEG q80) — typically 10x smaller
+        const optimizedPhoto = selectedPhoto
+          ? await optimizeImageForUpload(selectedPhoto)
+          : null;
+
         const { data: newEventFromDB, error } =
           await DatabaseService.createEvent({
             ...newEvent,
             location_url: newEvent.location_url?.trim() || null,
             interests: interestObjects,
-            photoAsset: selectedPhoto,
+            photoAsset: optimizedPhoto,
           });
 
         if (error) throw error;

@@ -23,6 +23,7 @@ import {
   getCirclesByUser,
   sendMessage,
 } from "@/lib/database";
+import { useDebounced } from "@/hooks/useDebounced";
 
 interface Message {
   id: string;
@@ -84,8 +85,9 @@ export default function MessagesScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounced(query, 200);
   const filteredConversations = conversations.filter((c) =>
-    c.name?.toLowerCase().includes(query.trim().toLowerCase())
+    c.name?.toLowerCase().includes(debouncedQuery.trim().toLowerCase())
   );
 
   const loadConversations = async () => {
