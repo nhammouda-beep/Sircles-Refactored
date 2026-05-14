@@ -30,6 +30,9 @@ import { FeedSkeleton } from "@/components/SkeletonLoader";
 import { Avatar } from "@/components/Avatar";
 import { useDebounced } from "@/hooks/useDebounced";
 import { optimizeImageForUpload } from "@/lib/imageOptimize";
+import { PostCard } from "@/components/feed/PostCard";
+import { EventCard } from "@/components/feed/EventCard";
+import { SuggestedCirclesSection } from "@/components/feed/SuggestedCirclesSection";
 
 interface Post {
   id: string;
@@ -383,7 +386,7 @@ export default function HomeScreen() {
     }
   }, [user]);
 
-  const formatTimeAgo = (dateString: string) => {
+  const formatTimeAgo = (dateString?: string | null) => {
     if (!dateString) return "Unknown time";
     const date = new Date(dateString);
     if (isNaN(+date)) return "Unknown time";
@@ -638,68 +641,6 @@ export default function HomeScreen() {
     );
   }
 
-  function renderSuggestedSection() {
-    const H_PAD = 12;
-    const CARD_GAP = 12;
-    const cardW = Math.floor((width - H_PAD * 2) * 0.72);
-
-    const items = suggestedCircles;
-
-    return (
-      <View style={[styles.card, { backgroundColor: surfaceColor }]}>
-        <View
-          style={{ paddingHorizontal: H_PAD, paddingTop: 10, paddingBottom: 8 }}
-        >
-          <ThemedText
-            style={{ fontWeight: "700", fontSize: 14, color: textColor }}
-          >
-            Circles of Your Interest
-          </ThemedText>
-        </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: H_PAD,
-            paddingBottom: 10,
-          }}
-        >
-          {items.map((circle: any, idx: number) => (
-            <View
-              key={circle.id}
-              style={{
-                width: cardW,
-                marginRight: idx === items.length - 1 ? 0 : CARD_GAP,
-              }}
-            >
-              <CircleCard
-                circle={circle}
-                onJoin={handleJoinSuggestedCircle}
-                onDismiss={dismiss as any}
-                onSnooze={snooze as any}
-              />
-            </View>
-          ))}
-        </ScrollView>
-
-        <TouchableOpacity
-          onPress={() => router.push("/(tabs)/circles")}
-          style={{
-            alignItems: "center",
-            paddingVertical: 8,
-            borderTopWidth: 1,
-            borderColor: BORDER,
-          }}
-        >
-          <ThemedText style={{ color: SUBTLE, fontWeight: "600" }}>
-            See All
-          </ThemedText>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
       {/* Header */}
@@ -775,11 +716,31 @@ export default function HomeScreen() {
           data={filteredFeed}
           keyExtractor={(item) => `${item.type}-${item.id}`}
           renderItem={({ item }) =>
-            item.type === "post"
-              ? renderPost({ item })
-              : item.type === "event"
-              ? renderEvent({ item })
-              : renderSuggestedSection()
+            item.type === "post" ? (
+              <PostCard
+                post={item}
+                isOwner={isOwner(item)}
+                canLike={!!user}
+                onLike={handleLikePost}
+                onMenu={(id) => setMenuFor({ type: "post", id })}
+                formatTimeAgo={formatTimeAgo}
+              />
+            ) : item.type === "event" ? (
+              <EventCard
+                event={item}
+                isOwner={item.createdby === user?.id}
+                onMenu={(id) => setMenuFor({ type: "event", id })}
+                formatTimeAgo={formatTimeAgo}
+                formatTime={formatTo12Hour}
+              />
+            ) : (
+              <SuggestedCirclesSection
+                suggestedCircles={suggestedCircles}
+                onJoin={handleJoinSuggestedCircle}
+                onDismiss={dismiss as any}
+                onSnooze={snooze as any}
+              />
+            )
           }
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -1203,259 +1164,8 @@ export default function HomeScreen() {
       />
     </SafeAreaView>
   );
-
-  // --- UI: Event Card ---
-  function renderEvent({ item }: { item: any }) {
-    const isEventOwner = item.createdby === user?.id;
-
-    return (
-      <View style={[styles.card, { backgroundColor: surfaceColor }]}>
-        <View style={styles.cardHeader}>
-          <View style={styles.headerLeft}>
-            <View
-              style={[
-                styles.avatarCircle,
-                { backgroundColor: tintColor + "26" },
-              ]}
-            >
-              <IconSymbol name="calendar" size={18} color={tintColor} />
-            </View>
-            <View style={styles.headerTextWrap}>
-              <ThemedText style={[styles.headerTitle, { color: TEXT }]}>
-                {item.circle?.name || item.circleName || "Event"}
-              </ThemedText>
-              <ThemedText style={[styles.headerSub, { color: SUBTLE }]}>
-                Event • {formatTimeAgo(item.creationdate)}
-              </ThemedText>
-            </View>
-          </View>
-          {isEventOwner && (
-            <TouchableOpacity
-              onPress={() => setMenuFor({ type: "event", id: item.id })}
-              style={styles.menuBtn}
-            >
-              <IconSymbol name="ellipsis" size={20} color={SUBTLE} />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {(item.photo_url || item.image) && (
-          <Image
-            source={{ uri: item.photo_url || item.image }}
-            style={styles.cardImage}
-          />
-        )}
-        <View style={styles.cardBody}>
-          <ThemedText
-            style={[styles.eventTitle, { color: TEXT, fontWeight: "800" }]}
-          >
-            {item.title || "Untitled Event"}
-          </ThemedText>
-          <ThemedText style={[styles.eventMeta, { color: PRIMARY }]}>
-            📅 {item.date ? new Date(item.date).toLocaleDateString() : "TBD"} •{" "}
-            {formatTo12Hour(item.time) || "TBD"}
-          </ThemedText>
-          {item.description ? (
-            <ThemedText style={[styles.desc, { color: TEXT }]}>
-              {item.description}
-            </ThemedText>
-          ) : null}
-          {item.location ? (
-            <ThemedText style={[styles.eventLoc, { color: SUBTLE }]}>
-              📍 {item.location}
-            </ThemedText>
-          ) : null}
-
-          {item.event_interests?.length ? (
-            <View style={styles.chipsRow}>
-              {item.event_interests.map((ei: any) => (
-                <View
-                  key={ei.interests?.id}
-                  style={[
-                    styles.chip,
-                    {
-                      borderColor: tintColor,
-                      backgroundColor: tintColor + "1A",
-                    },
-                  ]}
-                >
-                  <ThemedText style={[styles.chipText, { color: tintColor }]}>
-                    {ei.interests?.title}
-                  </ThemedText>
-                </View>
-              ))}
-            </View>
-          ) : null}
-        </View>
-      </View>
-    );
-  }
-
-  function LikeButton({
-    liked,
-    count,
-    onPress,
-    disabled,
-    SUBTLE,
-  }: {
-    liked: boolean;
-    count: number;
-    onPress: () => void;
-    disabled?: boolean;
-    SUBTLE: string;
-  }) {
-    const scale = React.useRef(new Animated.Value(1)).current;
-    const opacity = React.useRef(new Animated.Value(0)).current;
-
-    const run = () => {
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(scale, {
-            toValue: 1.25,
-            duration: 120,
-            useNativeDriver: true,
-          }),
-          Animated.spring(scale, {
-            toValue: 1,
-            friction: 5,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(opacity, {
-            toValue: 1,
-            duration: 80,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacity, {
-            toValue: 0,
-            duration: 160,
-            delay: 80,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]).start();
-    };
-
-    const handlePress = () => {
-      run();
-      onPress();
-    };
-
-    return (
-      <TouchableOpacity
-        style={[styles.actionBtn, { position: "relative" }]}
-        onPress={handlePress}
-        disabled={disabled}
-        activeOpacity={0.8}
-      >
-        <Animated.View style={{ transform: [{ scale }] }}>
-          <IconSymbol
-            name={liked ? "heart.fill" : "heart"}
-            size={20}
-            color={liked ? "#ff4444" : SUBTLE}
-          />
-        </Animated.View>
-
-        <ThemedText
-          style={[
-            styles.actionTxt,
-            liked && { color: "#ff4444", fontWeight: "700" },
-          ]}
-        >
-          {count}
-        </ThemedText>
-
-        <Animated.View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            left: -6,
-            right: -6,
-            top: -6,
-            bottom: -6,
-            borderRadius: 8,
-            backgroundColor: "rgba(255,68,68,0.15)",
-            opacity,
-          }}
-        />
-      </TouchableOpacity>
-    );
-  }
-
-  // --- UI: Post Card ---
-  function renderPost({ item }: { item: Post & { interestScore?: number } }) {
-    const owner = isOwner(item);
-
-    return (
-      <View style={[styles.card, { backgroundColor: surfaceColor }]}>
-        <View style={styles.cardHeader}>
-          <View style={styles.headerLeft}>
-            <Avatar
-              uri={item.author?.avatar_url}
-              name={item.author?.name}
-              size={36}
-            />
-            <View style={styles.headerTextWrap}>
-              <ThemedText style={[styles.headerTitle, { color: TEXT }]}>
-                {item.author?.name || "Unknown"}
-              </ThemedText>
-              <View style={styles.headerMetaRow}>
-                <ThemedText style={[styles.headerSub, { color: SUBTLE }]}>
-                  in {item.circle?.name || "Circle"}
-                </ThemedText>
-                <ThemedText style={[styles.dot]}>•</ThemedText>
-                <ThemedText style={[styles.headerSub, { color: SUBTLE }]}>
-                  {formatTimeAgo(item.creationdate)}
-                </ThemedText>
-              </View>
-            </View>
-          </View>
-
-          {owner && (
-            <TouchableOpacity
-              onPress={() => setMenuFor({ type: "post", id: item.id })}
-              style={styles.menuBtn}
-            >
-              <IconSymbol name="ellipsis" size={20} color={SUBTLE} />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <View style={styles.cardBody}>
-          {!!item.content && (
-            <ThemedText style={[styles.desc, { color: TEXT }]}>
-              {item.content}
-            </ThemedText>
-          )}
-          {item.image && (
-            <Image source={{ uri: item.image }} style={styles.cardImage} />
-          )}
-
-          <View style={styles.actionsRow}>
-            <LikeButton
-              liked={!!item.userLiked}
-              count={item.likes_count || 0}
-              onPress={() => handleLikePost(item.id)}
-              disabled={!user}
-              SUBTLE={SUBTLE}
-            />
-
-            <TouchableOpacity
-              style={styles.actionBtn}
-              onPress={() => router.push(`/post/${item.id}`)}
-            >
-              <IconSymbol name="bubble.left" size={18} color={SUBTLE} />
-              <ThemedText style={styles.actionTxt}>
-                {item.comments_count || 0}
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    );
-  }
 }
+
 
 /* Styles */
 const styles = StyleSheet.create({
