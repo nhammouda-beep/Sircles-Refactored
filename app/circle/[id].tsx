@@ -27,6 +27,9 @@ import { Avatar } from "@/components/Avatar";
 import { MemberCard } from "@/components/circle/MemberCard";
 import { JoinRequestCard } from "@/components/circle/JoinRequestCard";
 import { AdminMemberCard } from "@/components/circle/AdminMemberCard";
+import { CirclePostCard } from "@/components/circle/CirclePostCard";
+import { CircleTabBar } from "@/components/circle/CircleTabBar";
+import { CircleInfoHeader } from "@/components/circle/CircleInfoHeader";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
@@ -1173,100 +1176,19 @@ export default function CircleScreen() {
   }
 
   const renderPost = (post: Post) => (
-    <View
+    <CirclePostCard
       key={post.id}
-      style={[
-        styles.postCard,
-        {
-          backgroundColor: surfaceColor,
-          borderColor: PALETTE.border,
-          borderWidth: 1,
-        },
-      ]}
-    >
-      <View style={[styles.postHeader, isRTL && styles.postHeaderRTL]}>
-        <View style={[styles.authorInfo, isRTL && styles.authorInfoRTL]}>
-          <Avatar
-            uri={post.author?.avatar_url}
-            name={post.author?.name}
-            size={40}
-            style={styles.authorAvatar}
-          />
-          <View style={styles.authorDetails}>
-            <ThemedText type="defaultSemiBold" style={{ color: "#000000ff" }}>
-              {post.author?.name || "Unknown User"}
-            </ThemedText>
-            <ThemedText style={styles.postTime}>
-              {new Date(post.creationdate).toLocaleDateString()}
-            </ThemedText>
-          </View>
-        </View>
-        {(post.author?.id === user?.id || circle.isAdmin) && (
-          <View style={styles.postEditActions}>
-            {post.author?.id === user?.id && (
-              <TouchableOpacity
-                style={styles.postActionButton}
-                onPress={() => handleEditPost(post.id, post.content)}
-              >
-                <IconSymbol name="pencil" size={16} color={tintColor} />
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={[
-                styles.postActionButton,
-                deletePostLoading === post.id && styles.disabledButton,
-              ]}
-              onPress={() => handleDeletePost(post.id)}
-              disabled={deletePostLoading === post.id}
-            >
-              <IconSymbol
-                name="trash"
-                size={16}
-                color={deletePostLoading === post.id ? "#ccc" : PALETTE.danger}
-              />
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.postContentContainer}>
-        <ThemedText style={styles.postContent}>{post.content}</ThemedText>
-      </View>
-
-      {post.image && (
-        <Image source={{ uri: post.image }} style={styles.postImage} />
-      )}
-
-      <View style={styles.postInteractionActions}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => handleLikePost(post.id)}
-        >
-          <IconSymbol
-            name={post.userLiked ? "heart.fill" : "heart"}
-            size={20}
-            color={post.userLiked ? PALETTE.danger : textColor}
-          />
-          <ThemedText
-            style={[
-              styles.actionText,
-              post.userLiked && { color: PALETTE.danger },
-            ]}
-          >
-            {post.likes_count || 0}
-          </ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => router.push(`/post/${post.id}`)}
-        >
-          <IconSymbol name="bubble.left" size={20} color={textColor} />
-          <ThemedText style={styles.actionText}>
-            {(post as any).comments_count || post.comments?.length || 0}
-          </ThemedText>
-        </TouchableOpacity>
-      </View>
-    </View>
+      post={post as any}
+      surfaceColor={surfaceColor}
+      textColor={textColor}
+      isRTL={isRTL}
+      isAuthor={post.author?.id === user?.id}
+      canDelete={post.author?.id === user?.id || !!circle.isAdmin}
+      deletingPostId={deletePostLoading}
+      onEdit={handleEditPost}
+      onDelete={handleDeletePost}
+      onLike={handleLikePost}
+    />
   );
 
   const renderMember = (member: Member) => (
@@ -1413,202 +1335,21 @@ export default function CircleScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
       >
-      <View style={[styles.circleInfo, { backgroundColor: surfaceColor }]}>
-        <View style={styles.circleImageContainer}>
-          {circle.circle_profile_url ? (
-            <View style={styles.circleImageWithOverlay}>
-              <Image
-                source={{ uri: circle.circle_profile_url }}
-                style={styles.circleHeaderImage}
-                contentFit="cover"
-              />
-              {circle.isAdmin && (
-                <TouchableOpacity
-                  style={styles.circleImageOverlayButton}
-                  onPress={handleCircleImagePicker}
-                  activeOpacity={0.8}
-                >
-                  <View
-                    style={[
-                      styles.circleOverlayButtonContent,
-                      { backgroundColor: PALETTE.overlay },
-                    ]}
-                  >
-                    <IconSymbol name="camera" size={16} color="#fff" />
-                    <ThemedText style={styles.circleOverlayButtonText}>
-                      Change Photo
-                    </ThemedText>
-                  </View>
-                </TouchableOpacity>
-              )}
-            </View>
-          ) : (
-            <>
-              {circle.isAdmin ? (
-                <TouchableOpacity
-                  style={[
-                    styles.circleImagePlaceholderButton,
-                    { backgroundColor, borderColor: tintColor },
-                  ]}
-                  onPress={handleCircleImagePicker}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.circleImagePlaceholder}>
-                    <IconSymbol name="camera" size={32} color={tintColor} />
-                    <ThemedText
-                      style={[
-                        styles.circleImagePlaceholderText,
-                        { color: tintColor },
-                      ]}
-                    >
-                      Tap to Add Photo
-                    </ThemedText>
-                  </View>
-                </TouchableOpacity>
-              ) : (
-                <View
-                  style={[
-                    styles.circleImagePlaceholderView,
-                    { backgroundColor: "#F9FAFB", borderColor: PALETTE.border },
-                  ]}
-                >
-                  <View style={styles.circleImagePlaceholder}>
-                    <IconSymbol
-                      name="photo"
-                      size={32}
-                      color={textColor + "40"}
-                    />
-                    <ThemedText
-                      style={[
-                        styles.circleImagePlaceholderText,
-                        { color: textColor + "40" },
-                      ]}
-                    >
-                      No Photo
-                    </ThemedText>
-                  </View>
-                </View>
-              )}
-            </>
-          )}
-        </View>
+      <CircleInfoHeader
+        circle={circle}
+        surfaceColor={surfaceColor}
+        backgroundColor={backgroundColor}
+        textColor={textColor}
+        onImagePick={handleCircleImagePicker}
+      />
 
-        <ThemedText style={styles.circleDescription}>
-          {circle.description}
-        </ThemedText>
-
-        <View style={styles.circleStats}>
-          <View style={styles.statItem}>
-            <IconSymbol name="person.3" size={16} color={textColor} />
-            <ThemedText style={styles.statText}>
-              {circle.memberCount} members
-            </ThemedText>
-          </View>
-          <View style={styles.statItem}>
-            <IconSymbol
-              name={circle.privacy === "private" ? "lock.fill" : "globe"}
-              size={16}
-              color={textColor}
-            />
-            <ThemedText style={styles.statText}>
-              {circle.privacy === "private" ? "Private" : "Public"}
-            </ThemedText>
-          </View>
-        </View>
-
-        {circle.interests && circle.interests.length > 0 && (
-          <View style={styles.circleInterests}>
-            <ThemedText style={styles.interestsTitle}>Interests:</ThemedText>
-            <View style={styles.interestTags}>
-              {circle.interests.map((interest, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.interestTag,
-                    { backgroundColor: tintColor + "20" },
-                  ]}
-                >
-                  <ThemedText
-                    style={[styles.interestTagText, { color: tintColor }]}
-                  >
-                    {interest}
-                  </ThemedText>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-      </View>
-
-      <View style={[styles.tabContainer, { backgroundColor: surfaceColor }]}>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === "feed" && { backgroundColor: tintColor },
-          ]}
-          onPress={() => setActiveTab("feed")}
-        >
-          <ThemedText
-            style={[styles.tabText, activeTab === "feed" && { color: "#fff" }]}
-          >
-            Feed
-          </ThemedText>
-        </TouchableOpacity>
-        {circle.isJoined && (
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === "events" && { backgroundColor: tintColor },
-            ]}
-            onPress={() => setActiveTab("events")}
-          >
-            <ThemedText
-              style={[
-                styles.tabText,
-                activeTab === "events" && { color: "#fff" },
-              ]}
-            >
-              Events
-            </ThemedText>
-          </TouchableOpacity>
-        )}
-        {circle.isJoined && (
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === "members" && { backgroundColor: tintColor },
-            ]}
-            onPress={() => setActiveTab("members")}
-          >
-            <ThemedText
-              style={[
-                styles.tabText,
-                activeTab === "members" && { color: "#fff" },
-              ]}
-            >
-              Members
-            </ThemedText>
-          </TouchableOpacity>
-        )}
-        {circle.isAdmin && (
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === "admin" && { backgroundColor: tintColor },
-            ]}
-            onPress={() => setActiveTab("admin")}
-          >
-            <ThemedText
-              style={[
-                styles.tabText,
-                activeTab === "admin" && { color: "#fff" },
-              ]}
-            >
-              Admin
-            </ThemedText>
-          </TouchableOpacity>
-        )}
-      </View>
+      <CircleTabBar
+        activeTab={activeTab}
+        isJoined={!!circle.isJoined}
+        isAdmin={!!circle.isAdmin}
+        surfaceColor={surfaceColor}
+        onTabChange={setActiveTab}
+      />
 
         {activeTab === "feed" && (
           <View style={styles.feedContainer}>
