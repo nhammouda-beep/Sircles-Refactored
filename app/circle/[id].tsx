@@ -30,6 +30,8 @@ import { AdminMemberCard } from "@/components/circle/AdminMemberCard";
 import { CirclePostCard } from "@/components/circle/CirclePostCard";
 import { CircleTabBar } from "@/components/circle/CircleTabBar";
 import { CircleInfoHeader } from "@/components/circle/CircleInfoHeader";
+import { CreatePostModal } from "@/components/circle/CreatePostModal";
+import { EditPostModal } from "@/components/circle/EditPostModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
@@ -1767,147 +1769,22 @@ export default function CircleScreen() {
       )}
 
       {/* Create Post Modal */}
-    <Modal
+    <CreatePostModal
         visible={showPostModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowPostModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View
-            style={[
-              styles.createPostModalContent,
-              { backgroundColor: surfaceColor },
-            ]}
-          >
-            <View style={styles.modalHeader}>
-              <ThemedText style={[styles.modalTitle, { color: tintColor }]}>
-                Create Post
-              </ThemedText>
-              <TouchableOpacity onPress={() => setShowPostModal(false)}>
-                <IconSymbol name="xmark" size={20} color={textColor} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.modalBody}>
-              <View style={styles.inputSection}>
-                <ThemedText
-                  style={[styles.postingInLabel, { color: "#6B7280" }]}
-                >
-                  Posting in:
-                </ThemedText>
-                <ThemedText style={[styles.circleName, { color: tintColor }]}>
-                  {circle.name}
-                </ThemedText>
-              </View>
-
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.inputLabel, { color: "#6B7280" }]}>
-                  What is on your mind?
-                </ThemedText>
-                <TextInput
-                  style={[
-                    styles.postInput,
-                    {
-                      backgroundColor: "#F9FAFB",
-                      color: textColor,
-                      borderColor: PALETTE.border,
-                    },
-                  ]}
-                  value={newPostContent}
-                  onChangeText={setNewPostContent}
-                  placeholder="Share your thoughts with the circle..."
-                  placeholderTextColor={textColor + "60"}
-                  multiline
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                />
-              </View>
-
-              <View style={styles.inputSection}>
-                <ThemedText style={[styles.inputLabel, { color: "#6B7280" }]}>
-                  Add Photo
-                </ThemedText>
-                <TouchableOpacity
-                  onPress={pickPostImage}
-                  style={[
-                    styles.imagePickerButton,
-                    { backgroundColor: "#F9FAFB", borderColor: tintColor },
-                    selectedPostImage && styles.selectedImageContainer,
-                  ]}
-                >
-                  {selectedPostImage ? (
-                    <>
-                      <Image
-                        source={{ uri: selectedPostImage.uri }}
-                        style={styles.selectedPostImage}
-                      />
-                      <View
-                        style={[
-                          styles.imageOverlay,
-                          { backgroundColor: PALETTE.overlay },
-                        ]}
-                      >
-                        <IconSymbol name="camera" size={16} color="#fff" />
-                        <ThemedText style={styles.changeImageText}>
-                          Change Photo
-                        </ThemedText>
-                      </View>
-                    </>
-                  ) : (
-                    <View style={styles.imagePlaceholder}>
-                      <IconSymbol name="camera" size={32} color={tintColor} />
-                      <ThemedText
-                        style={[styles.imagePickerText, { color: tintColor }]}
-                      >
-                        Tap to select photo
-                      </ThemedText>
-                    </View>
-                  )}
-                </TouchableOpacity>
-                {selectedPostImage && (
-                  <ThemedText
-                    style={{
-                      fontSize: 12,
-                      color: textColor + "80",
-                      marginTop: 4,
-                    }}
-                  >
-                    File size:{" "}
-                    {((selectedPostImage.fileSize || 0) / 1024 / 1024).toFixed(2)} MB
-                  </ThemedText>
-                )}
-              </View>
-            </View>
-
-            <View style={styles.modalFooter}>
-              <TouchableOpacity
-                style={[
-                  styles.modalButton,
-                  styles.cancelButton,
-                  {
-                    backgroundColor: "#F9FAFB",
-                    borderColor: PALETTE.muted,
-                  },
-                ]}
-                onPress={() => {
-                  setShowPostModal(false);
-                  setSelectedPostImage(null);
-                }}
-              >
-                <ThemedText style={{ color: PALETTE.muted }}>Cancel</ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: tintColor }]}
-                onPress={handleCreatePost}
-                disabled={createPostLoading || !newPostContent.trim()}
-              >
-                <ThemedText style={{ color: "#fff" }}>Post</ThemedText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        circleName={circle.name || ""}
+        surfaceColor={surfaceColor}
+        textColor={textColor}
+        content={newPostContent}
+        onContentChange={setNewPostContent}
+        selectedImage={selectedPostImage}
+        onPickImage={pickPostImage}
+        loading={createPostLoading}
+        onSubmit={handleCreatePost}
+        onClose={() => {
+          setShowPostModal(false);
+          setSelectedPostImage(null);
+        }}
+      />
 
       {/* Event Modals */}
       <EventModal
@@ -1931,64 +1808,16 @@ export default function CircleScreen() {
         editingEvent={editingEvent}
       />
 
-      {/* Edit Post Modal */}
-      <Modal
+      <EditPostModal
         visible={isEditingPost}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView style={[styles.modalContainer, { backgroundColor }]}>
-          <View style={[styles.modalHeader, { backgroundColor: surfaceColor }]}>
-            <TouchableOpacity onPress={handleCancelEdit}>
-              <ThemedText style={[styles.cancelButton, { color: tintColor }]}>
-                Cancel
-              </ThemedText>
-            </TouchableOpacity>
-            <ThemedText style={styles.modalTitle}>Edit Post</ThemedText>
-            <TouchableOpacity
-              onPress={handleUpdatePost}
-              disabled={!editPostContent.trim()}
-            >
-              <ThemedText
-                style={[
-                  styles.saveButton,
-                  {
-                    color: editPostContent.trim()
-                      ? tintColor
-                      : textColor + "50",
-                  },
-                ]}
-              >
-                Save
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.modalContent}>
-            <View style={styles.inputSection}>
-              <ThemedText style={styles.inputLabel}>Edit your post</ThemedText>
-              <TextInput
-                style={[
-                  styles.postInput,
-                  {
-                    backgroundColor: surfaceColor,
-                    color: textColor,
-                    borderColor: PALETTE.border,
-                  },
-                ]}
-                value={editPostContent}
-                onChangeText={setEditPostContent}
-                placeholder="What's on your mind?"
-                placeholderTextColor={textColor + "60"}
-                multiline
-                numberOfLines={6}
-                textAlignVertical="top"
-                autoFocus
-              />
-            </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
+        backgroundColor={backgroundColor}
+        surfaceColor={surfaceColor}
+        textColor={textColor}
+        content={editPostContent}
+        onContentChange={setEditPostContent}
+        onSave={handleUpdatePost}
+        onCancel={handleCancelEdit}
+      />
 
       {/* Edit Circle Modal */}
       <Modal
