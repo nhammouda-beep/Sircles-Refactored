@@ -33,6 +33,7 @@ import { optimizeImageForUpload } from "@/lib/imageOptimize";
 import { PostCard } from "@/components/feed/PostCard";
 import { EventCard } from "@/components/feed/EventCard";
 import { SuggestedCirclesSection } from "@/components/feed/SuggestedCirclesSection";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 interface Post {
   id: string;
@@ -1086,71 +1087,19 @@ export default function HomeScreen() {
         </SafeAreaView>
       </Modal>
 
-      {/* Delete Post Confirm */}
-      <Modal
+      <ConfirmDialog
         visible={showDeleteConfirmModal}
-        animationType="fade"
-        transparent
-        onRequestClose={() => {
+        title="Delete Post"
+        message="Are you sure you want to delete this post? This action cannot be undone."
+        confirmText="Delete"
+        destructive
+        loading={deletePostLoading === postToDelete}
+        onConfirm={confirmDeletePost}
+        onCancel={() => {
           setShowDeleteConfirmModal(false);
           setPostToDelete(null);
         }}
-      >
-        <View style={styles.deleteModalOverlay}>
-          <View
-            style={[
-              styles.deleteModalContent,
-              { backgroundColor: surfaceColor },
-            ]}
-          >
-            <View style={styles.deleteModalHeader}>
-              <ThemedText style={[styles.deleteModalTitle, { color: "#000" }]}>
-                Delete Post
-              </ThemedText>
-            </View>
-
-            <View style={styles.deleteModalBody}>
-              <ThemedText
-                style={[styles.deleteModalMessage, { color: "#000" }]}
-              >
-                Are you sure you want to delete this post? This action cannot be
-                undone.
-              </ThemedText>
-            </View>
-
-            <View style={styles.deleteModalFooter}>
-              <TouchableOpacity
-                style={[
-                  styles.deleteModalButton,
-                  styles.cancelDeleteButton,
-                  { backgroundColor: "#F9FAFB", borderColor: PALETTE.border },
-                ]}
-                onPress={() => {
-                  setShowDeleteConfirmModal(false);
-                  setPostToDelete(null);
-                }}
-              >
-                <ThemedText style={{ color: textColor }}>Cancel</ThemedText>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.deleteModalButton,
-                  { backgroundColor: PALETTE.danger },
-                ]}
-                onPress={confirmDeletePost}
-                disabled={deletePostLoading === postToDelete}
-              >
-                <ThemedText style={{ color: "#fff", fontWeight: "600" }}>
-                  {deletePostLoading === postToDelete
-                    ? "Deleting..."
-                    : "Delete"}
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      />
 
       <EventModal
         visible={isEventModalVisible}
