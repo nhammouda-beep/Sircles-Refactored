@@ -24,6 +24,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { DatabaseService } from "@/lib/database";
 import { Avatar } from "@/components/Avatar";
+import { MemberCard } from "@/components/circle/MemberCard";
+import { JoinRequestCard } from "@/components/circle/JoinRequestCard";
+import { AdminMemberCard } from "@/components/circle/AdminMemberCard";
 import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
 import EventModal from "@/components/EventModal";
@@ -1266,177 +1269,47 @@ export default function CircleScreen() {
   );
 
   const renderMember = (member: Member) => (
-    <View
+    <MemberCard
       key={member.id}
-      style={[
-        styles.memberCard,
-        {
-          backgroundColor: surfaceColor,
-          borderColor: PALETTE.border,
-          borderWidth: 1,
-        },
-      ]}
-    >
-      <View style={[styles.memberInfo, isRTL && styles.memberInfoRTL]}>
-        <Avatar
-          uri={member.avatar_url}
-          name={member.name}
-          size={40}
-          style={styles.memberAvatar}
-        />
-        <View style={styles.memberDetails}>
-          <ThemedText type="defaultSemiBold" style={{ color: "#000000ff" }}>
-            {member.name}
-          </ThemedText>
-          {member.isAdmin && (
-            <ThemedText style={[styles.adminBadge, { color: tintColor }]}>
-              Admin
-            </ThemedText>
-          )}
-        </View>
-      </View>
-      {circle.isAdmin &&
+      member={member}
+      surfaceColor={surfaceColor}
+      isRTL={isRTL}
+      canRemove={
+        !!circle.isAdmin &&
         member.id !== circle.creator &&
-        member.id !== user?.id && (
-          <TouchableOpacity
-            style={styles.removeButton}
-            onPress={() => handleRemoveMember(member.id, member.name)}
-          >
-            <IconSymbol name="minus.circle" size={20} color={PALETTE.danger} />
-          </TouchableOpacity>
-        )}
-    </View>
+        member.id !== user?.id
+      }
+      onRemove={handleRemoveMember}
+    />
   );
 
   const renderJoinRequest = (request: JoinRequest) => (
-    <View
+    <JoinRequestCard
       key={request.id}
-      style={[
-        styles.requestCard,
-        {
-          backgroundColor: surfaceColor,
-          borderColor: PALETTE.border,
-          borderWidth: 1,
-        },
-      ]}
-    >
-      <View style={[styles.requestInfo, isRTL && styles.requestInfoRTL]}>
-        <Avatar
-          uri={(request.users as any).avatar_url || (request.users as any).avatar}
-          name={request.users.name}
-          size={40}
-          style={styles.requestAvatar}
-        />
-        <View style={styles.requestDetails}>
-          <ThemedText type="defaultSemiBold">{request.users.name}</ThemedText>
-          {request.message && (
-            <ThemedText style={styles.requestMessage}>
-              "{request.message}"
-            </ThemedText>
-          )}
-          <ThemedText style={styles.requestTime}>
-            {new Date(request.creationdate).toLocaleDateString()}
-          </ThemedText>
-        </View>
-      </View>
-      <View style={styles.requestActions}>
-        <TouchableOpacity
-          style={[styles.requestButton, { backgroundColor: tintColor }]}
-          onPress={() => handleJoinRequest(request.id, "accept")}
-        >
-          <ThemedText style={styles.requestButtonText}>Accept</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.requestButton, { backgroundColor: PALETTE.danger }]}
-          onPress={() => handleJoinRequest(request.id, "reject")}
-        >
-          <ThemedText style={styles.requestButtonText}>Reject</ThemedText>
-        </TouchableOpacity>
-      </View>
-    </View>
+      request={request}
+      surfaceColor={surfaceColor}
+      isRTL={isRTL}
+      onAction={handleJoinRequest}
+    />
   );
 
-  const renderAdminMember = (member: Member) => (
-    <View
-      key={member.id}
-      style={[
-        styles.adminMemberCard,
-        {
-          backgroundColor: surfaceColor,
-          borderColor: PALETTE.border,
-          borderWidth: 1,
-        },
-      ]}
-    >
-      <View
-        style={[styles.adminMemberInfo, isRTL && styles.adminMemberInfoRTL]}
-      >
-        <Avatar
-          uri={member.avatar_url}
-          name={member.name}
-          size={40}
-          style={styles.adminMemberAvatar}
-        />
-        <View style={styles.adminMemberDetails}>
-          <ThemedText type="defaultSemiBold" style={{ color: "#000000ff" }}>
-            {member.name}
-          </ThemedText>
-          <View style={styles.memberBadges}>
-            {member.isAdmin && (
-              <View style={[styles.badge, { backgroundColor: tintColor }]}>
-                <ThemedText style={styles.badgeText}>Admin</ThemedText>
-              </View>
-            )}
-            {member.id === circle.creator && (
-              <View style={[styles.badge, { backgroundColor: tintColor }]}>
-                <ThemedText style={styles.badgeText}>Creator</ThemedText>
-              </View>
-            )}
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.adminMemberActions}>
-        {member.id !== circle.creator && member.id !== user?.id && (
-          <TouchableOpacity
-            style={[
-              styles.adminActionButton,
-              { backgroundColor: PALETTE.danger },
-            ]}
-            onPress={() => handleRemoveMemberAsAdmin(member.id, member.name)}
-          >
-            <IconSymbol name="minus.circle" size={16} color="#fff" />
-            <ThemedText style={styles.adminActionButtonText}>Remove</ThemedText>
-          </TouchableOpacity>
-        )}
-
-        {member.id !== circle.creator &&
-          member.id !== user?.id &&
-          circle.isAdmin && (
-            <TouchableOpacity
-              style={[
-                styles.adminActionButton,
-                {
-                  backgroundColor: member.isAdmin ? PALETTE.warning : tintColor,
-                },
-              ]}
-              onPress={() =>
-                handleToggleAdmin(member.id, member.name, member.isAdmin)
-              }
-            >
-              <IconSymbol
-                name={member.isAdmin ? "star.slash" : "star.fill"}
-                size={16}
-                color="#fff"
-              />
-              <ThemedText style={styles.adminActionButtonText}>
-                {member.isAdmin ? "Remove Admin" : "Make Admin"}
-              </ThemedText>
-            </TouchableOpacity>
-          )}
-      </View>
-    </View>
-  );
+  const renderAdminMember = (member: Member) => {
+    const isMemberCreator = member.id === circle.creator;
+    const isSelf = member.id === user?.id;
+    return (
+      <AdminMemberCard
+        key={member.id}
+        member={member}
+        surfaceColor={surfaceColor}
+        isRTL={isRTL}
+        isCreator={isMemberCreator}
+        canRemove={!isMemberCreator && !isSelf}
+        canToggleAdmin={!isMemberCreator && !isSelf && !!circle.isAdmin}
+        onRemove={handleRemoveMemberAsAdmin}
+        onToggleAdmin={handleToggleAdmin}
+      />
+    );
+  };
 
   const filteredMembers = members.filter((m) =>
     m.name.toLowerCase().includes(memberSearchQuery.toLowerCase())
