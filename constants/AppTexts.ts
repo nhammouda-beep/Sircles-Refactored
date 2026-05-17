@@ -32,7 +32,6 @@ export const AppTexts = {
     no: 'No',
 
     // Profile & Settings
-    profile: 'Profile',
     settings: 'Settings',
     personalInformation: 'Personal Information',
     email: 'Email',
@@ -105,20 +104,15 @@ export const AppTexts = {
     searchCircles: 'Search Circles',
     circleDetails: 'Circle Details',
     joinCircle: 'Join Circle',
-    feed: 'Feed',
-    events: 'Events',
     chat: 'Chat',
     members: 'Members',
     posts: 'Posts',
     noPostsYet: 'No posts yet',
     noEventsYet: 'No events yet',
     sendMessage: 'Send Message',
-    typeMessage: 'Type a message...',
     myCircles: 'My Circles',
     findEvents: 'Find Events',
-    createEvent: 'Create Event',
     eventCreated: 'Event created successfully!',
-    fillAllFields: 'Please fill in all required fields',
     enterEventTitle: 'Enter event title',
     enterLocation: 'Enter location',
     enterDescription: 'Enter event description',
@@ -147,7 +141,6 @@ export const AppTexts = {
     name: 'Circle name',
     enterCircleName: 'e.g. Sport Circle',
     privacy: 'Privacy',
-    interests: 'Interests',
 
     // Events
     upcoming: 'Upcoming',
@@ -233,7 +226,6 @@ export const AppTexts = {
     no: 'لا',
 
     // Profile & Settings
-    profile: 'الملف الشخصي',
     settings: 'الإعدادات',
     personalInformation: 'المعلومات الشخصية',
     email: 'البريد الإلكتروني',
@@ -306,20 +298,15 @@ export const AppTexts = {
     searchCircles: 'البحث في الدوائر',
     circleDetails: 'تفاصيل الدائرة',
     joinCircle: 'انضم للدائرة',
-    feed: 'الخلاصة',
-    events: 'الأحداث',
     chat: 'المحادثة',
     members: 'الأعضاء',
     posts: 'المنشورات',
     noPostsYet: 'لا توجد منشورات بعد',
     noEventsYet: 'لا توجد أحداث بعد',
     sendMessage: 'إرسال رسالة',
-    typeMessage: 'اكتب رسالة...',
     myCircles: 'دوائري',
     findEvents: 'البحث عن الأحداث',
-    createEvent: 'إنشاء حدث',
     eventCreated: 'تم إنشاء الحدث بنجاح!',
-    fillAllFields: 'يرجى ملء جميع الحقول المطلوبة',
     enterEventTitle: 'أدخل عنوان الحدث',
     enterLocation: 'أدخل الموقع',
     enterDescription: 'أدخل وصف الحدث',
@@ -340,7 +327,6 @@ export const AppTexts = {
     name: 'اسم الدائرة',
     enterCircleName: 'مثال: دائرة الرياضة',
     privacy: 'الخصوصية',
-    interests: 'الاهتمامات',
 
     // Events
     upcoming: 'القادمة',
