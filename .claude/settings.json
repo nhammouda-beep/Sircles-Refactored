@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git commit -m 'Extract CreatePostModal and EditPostModal from circle detail *)",
       "Bash(cd c:/Users/jhammoni/Sircles && sed -i '1823,2058d' \"app/circle/[id].tsx\")",
-      "Bash(git commit -m 'Extract EditCircleModal from circle detail *)"
+      "Bash(git commit -m 'Extract EditCircleModal from circle detail *)",
+      "Bash(git commit -m 'Extract CircleEventCard from circle detail FlatList renderItem *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\jhammoni\\Sircles\\app\\circle"

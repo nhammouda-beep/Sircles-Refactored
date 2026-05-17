@@ -33,6 +33,7 @@ import { CircleInfoHeader } from "@/components/circle/CircleInfoHeader";
 import { CreatePostModal } from "@/components/circle/CreatePostModal";
 import { EditPostModal } from "@/components/circle/EditPostModal";
 import { EditCircleModal } from "@/components/circle/EditCircleModal";
+import { CircleEventCard } from "@/components/circle/CircleEventCard";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
@@ -1407,246 +1408,21 @@ export default function CircleScreen() {
               showsVerticalScrollIndicator={false}
               scrollEnabled={false}
               renderItem={({ item }) => (
-                <View
-                  style={[
-                    styles.eventCard,
-                    {
-                      backgroundColor: surfaceColor,
-                      borderColor: PALETTE.border,
-                    },
-                  ]}
-                >
-                  <View style={styles.eventHeader}>
-                    <View style={styles.eventInfo}>
-                      <ThemedText style={styles.eventTitle}>
-                        {item.title}
-                      </ThemedText>
-                      <ThemedText style={styles.eventDate}>
-                        {new Date(item.date).toLocaleDateString()} at{" "}
-                        {item.time}
-                      </ThemedText>
-                      {item.location && (
-                        <View
-                          style={{ flexDirection: "row", alignItems: "center" }}
-                        >
-                          <ThemedText style={styles.eventLocation}>
-                            📍{" "}
-                          </ThemedText>
-                          {item.location_url ? (
-                            <TouchableOpacity
-                              onPress={() =>
-                                Linking.openURL(item.location_url!)
-                              }
-                            >
-                              <ThemedText
-                                style={[
-                                  styles.eventLocation,
-                                  {
-                                    color: PALETTE.link,
-                                    textDecorationLine: "underline",
-                                  },
-                                ]}
-                              >
-                                {item.location}
-                              </ThemedText>
-                            </TouchableOpacity>
-                          ) : (
-                            <ThemedText style={styles.eventLocation}>
-                              {item.location}
-                            </ThemedText>
-                          )}
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.eventActions}>
-                      {canEditEvent(item) && (
-                        <TouchableOpacity
-                          style={styles.editEventButton}
-                          onPress={() => handleEditEvent(item)}
-                        >
-                          <IconSymbol
-                            name="pencil"
-                            size={18}
-                            color={tintColor}
-                          />
-                        </TouchableOpacity>
-                      )}
-                      {(circle?.createdby === user?.id ||
-                        circle.isAdmin ||
-                        item.createdby === user?.id) && (
-                        <TouchableOpacity
-                          style={styles.deleteEventButton}
-                          onPress={() => deleteEvent(item.id)}
-                        >
-                          <IconSymbol
-                            name="trash"
-                            size={18}
-                            color={PALETTE.danger}
-                          />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  </View>
-
-                  {item.photo_url && (
-                    <Image
-                      source={{ uri: item.photo_url }}
-                      style={styles.eventPhoto}
-                      contentFit="cover"
-                    />
-                  )}
-
-                  {item.description && (
-                    <ThemedText style={styles.eventDescription}>
-                      {item.description}
-                    </ThemedText>
-                  )}
-
-                  {item.event_interests && item.event_interests.length > 0 && (
-                    <View style={styles.eventInterests}>
-                      {item.event_interests.map((ei: any) => (
-                        <View
-                          key={ei.interests.id}
-                          style={[
-                            styles.eventInterestChip,
-                            {
-                              backgroundColor: tintColor + "20",
-                              borderColor: tintColor,
-                            },
-                          ]}
-                        >
-                          <ThemedText
-                            style={[
-                              styles.eventInterestText,
-                              { color: tintColor },
-                            ]}
-                          >
-                            {ei.interests.title}
-                          </ThemedText>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-
-                  <ThemedText style={styles.eventCreator}>
-                    Created by {item.creator?.name || "Unknown"}
-                  </ThemedText>
-
-                  <View style={styles.eventRsvpSection}>
-                    <View style={styles.eventRsvpButtons}>
-                      <TouchableOpacity
-                        style={[
-                          styles.eventRsvpButton,
-                          {
-                            backgroundColor:
-                              item.user_rsvp?.[0]?.status === "going"
-                                ? successColor
-                                : backgroundColor,
-                            borderColor: successColor,
-                          },
-                        ]}
-                        onPress={() => handleEventRsvp(item.id, "going")}
-                      >
-                        <IconSymbol
-                          name="checkmark.circle.fill"
-                          size={14}
-                          color={
-                            item.user_rsvp?.[0]?.status === "going"
-                              ? "#fff"
-                              : successColor
-                          }
-                        />
-                        <ThemedText
-                          style={[
-                            styles.eventRsvpButtonText,
-                            {
-                              color:
-                                item.user_rsvp?.[0]?.status === "going"
-                                  ? "#fff"
-                                  : successColor,
-                            },
-                          ]}
-                        >
-                          Going ({item.going_count || 0})
-                        </ThemedText>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[
-                          styles.eventRsvpButton,
-                          {
-                            backgroundColor:
-                              item.user_rsvp?.[0]?.status === "maybe"
-                                ? PALETTE.warning
-                                : backgroundColor,
-                            borderColor: PALETTE.warning,
-                          },
-                        ]}
-                        onPress={() => handleEventRsvp(item.id, "maybe")}
-                      >
-                        <IconSymbol
-                          name="star.fill"
-                          size={14}
-                          color={
-                            item.user_rsvp?.[0]?.status === "maybe"
-                              ? "#fff"
-                              : PALETTE.warning
-                          }
-                        />
-                        <ThemedText
-                          style={[
-                            styles.eventRsvpButtonText,
-                            {
-                              color:
-                                item.user_rsvp?.[0]?.status === "maybe"
-                                  ? "#fff"
-                                  : PALETTE.warning,
-                            },
-                          ]}
-                        >
-                          Maybe ({item.maybe_count || 0})
-                        </ThemedText>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[
-                          styles.eventRsvpButton,
-                          {
-                            backgroundColor:
-                              item.user_rsvp?.[0]?.status === "not_going"
-                                ? PALETTE.danger
-                                : backgroundColor,
-                            borderColor: PALETTE.danger,
-                          },
-                        ]}
-                        onPress={() => handleEventRsvp(item.id, "not_going")}
-                      >
-                        <IconSymbol
-                          name="xmark.circle.fill"
-                          size={14}
-                          color={
-                            item.user_rsvp?.[0]?.status === "not_going"
-                              ? "#fff"
-                              : PALETTE.danger
-                          }
-                        />
-                        <ThemedText
-                          style={[
-                            styles.eventRsvpButtonText,
-                            {
-                              color:
-                                item.user_rsvp?.[0]?.status === "not_going"
-                                  ? "#fff"
-                                  : PALETTE.danger,
-                            },
-                          ]}
-                        >
-                          Can't Go ({item.no_going_count || 0})
-                        </ThemedText>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
+                <CircleEventCard
+                  event={item}
+                  surfaceColor={surfaceColor}
+                  backgroundColor={backgroundColor}
+                  successColor={successColor}
+                  canEdit={canEditEvent(item)}
+                  canDelete={
+                    circle?.createdby === user?.id ||
+                    !!circle.isAdmin ||
+                    item.createdby === user?.id
+                  }
+                  onEdit={handleEditEvent}
+                  onDelete={deleteEvent}
+                  onRsvp={handleEventRsvp}
+                />
               )}
               ListEmptyComponent={
                 <View style={styles.emptyState}>
