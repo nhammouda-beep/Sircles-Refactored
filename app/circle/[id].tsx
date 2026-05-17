@@ -35,6 +35,7 @@ import { EditPostModal } from "@/components/circle/EditPostModal";
 import { EditCircleModal } from "@/components/circle/EditCircleModal";
 import { CircleEventCard } from "@/components/circle/CircleEventCard";
 import { SearchableSection } from "@/components/circle/SearchableSection";
+import { CircleDetailHeader } from "@/components/circle/CircleDetailHeader";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
@@ -1248,90 +1249,18 @@ export default function CircleScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
-      <View style={[styles.header, { backgroundColor: surfaceColor }]}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <IconSymbol name="chevron.left" size={24} color={textColor} />
-        </TouchableOpacity>
-        <ThemedText type="defaultSemiBold" style={styles.headerTitle}>
-          {circle.name}
-        </ThemedText>
-        <View style={styles.headerActions}>
-          {!circle?.isJoined &&
-            !hasPendingRequest &&
-            !circle?.hasPendingRequest && (
-              <TouchableOpacity
-                style={[styles.joinButton, { backgroundColor: tintColor }]}
-                onPress={handleJoinCircle}
-                disabled={loading}
-              >
-                <IconSymbol name="plus" size={16} color="#fff" />
-                <ThemedText style={styles.joinButtonText}>
-                  {circle?.privacy === "private" ? "Request to Join" : "Join"}
-                </ThemedText>
-              </TouchableOpacity>
-            )}
-
-          {!circle?.isJoined &&
-            (hasPendingRequest || circle?.hasPendingRequest) && (
-              <TouchableOpacity
-                style={[
-                  styles.pendingButton,
-                  { backgroundColor: PALETTE.warning },
-                ]}
-                disabled
-              >
-                <IconSymbol name="clock" size={16} color="#fff" />
-                <ThemedText style={styles.pendingButtonText}>
-                  Pending
-                </ThemedText>
-              </TouchableOpacity>
-            )}
-
-          {circle?.isJoined && circle?.createdby !== user?.id && (
-            <TouchableOpacity
-              style={[styles.leaveButton, { backgroundColor: PALETTE.danger }]}
-              onPress={handleLeaveCircle}
-              disabled={loading}
-            >
-              <IconSymbol name="minus" size={16} color="#fff" />
-              <ThemedText style={styles.leaveButtonText}>Leave</ThemedText>
-            </TouchableOpacity>
-          )}
-
-          {circle?.isJoined && (
-            <TouchableOpacity
-              style={[styles.messageButton, { backgroundColor: PALETTE.link }]}
-              onPress={() =>
-                router.push(`/(tabs)/messages?circleId=${circle.id}`)
-              }
-            >
-              <IconSymbol name="message" size={16} color="#fff" />
-              <ThemedText style={styles.messageButtonText}>Messages</ThemedText>
-            </TouchableOpacity>
-          )}
-
-          {circle?.isAdmin && (
-            <TouchableOpacity
-              style={[styles.editButton, { backgroundColor: tintColor }]}
-              onPress={handleEditCircle}
-              disabled={loading}
-            >
-              <IconSymbol name="pencil" size={16} color="#fff" />
-              <ThemedText style={styles.editButtonText}>Edit</ThemedText>
-            </TouchableOpacity>
-          )}
-
-          {circle?.createdby === user?.id && (
-            <TouchableOpacity
-              style={[styles.deleteButton, { backgroundColor: PALETTE.danger }]}
-              onPress={handleDeleteCircle}
-              disabled={loading}
-            >
-              <IconSymbol name="trash" size={18} color="#fff" />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+      <CircleDetailHeader
+        circle={circle}
+        currentUserId={user?.id}
+        hasPendingRequest={hasPendingRequest}
+        loading={loading}
+        surfaceColor={surfaceColor}
+        textColor={textColor}
+        onJoin={handleJoinCircle}
+        onLeave={handleLeaveCircle}
+        onEdit={handleEditCircle}
+        onDelete={handleDeleteCircle}
+      />
 
       <ScrollView
         style={styles.content}
