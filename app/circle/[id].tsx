@@ -34,6 +34,7 @@ import { CreatePostModal } from "@/components/circle/CreatePostModal";
 import { EditPostModal } from "@/components/circle/EditPostModal";
 import { EditCircleModal } from "@/components/circle/EditCircleModal";
 import { CircleEventCard } from "@/components/circle/CircleEventCard";
+import { SearchableSection } from "@/components/circle/SearchableSection";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
@@ -1443,95 +1444,40 @@ export default function CircleScreen() {
 
         {activeTab === "admin" && circle.isAdmin && (
           <View style={styles.adminContainer}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>
-              Join Requests ({joinRequests.length})
-            </ThemedText>
-            <View
-              style={[
-                styles.searchContainer,
-                { backgroundColor, borderColor: PALETTE.border },
-              ]}
+            <SearchableSection
+              title="Join Requests"
+              count={joinRequests.length}
+              placeholder="Search join requests by name..."
+              searchQuery={requestSearchQuery}
+              onSearchChange={setRequestSearchQuery}
+              backgroundColor={backgroundColor}
+              textColor={textColor}
+              totalItems={joinRequests.length}
+              filteredCount={filteredJoinRequests.length}
+              emptyMessage="No pending join requests"
+              notFoundMessage={'No join requests found matching "{query}"'}
             >
-              <IconSymbol
-                name="magnifyingglass"
-                size={16}
-                color={textColor + "60"}
-              />
-              <TextInput
-                style={[styles.searchInput, { color: textColor }]}
-                placeholder="Search join requests by name..."
-                placeholderTextColor={textColor + "60"}
-                value={requestSearchQuery}
-                onChangeText={setRequestSearchQuery}
-              />
-              {requestSearchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setRequestSearchQuery("")}>
-                  <IconSymbol
-                    name="xmark.circle.fill"
-                    size={16}
-                    color={textColor + "40"}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
-            {filteredJoinRequests.length > 0 ? (
-              filteredJoinRequests.map(renderJoinRequest)
-            ) : joinRequests.length > 0 ? (
-              <ThemedText style={styles.emptyText}>
-                No join requests found matching "{requestSearchQuery}"
-              </ThemedText>
-            ) : (
-              <ThemedText style={styles.emptyText}>
-                No pending join requests
-              </ThemedText>
-            )}
-            <ThemedText
-              type="subtitle"
-              style={[styles.sectionTitle, { marginTop: 24 }]}
+              {filteredJoinRequests.map(renderJoinRequest)}
+            </SearchableSection>
+
+            <SearchableSection
+              title="Circle Members"
+              count={members.length}
+              placeholder="Search members by name..."
+              searchQuery={memberSearchQuery}
+              onSearchChange={setMemberSearchQuery}
+              backgroundColor={backgroundColor}
+              textColor={textColor}
+              totalItems={members.length}
+              filteredCount={filteredMembers.length}
+              emptyMessage="No members found"
+              notFoundMessage={'No members found matching "{query}"'}
+              titleMarginTop={24}
             >
-              Circle Members ({members.length})
-            </ThemedText>
-            <View
-              style={[
-                styles.searchContainer,
-                { backgroundColor, borderColor: PALETTE.border },
-              ]}
-            >
-              <IconSymbol
-                name="magnifyingglass"
-                size={16}
-                color={textColor + "60"}
-              />
-              <TextInput
-                style={[styles.searchInput, { color: textColor }]}
-                placeholder="Search members by name..."
-                placeholderTextColor={textColor + "60"}
-                value={memberSearchQuery}
-                onChangeText={setMemberSearchQuery}
-              />
-              {memberSearchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setMemberSearchQuery("")}>
-                  <IconSymbol
-                    name="xmark.circle.fill"
-                    size={16}
-                    color={textColor + "40"}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
-            <View style={styles.adminMembersContainer}>
-              {filteredMembers.length > 0 ? (
-                filteredMembers.map(renderAdminMember)
-              ) : members.length > 0 ? (
-                <ThemedText style={styles.emptyText}>
-                  No members found matching "{memberSearchQuery}"
-                </ThemedText>
-              ) : (
-                <ThemedText style={styles.emptyText}>
-                  No members found
-                </ThemedText>
-              )}
-            </View>
+              <View style={styles.adminMembersContainer}>
+                {filteredMembers.map(renderAdminMember)}
+              </View>
+            </SearchableSection>
           </View>
         )}
       </ScrollView>
