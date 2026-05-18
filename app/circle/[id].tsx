@@ -4,26 +4,20 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  Modal,
-  TextInput,
   Alert,
   RefreshControl,
   FlatList,
   Platform,
 } from "react-native";
-import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import * as Linking from "expo-linking";
 
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { DatabaseService } from "@/lib/database";
-import { Avatar } from "@/components/Avatar";
 import { MemberCard } from "@/components/circle/MemberCard";
 import { JoinRequestCard } from "@/components/circle/JoinRequestCard";
 import { AdminMemberCard } from "@/components/circle/AdminMemberCard";
@@ -147,7 +141,6 @@ export default function CircleScreen() {
   const [editingEvent, setEditingEvent] = useState<any | null>(null);
   const [selectedPostImage, setSelectedPostImage] =
     useState<ImagePicker.ImagePickerAsset | null>(null);
-  const [imageUploading, setImageUploading] = useState(false);
   const [memberSearchQuery, setMemberSearchQuery] = useState("");
   const [requestSearchQuery, setRequestSearchQuery] = useState("");
 
@@ -169,13 +162,9 @@ export default function CircleScreen() {
     circle_profile_url: undefined as string | undefined,
     _selectedImageAsset: undefined as any,
   });
-  const [allInterests, setAllInterests] = useState<any[]>([]);
   const [interestsByCategory, setInterestsByCategory] = useState<{
     [key: string]: any[];
   }>({});
-
-  const [interests, setInterests] = useState<{ [category: string]: any[] }>({});
-  const [uploading, setUploading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
@@ -189,14 +178,6 @@ export default function CircleScreen() {
       );
       if (error) return;
       setEvents(data || []);
-    } catch {}
-  };
-
-  const loadInterests = async () => {
-    try {
-      const { data, error } = await DatabaseService.getInterestsByCategory();
-      if (error) return;
-      setInterests(data || {});
     } catch {}
   };
 
@@ -237,100 +218,11 @@ export default function CircleScreen() {
     setShowEditEventModal(true);
   };
 
-  const handleSaveEventChanges = async () => {
-    if (!editingEvent || !user?.id) {
-      Alert.alert("Error", "Unable to save changes. Please try again.");
-      return;
-    }
-    try {
-      setLoading(true);
-      let updateData: any = {
-        title: editingEvent.title,
-        description: editingEvent.description,
-        date: editingEvent.date,
-        time: editingEvent.time,
-        location: editingEvent.location,
-      };
-
-      if (editingEvent._selectedImageAsset) {
-        try {
-          const { data: uploadData } = await StorageService.uploadEventPhoto(
-            editingEvent.id,
-            editingEvent._selectedImageAsset,
-            user.id
-          );
-          if (uploadData?.publicUrl)
-            updateData.photo_url = uploadData.publicUrl;
-        } catch {}
-      }
-
-      const { error } = await supabase
-        .from("events")
-        .update(updateData)
-        .eq("id", editingEvent.id);
-      if (error) {
-        Alert.alert("Error", error.message || "Failed to update event");
-        return;
-      }
-
-      try {
-        await DatabaseService.updateEventInterests(
-          editingEvent.id,
-          editingEvent.interests
-        );
-      } catch {}
-
-      Alert.alert("Success", "Event updated successfully");
-      setShowEditEventModal(false);
-      setEditingEvent(null);
-      await loadEvents();
-    } catch {
-      Alert.alert("Error", "Failed to update event");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const canEditEvent = (event: any) => {
     if (!user?.id) return false;
     if (event.createdby === user.id) return true;
     if (event.circleid && circle?.isAdmin) return true;
     return false;
-  };
-
-  const handleEventImagePicker = async () => {
-    try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission Required",
-          "Please grant photo library access to change event picture."
-        );
-        return;
-      }
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-        base64: false,
-      });
-      if (!result.canceled && result.assets?.length) {
-        const asset = result.assets[0];
-        if (!asset.uri) {
-          Alert.alert("Error", "Invalid image selected");
-          return;
-        }
-        setEditingEvent((prev: any) =>
-          prev
-            ? { ...prev, photo_url: asset.uri, _selectedImageAsset: asset }
-            : null
-        );
-      }
-    } catch {
-      Alert.alert("Error", "Failed to pick image");
-    }
   };
 
   const handleEventRsvp = async (
@@ -760,8 +652,6 @@ export default function CircleScreen() {
         await DatabaseService.getInterestsByCategory();
       if (error) return;
       setInterestsByCategory(interestsData || {});
-      const allInterestsFlat = Object.values(interestsData || {}).flat();
-      setAllInterests(allInterestsFlat);
     } catch {}
   };
 
@@ -791,41 +681,6 @@ export default function CircleScreen() {
         ? prev.interests.filter((id) => id !== interestId)
         : [...prev.interests, interestId],
     }));
-  };
-
-  const handleImagePicker = async () => {
-    try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission Required",
-          "Please grant photo library access to change circle picture."
-        );
-        return;
-      }
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-        base64: false,
-      });
-      if (!result.canceled && result.assets?.length) {
-        const asset = result.assets[0];
-        if (!asset.uri) {
-          Alert.alert("Error", "Invalid image selected");
-          return;
-        }
-        setEditedCircle((prev) => ({
-          ...prev,
-          circle_profile_url: asset.uri,
-          _selectedImageAsset: asset,
-        }));
-      }
-    } catch {
-      Alert.alert("Error", "Failed to pick image");
-    }
   };
 
   const handleCircleImagePicker = async () => {
@@ -859,7 +714,6 @@ export default function CircleScreen() {
       Alert.alert("Error", "User or circle information is missing.");
       return;
     }
-    setImageUploading(true);
     try {
       const result = await StorageService.uploadCircleProfilePicture(
         circleId as string,
@@ -890,8 +744,6 @@ export default function CircleScreen() {
       }
     } catch {
       Alert.alert("Error", "Failed to upload circle image. Please try again.");
-    } finally {
-      setImageUploading(false);
     }
   };
 
@@ -1153,7 +1005,6 @@ export default function CircleScreen() {
   useEffect(() => {
     loadCircleData();
     loadEvents();
-    loadInterests();
   }, [circleId, user]);
 
   useEffect(() => {
