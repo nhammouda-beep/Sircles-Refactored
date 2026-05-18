@@ -9,7 +9,6 @@ import {
   TextInput,
   RefreshControl,
 } from "react-native";
-import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Linking from "expo-linking";
 
@@ -20,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DatabaseService } from "@/lib/database";
 import EventModal from "@/components/EventModal";
 import { EventsSkeleton } from "@/components/SkeletonLoader";
+import { EventsListCard } from "@/components/events/EventsListCard";
 import { useDebounced } from "@/hooks/useDebounced";
 import { useFocusEffect } from "expo-router";
 
@@ -56,8 +56,6 @@ export default function EventsScreen() {
   const TEXT = "#0F172A";
   const SUBTLE = "#6B7280";
   const BORDER = "#E5E7EB";
-  const WARNING = "#F59E0B";
-  const DANGER = "#EF4444";
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -441,240 +439,19 @@ export default function EventsScreen() {
             <ThemedText style={{ color: SUBTLE }}>No events yet</ThemedText>
           </View>
         ) : (
-          filteredSorted.map((event) => {
-            const showImage = !!event.photo_url;
-            const interestArr = event.event_interests || [];
-            const firstTwo = interestArr.slice(0, 2);
-            const moreCount = Math.max(0, interestArr.length - 2);
-
-            return (
-              <TouchableOpacity
-                key={event.id}
-                style={styles.card}
-                onPress={() => setSelectedEvent(event)}
-              >
-                {showImage && (
-                  <Image
-                    source={{ uri: event.photo_url! }}
-                    style={styles.cardImage}
-                    contentFit="cover"
-                  />
-                )}
-
-                <View
-                  style={[
-                    styles.cardBody,
-                    !showImage && styles.cardBodyRounded,
-                  ]}
-                >
-                  {firstTwo.length > 0 && (
-                    <View style={styles.interestsRow}>
-                      {firstTwo.map((ei, idx) => (
-                        <View
-                          key={idx}
-                          style={[styles.pill, { backgroundColor: PRIMARY }]}
-                        >
-                          <ThemedText style={styles.pillText}>
-                            {ei.interests.title}
-                          </ThemedText>
-                        </View>
-                      ))}
-                      {moreCount > 0 && (
-                        <ThemedText style={styles.moreInterests}>
-                          +{moreCount} more
-                        </ThemedText>
-                      )}
-                    </View>
-                  )}
-
-                  <ThemedText
-                    type="defaultSemiBold"
-                    style={[styles.title, isRTL && styles.rtl]}
-                  >
-                    {event.title}
-                  </ThemedText>
-                  {event.description?.trim()?.length > 0 && (
-                    <ThemedText style={styles.eventDescription}>
-                      {event.description}
-                    </ThemedText>
-                  )}
-
-                  {event.circleid ? (
-                    event.circleName && (
-                      <ThemedText style={[styles.metaSmall, { color: SUBTLE }]}>
-                        • {event.circleName}
-                      </ThemedText>
-                    )
-                  ) : (
-                    <ThemedText style={[styles.metaSmall, { color: SUBTLE }]}>
-                      • General
-                    </ThemedText>
-                  )}
-
-                  <View style={styles.metaRow}>
-                    <IconSymbol name="calendar" size={16} color={SUBTLE} />
-                    <ThemedText style={[styles.metaText, { color: SUBTLE }]}>
-                      {event.date}
-                    </ThemedText>
-                    <IconSymbol name="clock" size={16} color={SUBTLE} />
-                    <ThemedText style={[styles.metaText, { color: SUBTLE }]}>
-                      {event.time}
-                    </ThemedText>
-                  </View>
-                  <View style={styles.metaRow}>
-                    <IconSymbol name="location" size={16} color={SUBTLE} />
-                    {event.location_url ? (
-                      <TouchableOpacity
-                        onPress={() => Linking.openURL(event.location_url!)}
-                      >
-                        <ThemedText
-                          style={[
-                            styles.metaText,
-                            { color: PRIMARY, textDecorationLine: "underline" },
-                          ]}
-                        >
-                          {event.location}
-                        </ThemedText>
-                      </TouchableOpacity>
-                    ) : (
-                      <ThemedText style={[styles.metaText, { color: SUBTLE }]}>
-                        {event.location || "no location"}
-                      </ThemedText>
-                    )}
-                  </View>
-
-                  <View style={styles.divider} />
-
-                  <View style={styles.rsvpButtons}>
-                    <TouchableOpacity
-                      style={[
-                        styles.rsvpBtn,
-                        {
-                          borderColor: PRIMARY,
-                          backgroundColor:
-                            event.userRsvpStatus === "going" ? PRIMARY : BG,
-                        },
-                      ]}
-                      onPress={() => handleRsvp(event.id, "going")}
-                    >
-                      <IconSymbol
-                        name="checkmark.circle.fill"
-                        size={16}
-                        color={
-                          event.userRsvpStatus === "going" ? "#fff" : PRIMARY
-                        }
-                      />
-                      <ThemedText
-                        style={[
-                          styles.rsvpText,
-                          {
-                            color:
-                              event.userRsvpStatus === "going"
-                                ? "#fff"
-                                : PRIMARY,
-                          },
-                        ]}
-                      >
-                        Going ({event.going_count || 0})
-                      </ThemedText>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[
-                        styles.rsvpBtn,
-                        {
-                          borderColor: WARNING,
-                          backgroundColor:
-                            event.userRsvpStatus === "maybe" ? WARNING : BG,
-                        },
-                      ]}
-                      onPress={() => handleRsvp(event.id, "maybe")}
-                    >
-                      <IconSymbol
-                        name="star.fill"
-                        size={16}
-                        color={
-                          event.userRsvpStatus === "maybe" ? "#fff" : WARNING
-                        }
-                      />
-                      <ThemedText
-                        style={[
-                          styles.rsvpText,
-                          {
-                            color:
-                              event.userRsvpStatus === "maybe"
-                                ? "#fff"
-                                : WARNING,
-                          },
-                        ]}
-                      >
-                        Maybe ({event.maybe_count || 0})
-                      </ThemedText>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[
-                        styles.rsvpBtn,
-                        {
-                          borderColor: DANGER,
-                          backgroundColor:
-                            event.userRsvpStatus === "not_going" ? DANGER : BG,
-                        },
-                      ]}
-                      onPress={() => handleRsvp(event.id, "not_going")}
-                    >
-                      <IconSymbol
-                        name="xmark.circle.fill"
-                        size={16}
-                        color={
-                          event.userRsvpStatus === "not_going" ? "#fff" : DANGER
-                        }
-                      />
-                      <ThemedText
-                        style={[
-                          styles.rsvpText,
-                          {
-                            color:
-                              event.userRsvpStatus === "not_going"
-                                ? "#fff"
-                                : DANGER,
-                          },
-                        ]}
-                      >
-                        Cannot Go ({event.not_going_count || 0})
-                      </ThemedText>
-                    </TouchableOpacity>
-                  </View>
-
-                  <TouchableOpacity
-                    onPress={() => setSelectedEvent(event)}
-                    style={styles.moreLinkWrap}
-                  >
-                    <ThemedText style={[styles.moreLink, { color: PRIMARY }]}>
-                      For more details ›
-                    </ThemedText>
-                  </TouchableOpacity>
-                </View>
-
-                {deletableEvents.has(event.id) && (
-                  <View style={styles.cardActions}>
-                    <TouchableOpacity
-                      style={styles.iconBtn}
-                      onPress={() => handleEditEvent(event)}
-                    >
-                      <IconSymbol name="pencil" size={16} color={PRIMARY} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.iconBtn}
-                      onPress={() => handleDeleteEvent(event.id)}
-                    >
-                      <IconSymbol name="trash" size={16} color="#ff4444" />
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })
+          filteredSorted.map((event) => (
+            <EventsListCard
+              key={event.id}
+              event={event as any}
+              isRTL={isRTL}
+              isDeletable={deletableEvents.has(event.id)}
+              isRsvpPending={pendingRsvp.has(event.id)}
+              onPress={setSelectedEvent as any}
+              onEdit={handleEditEvent as any}
+              onDelete={handleDeleteEvent}
+              onRsvp={handleRsvp}
+            />
+          ))
         )}
       </ScrollView>
 
