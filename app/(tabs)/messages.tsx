@@ -74,7 +74,6 @@ export default function MessagesScreen() {
 
   const backgroundColor = COLORS.bg;
   const surfaceColor = COLORS.surface;
-  const tintColor = COLORS.me;
   const textColor = COLORS.textDark;
 
   const [conversations, setConversations] = useState<CircleConversation[]>([]);

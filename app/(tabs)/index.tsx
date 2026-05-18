@@ -10,8 +10,6 @@ import {
   Modal,
   TextInput,
   FlatList,
-  useWindowDimensions,
-  Animated,
 } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,11 +21,9 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { DatabaseService } from "@/lib/database";
-import { CircleCard } from "@/components/CircleCard";
 import { useCirclesStore } from "@/stores/circlesStore";
 import EventModal from "@/components/EventModal";
 import { FeedSkeleton } from "@/components/SkeletonLoader";
-import { Avatar } from "@/components/Avatar";
 import { useDebounced } from "@/hooks/useDebounced";
 import { optimizeImageForUpload } from "@/lib/imageOptimize";
 import { PostCard } from "@/components/feed/PostCard";
@@ -56,7 +52,6 @@ interface Post {
 export default function HomeScreen() {
   const { user } = useAuth();
   const { texts } = useLanguage();
-  const { width } = useWindowDimensions();
 
   // theme
   const PRIMARY = "#198F4B";
@@ -116,19 +111,6 @@ export default function HomeScreen() {
   const [showSearch, setShowSearch] = useState(false);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounced(query, 200);
-  const PALETTE = {
-    background: "#FFFFFF",
-    surface: "#FFFFFF",
-    border: "#E5E7EB",
-    text: "#111827",
-    muted: "#6B7280",
-    tint: "#0E7F45",
-    success: "#0E7F45",
-    warning: "#F59E0B",
-    danger: "#EF4444",
-    link: "#0EA5E9",
-    overlay: "rgba(0,0,0,0.6)",
-  };
 
   const isAllowedImageAsset = (
     asset: ImagePicker.ImagePickerAsset | null | undefined
@@ -157,11 +139,9 @@ export default function HomeScreen() {
   // suggested circles store
   const {
     suggested: suggestedCircles,
-    loading: suggestedLoading,
     loadSuggested,
     dismiss,
     snooze,
-    error: circlesError,
   } = useCirclesStore();
 
   const isFirstMount = React.useRef(true);
@@ -532,7 +512,7 @@ export default function HomeScreen() {
     try {
       setDeletePostLoading(postToDelete);
       setShowDeleteConfirmModal(false);
-      const { data, error } = await DatabaseService.deletePost(
+      const { error } = await DatabaseService.deletePost(
         postToDelete,
         user.id
       );

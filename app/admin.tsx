@@ -4,18 +4,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminScreen() {
-  const { texts, toggleLanguage, language, isRTL } = useLanguage();
+  const { texts, toggleLanguage, language } = useLanguage();
   const backgroundColor = useThemeColor({}, 'background');
   const surfaceColor = useThemeColor({}, 'surface');
   const tintColor = useThemeColor({}, 'tint');
-  const textColor = useThemeColor({}, 'text');
   const { signOut } = useAuth();
 
   const handleLogout = async () => {

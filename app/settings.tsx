@@ -16,7 +16,6 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 
 // لوحة ألوان متوافقة مع اللقطات
 const palette = {

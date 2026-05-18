@@ -15,7 +15,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 
 export default function PasswordSetupScreen() {
-  const { texts, isRTL } = useLanguage();
+  const { isRTL } = useLanguage();
   const { setupFirstTimePassword } = useAuth();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [password, setPassword] = useState('');
@@ -23,7 +23,6 @@ export default function PasswordSetupScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const backgroundColor = useThemeColor({}, 'background');
   const tintColor = useThemeColor({}, 'tint');
   const surfaceColor = useThemeColor({}, 'surface');
 

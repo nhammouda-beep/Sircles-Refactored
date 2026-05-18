@@ -6,7 +6,6 @@ import { useLocalSearchParams, router } from 'expo-router';
 import * as Linking from 'expo-linking';
 
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -50,7 +49,7 @@ interface Event {
 export default function EventScreen() {
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
-  const { texts, isRTL } = useLanguage();
+  const { texts } = useLanguage();
   const backgroundColor = useThemeColor({}, 'background');
   const surfaceColor = useThemeColor({}, 'surface');
   const tintColor = useThemeColor({}, 'tint');

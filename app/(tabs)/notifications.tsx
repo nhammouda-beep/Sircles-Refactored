@@ -37,7 +37,6 @@ type Category = "all" | "event" | "interactions";
 export default function NotificationsScreen() {
   const { user } = useAuth();
   const { texts, isRTL } = useLanguage();
-  const tintColor = useThemeColor({}, "tint");
   const textColor = useThemeColor({}, "text");
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -54,15 +53,6 @@ export default function NotificationsScreen() {
     if (t.includes("like") || t.includes("comment") || t.includes("message"))
       return "interactions";
     return "announcement";
-  };
-
-  // إجمالي العدّادات (اختياري لو حبيت ترجع لها)
-  const counts = {
-    event: notifications.filter((n) => getCategoryForType(n.type) === "event")
-      .length,
-    interactions: notifications.filter(
-      (n) => getCategoryForType(n.type) === "interactions"
-    ).length,
   };
 
   // عدّادات غير المقروء فقط (المطلوب للبادج)

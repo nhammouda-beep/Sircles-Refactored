@@ -13,7 +13,6 @@ import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import * as ImageManipulator from "expo-image-manipulator";
 
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -24,18 +23,6 @@ import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
 import { optimizeImageForUpload } from "@/lib/imageOptimize";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-
-interface UserProfile {
-  name: string;
-  email: string;
-  phone: string;
-  birthday?: string;
-  gender?: string;
-  avatar?: string;
-  address_apartment?: string;
-  address_building?: string;
-  address_block?: string;
-}
 
 const COLORS = {
   primary: "#2b7a4b",
@@ -112,24 +99,6 @@ export default function ProfileScreen() {
     if (!result.canceled && result.assets?.length) {
       await uploadAvatar(result.assets[0]);
     }
-  };
-
-  const normalizeToJpg = async (uri: string) => {
-    const out = await ImageManipulator.manipulateAsync(uri, [], {
-      compress: 0.9,
-      format: ImageManipulator.SaveFormat.JPEG,
-    });
-    return out.uri;
-  };
-
-  const detectExt = (asset: any) => {
-    let ext =
-      asset.mimeType?.split("/")[1]?.toLowerCase() ||
-      asset.uri.split("?")[0].split(".").pop()?.toLowerCase() ||
-      "jpg";
-    if (ext === "jpeg") ext = "jpg";
-    if (ext === "heic" || ext === "heif") ext = "heic";
-    return ext;
   };
 
   const uploadAvatar = async (asset: any) => {
