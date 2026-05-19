@@ -1,6 +1,7 @@
 import React from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedText } from "./ThemedText";
+import { reportError } from "@/lib/sentry";
 
 interface Props {
   children: React.ReactNode;
@@ -23,7 +24,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error("ErrorBoundary caught:", error, info.componentStack);
+    reportError(error, { componentStack: info.componentStack });
   }
 
   handleRetry = () => {

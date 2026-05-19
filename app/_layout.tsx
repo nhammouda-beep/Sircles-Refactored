@@ -11,11 +11,13 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { initSentry } from "@/lib/sentry";
 
 import { PaperProvider, MD3LightTheme } from "react-native-paper";
 import { en, registerTranslation } from "react-native-paper-dates";
 
 registerTranslation("en", en);
+initSentry();
 
 const MyCustomLightTheme = {
   ...MD3LightTheme, 

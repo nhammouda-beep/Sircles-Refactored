@@ -16,8 +16,8 @@ describe("useDebounced", () => {
   });
 
   it("does not update until the delay elapses", () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounced(value, 300),
+    const { result, rerender } = renderHook<string, { value: string }>(
+      ({ value }) => useDebounced(value, 300) as any,
       { initialProps: { value: "hello" } }
     );
 
@@ -36,8 +36,8 @@ describe("useDebounced", () => {
   });
 
   it("only emits the latest value when rapid changes occur", () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounced(value, 300),
+    const { result, rerender } = renderHook<string, { value: string }>(
+      ({ value }) => useDebounced(value, 300) as any,
       { initialProps: { value: "a" } }
     );
 
