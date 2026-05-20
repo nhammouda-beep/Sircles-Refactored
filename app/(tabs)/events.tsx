@@ -20,6 +20,7 @@ import { DatabaseService } from "@/lib/database";
 import EventModal from "@/components/EventModal";
 import { EventsSkeleton } from "@/components/SkeletonLoader";
 import { EventsListCard } from "@/components/events/EventsListCard";
+import { EventsFilterSheet } from "@/components/events/EventsFilterSheet";
 import { useDebounced } from "@/hooks/useDebounced";
 import { useFocusEffect } from "expo-router";
 
@@ -532,111 +533,24 @@ export default function EventsScreen() {
       </Modal>
 
       {/* Filters Sheet */}
-      <Modal
+      <EventsFilterSheet
         visible={filtersOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setFiltersOpen(false)}
-      >
-        <View style={styles.sheetOverlay}>
-          <View style={[styles.sheet, { backgroundColor: BG }]}>
-            <View style={styles.sheetHeader}>
-              <ThemedText type="subtitle" style={{ color: TEXT }}>
-                Filters
-              </ThemedText>
-              <TouchableOpacity onPress={() => setFiltersOpen(false)}>
-                <IconSymbol name="xmark" size={22} color={TEXT} />
-              </TouchableOpacity>
-            </View>
-
-            <ThemedText style={styles.sectionTitle}>Circle</ThemedText>
-            <View style={styles.rowWrap}>
-              <Chip
-                label="Any"
-                active={"any" === circleId}
-                onPress={() => setCircleId("any")}
-                tintColor={PRIMARY}
-              />
-              {circles.map((c) => (
-                <Chip
-                  key={c.id}
-                  label={c.name}
-                  active={circleId === c.id}
-                  onPress={() => setCircleId(c.id)}
-                  tintColor={PRIMARY}
-                />
-              ))}
-            </View>
-
-            <ThemedText style={styles.sectionTitle}>Interests</ThemedText>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{ marginBottom: 8 }}
-            >
-              <View style={[styles.rowWrap, { paddingRight: 12 }]}>
-                {allInterests.map((i) => (
-                  <Chip
-                    key={i.id}
-                    label={i.title}
-                    active={selectedInterests.has(i.id)}
-                    onPress={() => toggleInterest(i.id)}
-                    tintColor={PRIMARY}
-                  />
-                ))}
-              </View>
-            </ScrollView>
-
-            <ThemedText style={styles.sectionTitle}>More</ThemedText>
-            <View style={styles.rowWrap}>
-              <Toggle
-                label="With photo"
-                value={withPhoto}
-                onToggle={() => setWithPhoto((v) => !v)}
-                tintColor={PRIMARY}
-              />
-            </View>
-
-            <ThemedText style={styles.sectionTitle}>My RSVP</ThemedText>
-            <View style={styles.rowWrap}>
-              {(
-                ["any", "going", "maybe", "not_going", "none"] as RSVPFilter[]
-              ).map((k) => (
-                <Chip
-                  key={k}
-                  label={
-                    k === "any"
-                      ? "Any"
-                      : k === "not_going"
-                      ? "Can't go"
-                      : k === "none"
-                      ? "No response"
-                      : k.charAt(0).toUpperCase() + k.slice(1)
-                  }
-                  active={rsvpFilter === k}
-                  onPress={() => setRsvpFilter(k)}
-                  tintColor={PRIMARY}
-                />
-              ))}
-            </View>
-
-            <View style={styles.sheetActions}>
-              <TouchableOpacity
-                style={[styles.sheetBtn, styles.clearBtn]}
-                onPress={clearFilters}
-              >
-                <ThemedText>Clear</ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.sheetBtn, { backgroundColor: PRIMARY }]}
-                onPress={() => setFiltersOpen(false)}
-              >
-                <ThemedText style={{ color: "#fff" }}>Apply</ThemedText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        bg={BG}
+        text={TEXT}
+        primary={PRIMARY}
+        circles={circles}
+        selectedCircleId={circleId}
+        onCircleChange={setCircleId}
+        allInterests={allInterests}
+        selectedInterests={selectedInterests}
+        onToggleInterest={toggleInterest}
+        withPhoto={withPhoto}
+        onTogglePhoto={() => setWithPhoto((v) => !v)}
+        rsvpFilter={rsvpFilter}
+        onRsvpFilterChange={setRsvpFilter}
+        onClear={clearFilters}
+        onClose={() => setFiltersOpen(false)}
+      />
 
       {/* Add/Edit */}
       <EventModal
