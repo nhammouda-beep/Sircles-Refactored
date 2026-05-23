@@ -29,6 +29,7 @@ import { optimizeImageForUpload } from "@/lib/imageOptimize";
 import { PostCard } from "@/components/feed/PostCard";
 import { EventCard } from "@/components/feed/EventCard";
 import { SuggestedCirclesSection } from "@/components/feed/SuggestedCirclesSection";
+import { HomeCreatePostModal } from "@/components/feed/HomeCreatePostModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 interface Post {
@@ -856,147 +857,29 @@ export default function HomeScreen() {
       </Modal>
 
       {/* Create Post Modal */}
-      <Modal
+      <HomeCreatePostModal
         visible={showPostModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView style={[styles.modalContainer, { backgroundColor }]}>
-          <View
-            style={[
-              styles.modalHeader,
-              { backgroundColor: surfaceColor, borderBottomColor: BORDER },
-            ]}
-          >
-            <TouchableOpacity
-              onPress={() => {
-                setShowPostModal(false);
-                setSelectedPostImage(null);
-                setNewPostContent("");
-                setSelectedCircle("");
-              }}
-            >
-              <ThemedText style={[styles.cancelButton, { color: tintColor }]}>
-                Cancel
-              </ThemedText>
-            </TouchableOpacity>
-            <ThemedText style={[styles.modalTitle, { color: TEXT }]}>
-              Create Post
-            </ThemedText>
-            <TouchableOpacity
-              onPress={handleCreatePost}
-              disabled={!newPostContent.trim() || !selectedCircle}
-            >
-              <ThemedText
-                style={[
-                  styles.saveButton,
-                  {
-                    color:
-                      newPostContent.trim() && selectedCircle
-                        ? tintColor
-                        : SUBTLE,
-                  },
-                ]}
-              >
-                Post
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.modalBody}>
-            <View style={styles.inputSection}>
-              <ThemedText style={[styles.inputLabel, { color: TEXT }]}>
-                Select Circle:
-              </ThemedText>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {userCircles.map((c) => (
-                  <TouchableOpacity
-                    key={c.id}
-                    style={[
-                      styles.circlePill,
-                      {
-                        borderColor: tintColor,
-                        backgroundColor:
-                          selectedCircle === c.id ? tintColor : SURFACE,
-                      },
-                    ]}
-                    onPress={() => setSelectedCircle(c.id)}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.circlePillTxt,
-                        { color: selectedCircle === c.id ? "#fff" : textColor },
-                      ]}
-                    >
-                      {c.name}
-                    </ThemedText>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-
-            <View style={styles.inputSection}>
-              <ThemedText style={[styles.inputLabel, { color: TEXT }]}>
-                What is on your mind?
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.postInput,
-                  {
-                    backgroundColor: SURFACE,
-                    color: TEXT,
-                    borderColor: BORDER,
-                  },
-                ]}
-                value={newPostContent}
-                onChangeText={setNewPostContent}
-                placeholder="Share your thoughts..."
-                placeholderTextColor={SUBTLE}
-                multiline
-                numberOfLines={25}
-                textAlignVertical="top"
-              />
-            </View>
-
-            <View style={styles.inputSection}>
-              <ThemedText style={[styles.inputLabel, { color: TEXT }]}>
-                Add Photo:
-              </ThemedText>
-              <TouchableOpacity
-                onPress={pickImage}
-                style={[
-                  styles.imagePicker,
-                  { backgroundColor: SURFACE, borderColor: tintColor },
-                ]}
-              >
-                {selectedPostImage ? (
-                  <View style={styles.imageSelected}>
-                    <Image
-                      source={{ uri: selectedPostImage.uri }}
-                      style={styles.image}
-                    />
-                    <View style={styles.imageOverlay}>
-                      <IconSymbol name="photo" size={22} color="#fff" />
-                      <ThemedText style={styles.imageOverlayTxt}>
-                        Change Photo
-                      </ThemedText>
-                    </View>
-                  </View>
-                ) : (
-                  <View style={styles.imagePlaceholder}>
-                    <IconSymbol name="photo" size={28} color={tintColor} />
-                    <ThemedText
-                      style={[styles.imagePickerTxt, { color: tintColor }]}
-                    >
-                      Tap to select a photo
-                    </ThemedText>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
+        backgroundColor={backgroundColor}
+        surfaceColor={SURFACE}
+        textColor={TEXT}
+        borderColor={BORDER}
+        tintColor={tintColor}
+        subtleColor={SUBTLE}
+        userCircles={userCircles}
+        selectedCircle={selectedCircle}
+        onSelectCircle={setSelectedCircle}
+        content={newPostContent}
+        onContentChange={setNewPostContent}
+        selectedImage={selectedPostImage}
+        onPickImage={pickImage}
+        onSubmit={handleCreatePost}
+        onClose={() => {
+          setShowPostModal(false);
+          setSelectedPostImage(null);
+          setNewPostContent("");
+          setSelectedCircle("");
+        }}
+      />
 
       {/* Edit Post Modal */}
       <Modal
