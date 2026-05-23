@@ -31,6 +31,7 @@ import { EventCard } from "@/components/feed/EventCard";
 import { SuggestedCirclesSection } from "@/components/feed/SuggestedCirclesSection";
 import { HomeCreatePostModal } from "@/components/feed/HomeCreatePostModal";
 import { ActionMenu, type ActionMenuItem } from "@/components/feed/ActionMenu";
+import { EditPostModal } from "@/components/EditPostModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 interface Post {
@@ -819,74 +820,21 @@ export default function HomeScreen() {
         }}
       />
 
-      {/* Edit Post Modal */}
-      <Modal
+      <EditPostModal
         visible={!!editingPost}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView style={[styles.modalContainer, { backgroundColor }]}>
-          <View
-            style={[
-              styles.modalHeader,
-              { backgroundColor: surfaceColor, borderBottomColor: BORDER },
-            ]}
-          >
-            <TouchableOpacity
-              onPress={() => {
-                setEditingPost(null);
-                setEditPostContent("");
-              }}
-            >
-              <ThemedText style={[styles.cancelButton, { color: tintColor }]}>
-                Cancel
-              </ThemedText>
-            </TouchableOpacity>
-            <ThemedText style={[styles.modalTitle, { color: TEXT }]}>
-              Edit Post
-            </ThemedText>
-            <TouchableOpacity
-              onPress={handleSaveEdit}
-              disabled={!editPostContent.trim()}
-            >
-              <ThemedText
-                style={[
-                  styles.saveButton,
-                  { color: editPostContent.trim() ? tintColor : SUBTLE },
-                ]}
-              >
-                Save
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.modalContent}>
-            <View style={styles.inputSection}>
-              <ThemedText style={[styles.inputLabel, { color: TEXT }]}>
-                Edit your post
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.postInput,
-                  {
-                    backgroundColor: SURFACE,
-                    color: TEXT,
-                    borderColor: BORDER,
-                  },
-                ]}
-                value={editPostContent}
-                onChangeText={setEditPostContent}
-                placeholder="What's on your mind?"
-                placeholderTextColor={SUBTLE}
-                multiline
-                numberOfLines={6}
-                textAlignVertical="top"
-                autoFocus
-              />
-            </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
+        backgroundColor={backgroundColor}
+        surfaceColor={SURFACE}
+        textColor={TEXT}
+        tintColor={tintColor}
+        borderColor={BORDER}
+        content={editPostContent}
+        onContentChange={setEditPostContent}
+        onSave={handleSaveEdit}
+        onCancel={() => {
+          setEditingPost(null);
+          setEditPostContent("");
+        }}
+      />
 
       <ConfirmDialog
         visible={showDeleteConfirmModal}
