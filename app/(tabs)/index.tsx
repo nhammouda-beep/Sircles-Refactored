@@ -30,6 +30,7 @@ import { PostCard } from "@/components/feed/PostCard";
 import { EventCard } from "@/components/feed/EventCard";
 import { SuggestedCirclesSection } from "@/components/feed/SuggestedCirclesSection";
 import { HomeCreatePostModal } from "@/components/feed/HomeCreatePostModal";
+import { ActionMenu, type ActionMenuItem } from "@/components/feed/ActionMenu";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 interface Post {
@@ -747,114 +748,51 @@ export default function HomeScreen() {
         />
       )}
 
-      {/* Three-dots Menu */}
-      <Modal
+      <ActionMenu
         visible={!!menuFor}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMenuFor(null)}
-      >
-        <TouchableOpacity
-          style={styles.menuOverlay}
-          activeOpacity={1}
-          onPress={() => setMenuFor(null)}
-        >
-          <View
-            style={[
-              styles.menuSheet,
-              { backgroundColor: SURFACE, borderColor: BORDER },
-            ]}
-          >
-            {menuFor?.type === "post" &&
-              (() => {
-                const p = posts.find((x) => x.id === menuFor.id) || null;
-                const owner = isOwner(p);
-                return owner ? (
-                  <>
-                    <TouchableOpacity
-                      style={styles.menuItem}
-                      onPress={() => {
-                        if (p) handleEditPostStart(p.id, p.content || "");
-                        setMenuFor(null);
-                      }}
-                    >
-                      <IconSymbol name="pencil" size={18} color={TEXT} />
-                      <ThemedText
-                        style={[styles.menuText, { color: "#000000ff" }]}
-                      >
-                        Edit
-                      </ThemedText>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.menuItem}
-                      onPress={() => {
-                        handleDeletePost(menuFor!.id);
-                        setMenuFor(null);
-                      }}
-                    >
-                      <IconSymbol name="trash" size={18} color="#EF4444" />
-                      <ThemedText
-                        style={[styles.menuText, { color: "#EF4444" }]}
-                        onPress={confirmDeletePost}
-                      >
-                        Delete
-                      </ThemedText>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <View style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
-                    <ThemedText style={{ color: SUBTLE }}>
-                      No actions available
-                    </ThemedText>
-                  </View>
-                );
-              })()}
-            {menuFor?.type === "event" &&
-              (() => {
-                const event = events.find((e) => e.id === menuFor.id);
-                const owner = event?.createdby === user?.id;
-                return owner ? (
-                  <>
-                    <TouchableOpacity
-                      style={styles.menuItem}
-                      onPress={() => {
-                        handleEditEventStart(event);
-                        setMenuFor(null);
-                      }}
-                    >
-                      <IconSymbol name="pencil" size={18} color={TEXT} />
-                      <ThemedText
-                        style={[styles.menuText, { color: "#000000ff" }]}
-                      >
-                        Edit Event
-                      </ThemedText>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.menuItem}
-                      onPress={() => {
-                        setMenuFor(null);
-                        handleDeleteEvent(String(event.id)); // ✅ يستخدم الدالة المعدّلة
-                      }}
-                    >
-                      <IconSymbol name="trash" size={18} color="#EF4444" />
-                      <ThemedText
-                        style={[styles.menuText, { color: "#EF4444" }]}
-                      >
-                        Delete Event
-                      </ThemedText>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <View style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
-                    <ThemedText style={{ color: SUBTLE }}>
-                      No actions available
-                    </ThemedText>
-                  </View>
-                );
-              })()}
-          </View>
-        </TouchableOpacity>
-      </Modal>
+        items={(() => {
+          if (!menuFor) return [];
+          if (menuFor.type === "post") {
+            const p = posts.find((x) => x.id === menuFor.id) || null;
+            if (!isOwner(p)) return [];
+            const items: ActionMenuItem[] = [
+              {
+                label: "Edit",
+                icon: "pencil",
+                onPress: () => p && handleEditPostStart(p.id, p.content || ""),
+              },
+              {
+                label: "Delete",
+                icon: "trash",
+                color: "#EF4444",
+                onPress: () => handleDeletePost(menuFor.id),
+              },
+            ];
+            return items;
+          }
+          const event = events.find((e) => e.id === menuFor.id);
+          if (event?.createdby !== user?.id || !event) return [];
+          const items: ActionMenuItem[] = [
+            {
+              label: "Edit Event",
+              icon: "pencil",
+              onPress: () => handleEditEventStart(event),
+            },
+            {
+              label: "Delete Event",
+              icon: "trash",
+              color: "#EF4444",
+              onPress: () => handleDeleteEvent(String(event.id)),
+            },
+          ];
+          return items;
+        })()}
+        surfaceColor={SURFACE}
+        borderColor={BORDER}
+        textColor={TEXT}
+        subtleColor={SUBTLE}
+        onClose={() => setMenuFor(null)}
+      />
 
       {/* Create Post Modal */}
       <HomeCreatePostModal
