@@ -2,16 +2,13 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   StyleSheet,
   View,
-  ScrollView,
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
   Alert,
-  Modal,
   TextInput,
   FlatList,
 } from "react-native";
-import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -64,9 +61,7 @@ export default function HomeScreen() {
   const SUBTLE = "#6B7280";
   const BORDER = "#E5E7EB";
 
-  const surfaceColor = SURFACE;
   const tintColor = PRIMARY;
-  const textColor = TEXT;
   const backgroundColor = BG;
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -895,64 +890,6 @@ const styles = StyleSheet.create({
 
   content: { flex: 1, paddingHorizontal: 12, paddingBottom: 16 },
 
-  /* Card */
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#F3F4F6",
-    marginBottom: 14,
-    overflow: "hidden",
-  },
-  cardHeader: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  headerLeft: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
-  avatarImg: { width: 36, height: 36, borderRadius: 18 },
-  avatarCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTextWrap: { flex: 1 },
-  headerTitle: { fontSize: 14, fontWeight: "700" },
-  headerMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 2,
-  },
-  headerSub: { fontSize: 12 },
-  dot: { fontSize: 12, color: "#94A3B8" },
-  menuBtn: { padding: 6 },
-
-  cardBody: { paddingHorizontal: 12, paddingBottom: 12 },
-  cardImage: { width: "100%", height: 190 },
-
-  eventTitle: { fontSize: 16, fontWeight: "700", marginTop: 6 },
-  eventMeta: { fontSize: 13, fontWeight: "700", marginTop: 4 },
-  eventLoc: { fontSize: 13, marginTop: 6 },
-  desc: { fontSize: 14, lineHeight: 22, marginTop: 6 },
-
-  chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 },
-  chip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  chipText: { fontSize: 12, fontWeight: "700" },
-
-  actionsRow: { flexDirection: "row", gap: 18, marginTop: 10 },
-  actionBtn: { flexDirection: "row", alignItems: "center", gap: 6 },
-  actionTxt: { fontSize: 13, color: "#6B7280" },
-
   centeredContainer: {
     flex: 1,
     alignItems: "center",
@@ -962,132 +899,6 @@ const styles = StyleSheet.create({
   },
   emptyText: { opacity: 0.6, textAlign: "center" },
 
-  /* Menus */
-  menuOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "flex-end",
-  },
-  menuSheet: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingVertical: 6,
-    borderTopWidth: 1,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  menuText: { fontSize: 16, fontWeight: "600" },
-
-  /* Modals */
-  modalContainer: { flex: 1 },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  modalTitle: { fontSize: 18, fontWeight: "700" },
-  cancelButton: { fontSize: 16, fontWeight: "700" },
-  saveButton: { fontSize: 16, fontWeight: "700" },
-  modalBody: { padding: 16 },
-  modalContent: { flex: 1, padding: 16 },
-
-  /* Inputs */
-  inputSection: { marginBottom: 16 },
-  inputLabel: { fontSize: 14, fontWeight: "700", marginBottom: 8 },
-  circlePill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
-    borderWidth: 1,
-    marginRight: 8,
-  },
-  circlePillTxt: { fontSize: 12, fontWeight: "700" },
-  postInput: { borderRadius: 10, padding: 12, borderWidth: 1, minHeight: 100 },
-  imagePicker: {
-    height: 130,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    overflow: "hidden",
-  },
-  imageSelected: { width: "100%", height: "100%", position: "relative" },
-  image: { width: "100%", height: "100%" },
-  imageOverlay: {
-    position: "absolute",
-    inset: 0,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-  },
-  imageOverlayTxt: { color: "#fff", fontSize: 12, fontWeight: "700" },
-  imagePlaceholder: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  imagePickerTxt: { fontSize: 13, fontWeight: "700" },
-  deleteModalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  deleteModalContent: {
-    width: "85%",
-    maxWidth: 300,
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  deleteModalHeader: {
-    padding: 20,
-    paddingBottom: 16,
-    alignItems: "center",
-  },
-  deleteModalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  deleteModalBody: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    alignItems: "center",
-  },
-  deleteModalMessage: {
-    fontSize: 14,
-    textAlign: "center",
-    lineHeight: 20,
-    opacity: 0.8,
-  },
-  deleteModalFooter: {
-    flexDirection: "row",
-    gap: 12,
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
-  },
-  deleteModalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 44,
-  },
-  cancelDeleteButton: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
   /* Buttons */
   primaryBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 },
   primaryBtnText: { color: "#fff", fontWeight: "700" },
