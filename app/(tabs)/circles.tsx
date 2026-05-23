@@ -36,6 +36,7 @@ import { StorageService } from "@/lib/storage";
 import { CirclesSkeleton } from "@/components/SkeletonLoader";
 import { useDebounced } from "@/hooks/useDebounced";
 import { optimizeImageForUpload } from "@/lib/imageOptimize";
+import { AnimatedSegment } from "@/components/AnimatedSegment";
 
 interface Circle {
   id: string;
@@ -65,91 +66,6 @@ const COLORS = {
   dangerSoft: "#FFE9E9",
   control: "#EEF2F6", // عناصر التحكم الفاتحة
 };
-
-// Segmented بإنيميشن pill
-function AnimatedSegment({
-  options,
-  value,
-  onChange,
-  height = 36,
-}: {
-  options: { key: string; label: string }[];
-  value: string;
-  onChange: (v: string) => void;
-  height?: number;
-}) {
-  const idx = Math.max(
-    0,
-    options.findIndex((o) => o.key === value)
-  );
-  const anim = useRef(new Animated.Value(idx)).current;
-  const [w, setW] = useState(0);
-
-  useEffect(() => {
-    const i = Math.max(
-      0,
-      options.findIndex((o) => o.key === value)
-    );
-    Animated.timing(anim, {
-      toValue: i,
-      duration: 220,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [value]);
-
-  const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width);
-  const pillW = w / Math.max(1, options.length);
-  const translateX = anim.interpolate({
-    inputRange: options.map((_, i) => i),
-    outputRange: options.map((_, i) => i * pillW),
-  });
-
-  return (
-    <View
-      style={[
-        styles.segment,
-        { height: height + 12, padding: 6, backgroundColor: COLORS.control },
-      ]}
-      onLayout={onLayout}
-    >
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          StyleSheet.absoluteFillObject,
-          {
-            margin: 6,
-            width: pillW - 12,
-            height,
-            borderRadius: height / 2,
-            backgroundColor: COLORS.primary,
-            transform: [{ translateX }],
-          },
-        ]}
-      />
-      {options.map((o) => {
-        const active = o.key === value;
-        return (
-          <TouchableOpacity
-            key={o.key}
-            style={[styles.segmentBtn, { height }]}
-            activeOpacity={0.9}
-            onPress={() => onChange(o.key)}
-          >
-            <ThemedText
-              style={[
-                styles.segmentTxt,
-                active && { color: "#000", fontWeight: "700" },
-              ]}
-            >
-              {o.label}
-            </ThemedText>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-}
 
 export default function CirclesScreen() {
   const { user, userProfile } = useAuth();
