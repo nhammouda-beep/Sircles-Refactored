@@ -1,17 +1,13 @@
 // CirclesScreen.tsx
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   StyleSheet,
   View,
   ScrollView,
   TouchableOpacity,
-  Modal,
   TextInput,
   Alert,
   RefreshControl,
-  Animated,
-  Easing,
-  LayoutChangeEvent,
 } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -37,6 +33,7 @@ import { CirclesSkeleton } from "@/components/SkeletonLoader";
 import { useDebounced } from "@/hooks/useDebounced";
 import { optimizeImageForUpload } from "@/lib/imageOptimize";
 import { AnimatedSegment } from "@/components/AnimatedSegment";
+import { CreateCircleModal } from "@/components/circles/CreateCircleModal";
 
 interface Circle {
   id: string;
@@ -553,195 +550,29 @@ export default function CirclesScreen() {
       </ScrollView>
 
       {/* Create Modal */}
-      <Modal
+      <CreateCircleModal
         visible={showCreateModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowCreateModal(false)}
-      >
-        <View style={styles.overlay}>
-          <View style={styles.sheet}>
-            <View style={styles.sheetHeader}>
-              <TouchableOpacity
-                onPress={() => setShowCreateModal(false)}
-                style={styles.backBtn}
-              >
-                <IconSymbol name="chevron.left" size={18} color={COLORS.text} />
-              </TouchableOpacity>
-              <ThemedText type="subtitle" style={styles.sheetTitle}>
-                {texts.createCircle || "New Circle"}
-              </ThemedText>
-              <View style={{ width: 32 }} />
-            </View>
-
-            <ScrollView
-              style={styles.sheetBody}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Image */}
-              <TouchableOpacity style={styles.coverPicker} onPress={pickImage}>
-                {selectedImage ? (
-                  <Image
-                    source={{ uri: selectedImage.uri }}
-                    style={styles.coverImg}
-                  />
-                ) : (
-                  <View style={styles.coverEmpty}>
-                    <IconSymbol
-                      name="camera"
-                      size={28}
-                      color={COLORS.primary}
-                    />
-                    <ThemedText
-                      style={[styles.coverTxt, { color: COLORS.primary }]}
-                    >
-                      {texts.profilePicture || "Add a circle image"}
-                    </ThemedText>
-                  </View>
-                )}
-              </TouchableOpacity>
-
-              {/* Name */}
-              <View style={styles.field}>
-                <ThemedText style={styles.label}>
-                  {texts.name || "Circle name"}
-                </ThemedText>
-                <TextInput
-                  style={styles.input}
-                  placeholder={texts.enterCircleName || "e.g. Sport Circle"}
-                  placeholderTextColor={COLORS.textMuted + "AA"}
-                  value={newCircle.name}
-                  onChangeText={(t) => setNewCircle({ ...newCircle, name: t })}
-                />
-              </View>
-
-              {/* Description */}
-              <View style={styles.field}>
-                <ThemedText style={styles.label}>
-                  {texts.description || "Description"}
-                </ThemedText>
-                <TextInput
-                  style={styles.textarea}
-                  placeholder={
-                    texts.enterDescription || "What's this circle about?"
-                  }
-                  placeholderTextColor={COLORS.textMuted + "AA"}
-                  value={newCircle.description}
-                  onChangeText={(t) =>
-                    setNewCircle({ ...newCircle, description: t })
-                  }
-                  multiline
-                  numberOfLines={4}
-                />
-              </View>
-
-              {/* Privacy */}
-              <View style={styles.field}>
-                <ThemedText style={styles.label}>
-                  {texts.privacy || "Privacy"}
-                </ThemedText>
-                <AnimatedSegment
-                  options={[
-                    { key: "public", label: texts.public || "Public" },
-                    { key: "private", label: texts.private || "Private" },
-                  ]}
-                  value={newCircle.privacy}
-                  onChange={(v) =>
-                    setNewCircle({
-                      ...newCircle,
-                      privacy: v as "public" | "private",
-                    })
-                  }
-                  height={40}
-                />
-              </View>
-
-              {/* Interests */}
-              <View style={styles.field}>
-                <ThemedText style={styles.label}>
-                  {texts.interests || "Interests"}
-                </ThemedText>
-                <View style={styles.interestsBox}>
-                  {loadingInterests ? (
-                    <ThemedText style={styles.emptyText}>
-                      Loading interests...
-                    </ThemedText>
-                  ) : Object.keys(interests).length === 0 ? (
-                    <ThemedText style={styles.emptyText}>
-                      No interests available
-                    </ThemedText>
-                  ) : (
-                    Object.entries(interests).map(([cat, items]) => (
-                      <View key={cat} style={{ marginBottom: 12 }}>
-                        <ThemedText style={styles.catTitle}>{cat}</ThemedText>
-                        <View style={styles.chips}>
-                          {items.map((it: any) => {
-                            const selected = newCircle.interests.includes(
-                              it.id
-                            );
-                            return (
-                              <TouchableOpacity
-                                key={it.id}
-                                style={[
-                                  styles.chip,
-                                  {
-                                    backgroundColor: selected
-                                      ? COLORS.primary
-                                      : COLORS.surface,
-                                  },
-                                ]}
-                                onPress={() => toggleInterest(it.id)}
-                              >
-                                <ThemedText
-                                  style={[
-                                    styles.chipTxt,
-                                    { color: selected ? "#fff" : COLORS.text },
-                                  ]}
-                                >
-                                  {it.title}
-                                </ThemedText>
-                              </TouchableOpacity>
-                            );
-                          })}
-                        </View>
-                      </View>
-                    ))
-                  )}
-                </View>
-              </View>
-            </ScrollView>
-
-            <View style={styles.sheetFooter}>
-              <TouchableOpacity
-                style={styles.btnGhost}
-                onPress={() => {
-                  setShowCreateModal(false);
-                  setNewCircle({
-                    name: "",
-                    description: "",
-                    privacy: "public",
-                    interests: [],
-                    image: null,
-                  });
-                  setSelectedImage(null);
-                }}
-              >
-                <ThemedText style={styles.btnGhostTxt}>
-                  {texts.cancel || "Cancel"}
-                </ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.btnPrimary}
-                onPress={handleCreateCircle}
-              >
-                <ThemedText style={styles.btnPrimaryTxt}>
-                  {texts.create || "Create Circle"}
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        texts={texts}
+        newCircle={newCircle}
+        onChange={(updates) => setNewCircle({ ...newCircle, ...updates })}
+        selectedImage={selectedImage}
+        onPickImage={pickImage}
+        interests={interests}
+        loadingInterests={loadingInterests}
+        onToggleInterest={toggleInterest}
+        onSubmit={handleCreateCircle}
+        onClose={() => {
+          setShowCreateModal(false);
+          setNewCircle({
+            name: "",
+            description: "",
+            privacy: "public",
+            interests: [],
+            image: null,
+          });
+          setSelectedImage(null);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -781,23 +612,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.control,
   },
   searchInput: { flex: 1, fontSize: 14, color: COLORS.text },
-
-  segment: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    flexDirection: "row",
-    gap: 8,
-    backgroundColor: COLORS.control,
-    overflow: "hidden",
-  },
-  segmentBtn: {
-    flex: 1,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  segmentTxt: { fontSize: 13, fontWeight: "600", color: COLORS.textMuted },
 
   list: { flex: 1 },
   grid: { paddingHorizontal: 16, paddingBottom: 24, gap: 16 },
@@ -904,139 +718,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   joinTxt: { color: "#fff", fontSize: 13, fontWeight: "700" },
-
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sheet: {
-    width: "92%",
-    maxHeight: "90%",
-    borderRadius: 16,
-    overflow: "hidden",
-    backgroundColor: COLORS.surface,
-  },
-  sheetHeader: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray200,
-    backgroundColor: COLORS.surface,
-  },
-  backBtn: {
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sheetTitle: { fontSize: 18, color: COLORS.text },
-  sheetBody: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: COLORS.surface,
-  },
-
-  coverPicker: {
-    height: 140,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    marginBottom: 14,
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.surface,
-    borderColor: COLORS.primary,
-  },
-  coverImg: { width: "100%", height: "100%" },
-  coverEmpty: { alignItems: "center", justifyContent: "center", gap: 6 },
-  coverTxt: { fontWeight: "700" },
-
-  field: { marginBottom: 14 },
-  label: {
-    fontSize: 13,
-    fontWeight: "700",
-    marginBottom: 6,
-    color: COLORS.text,
-    opacity: 0.85,
-  },
-  input: {
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 44,
-    fontSize: 15,
-    backgroundColor: COLORS.gray100,
-    color: COLORS.text,
-  },
-  textarea: {
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    height: 96,
-    fontSize: 14,
-    textAlignVertical: "top",
-    backgroundColor: COLORS.gray100,
-    color: COLORS.text,
-  },
-
-  interestsBox: {
-    borderRadius: 12,
-    backgroundColor: COLORS.gray100,
-    marginHorizontal: -16,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  catTitle: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: COLORS.text,
-    opacity: 0.8,
-    marginBottom: 6,
-  },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.surface,
-  },
-  chipTxt: { fontSize: 12, fontWeight: "600", color: COLORS.text },
-
-  sheetFooter: {
-    padding: 12,
-    gap: 10,
-    flexDirection: "row",
-    borderTopWidth: 1,
-    borderTopColor: COLORS.gray200,
-    backgroundColor: COLORS.surface,
-  },
-  btnGhost: {
-    flex: 1,
-    height: 44,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: COLORS.gray300,
-    backgroundColor: COLORS.surface,
-  },
-  btnGhostTxt: { fontWeight: "700", color: COLORS.text },
-  btnPrimary: {
-    flex: 1,
-    height: 44,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.primary,
-  },
-  btnPrimaryTxt: { color: "#fff", fontWeight: "800" },
 
   rtl: { textAlign: "right" },
 
