@@ -1,7 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { SymbolWeight } from "expo-symbols";
-import { ComponentProps } from "react";
 import {
   OpaqueColorValue,
   type StyleProp,

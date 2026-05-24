@@ -434,12 +434,10 @@ export const PostService = {
       }
 
       let hasPermission = false;
-      let permissionReason = "none";
 
       // Check if user owns the post
       if (postDetails.userid === currentUser.user.id) {
         hasPermission = true;
-        permissionReason = "post_owner";
       }
 
       // Check circle permissions if post is in a circle
@@ -447,7 +445,6 @@ export const PostService = {
         // Check if user is circle creator
         if (postDetails.circles.creator === currentUser.user.id) {
           hasPermission = true;
-          permissionReason = "circle_creator";
         }
 
         // Check if user is circle admin
@@ -457,7 +454,6 @@ export const PostService = {
           );
           if (isAdmin) {
             hasPermission = true;
-            permissionReason = "circle_admin";
           }
         }
       }

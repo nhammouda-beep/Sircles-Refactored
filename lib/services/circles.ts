@@ -1,5 +1,4 @@
 import { supabase } from "../supabase";
-import { StorageService } from "../storage";
 
 export const CircleService = {
   async getCircles() {
@@ -784,7 +783,7 @@ export const CircleService = {
       }
 
       // Check if user is already an admin
-      const { data: existingAdmin, error: existingError } = await supabase
+      const { data: existingAdmin } = await supabase
         .from("circle_admins")
         .select("userid")
         .eq("circleid", circleId)
@@ -973,7 +972,7 @@ export const CircleService = {
       }
 
       // Also remove admin status if they had it (ignore errors here as they might not be admin)
-      const { error: adminRemoveError } = await supabase
+      await supabase
         .from("circle_admins")
         .delete()
         .eq("circleid", circleId)

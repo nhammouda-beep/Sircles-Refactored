@@ -1,4 +1,3 @@
-import { supabase } from "./supabase";
 import type { User, Circle, Event, Post } from "@/types/database";
 
 // Service modules
