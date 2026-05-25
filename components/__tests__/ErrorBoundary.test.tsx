@@ -69,10 +69,9 @@ describe("ErrorBoundary", () => {
   });
 
   it("shows generic message when error has no message", () => {
-    function ThrowEmpty() {
-      // eslint-disable-next-line no-throw-literal
+    const ThrowEmpty: React.FC = () => {
       throw new Error("");
-    }
+    };
     const { getByText } = render(
       <ErrorBoundary>
         <ThrowEmpty />

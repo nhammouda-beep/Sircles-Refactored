@@ -2,12 +2,15 @@ import { supabase } from "../supabase";
 import { StorageService } from "../storage";
 
 export const EventService = {
-  async getEvents() {
+  async getEvents(page = 0, limit = 30) {
     // Verify user is authenticated
     const { data: currentUser } = await supabase.auth.getUser();
     if (!currentUser.user) {
-      return { data: null, error: new Error("Authentication required") };
+      return { data: null, error: new Error("Authentication required"), hasMore: false };
     }
+
+    const from = page * limit;
+    const to = from + limit - 1;
 
     // Get events that are either general (circleid is null) or from circles the user is a member of
     const { data: events, error } = await supabase
@@ -27,11 +30,14 @@ export const EventService = {
           currentUser.user.id
         )})`
       )
-      .order("creationdate", { ascending: false });
+      .order("creationdate", { ascending: false })
+      .range(from, to);
 
     if (error) {
-      return { data: null, error };
+      return { data: null, error, hasMore: false };
     }
+
+    const hasMore = (events?.length || 0) === limit;
 
     // Get RSVP data separately and calculate counts for each event
     if (events && events.length > 0) {
@@ -67,10 +73,10 @@ export const EventService = {
         };
       });
 
-      return { data: enhancedEvents, error: null };
+      return { data: enhancedEvents, error: null, hasMore };
     }
 
-    return { data: events || [], error: null };
+    return { data: events || [], error: null, hasMore };
   },
 
   async getUserCircleIds(userId: string) {

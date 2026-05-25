@@ -8,6 +8,7 @@ import {
   TextInput,
   Alert,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -73,6 +74,12 @@ export default function CirclesScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Pagination
+  const PAGE_SIZE = 30;
+  const [circlesPage, setCirclesPage] = useState(0);
+  const [hasMoreCircles, setHasMoreCircles] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const STALE_MS = 30_000;
   const lastFetchRef = useRef<number>(0);
   const isStale = () => Date.now() - lastFetchRef.current > STALE_MS;
@@ -100,14 +107,21 @@ export default function CirclesScreen() {
       c.description?.toLowerCase().includes(debouncedQuery.trim().toLowerCase())
   );
 
-  const loadCircles = async () => {
+  const loadCircles = async (page = 0) => {
     try {
-      setLoading(true);
-      setError(null);
-      const { data: allCircles, error: circlesError } = await getCircles() as { data: any[] | null; error: any };
+      if (page === 0) {
+        setLoading(true);
+        setError(null);
+      }
+      const { data: allCircles, error: circlesError, hasMore } =
+        (await getCircles(page, PAGE_SIZE)) as {
+          data: any[] | null;
+          error: any;
+          hasMore: boolean;
+        };
       if (circlesError) {
         setError("Unable to load circles. Please try again.");
-        setCircles([]);
+        if (page === 0) setCircles([]);
         return;
       }
 
@@ -146,19 +160,38 @@ export default function CirclesScreen() {
           memberCount: c.member_count || 0,
         })) || [];
 
-      setCircles(prepared);
-      setMyCircles(prepared.filter((c) => c.isJoined));
+      if (page === 0) {
+        setCircles(prepared);
+        setMyCircles(prepared.filter((c) => c.isJoined));
+      } else {
+        setCircles((prev) => [...prev, ...prepared]);
+        setMyCircles((prev) => [
+          ...prev,
+          ...prepared.filter((c) => c.isJoined),
+        ]);
+      }
+      setHasMoreCircles(hasMore ?? false);
+      setCirclesPage(page);
     } catch {
       setError("Something went wrong. Please try again.");
-      setCircles([]);
+      if (page === 0) setCircles([]);
     } finally {
-      setLoading(false);
+      if (page === 0) setLoading(false);
     }
+  };
+
+  const loadMoreCircles = async () => {
+    if (!hasMoreCircles || loadingMore || loading) return;
+    setLoadingMore(true);
+    await loadCircles(circlesPage + 1);
+    setLoadingMore(false);
   };
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadCircles();
+    setCirclesPage(0);
+    setHasMoreCircles(true);
+    await loadCircles(0);
     lastFetchRef.current = Date.now();
     setRefreshing(false);
   };
@@ -521,6 +554,13 @@ export default function CirclesScreen() {
       <ScrollView
         style={styles.list}
         showsVerticalScrollIndicator={false}
+        onScroll={({ nativeEvent }) => {
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const distanceFromBottom =
+            contentSize.height - (layoutMeasurement.height + contentOffset.y);
+          if (distanceFromBottom < 400) loadMoreCircles();
+        }}
+        scrollEventThrottle={250}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
@@ -530,7 +570,7 @@ export default function CirclesScreen() {
         ) : error ? (
           <View style={styles.centerPad}>
             <ThemedText style={styles.emptyText}>{error}</ThemedText>
-            <TouchableOpacity style={styles.retryBtn} onPress={loadCircles}>
+            <TouchableOpacity style={styles.retryBtn} onPress={() => loadCircles(0)}>
               <ThemedText style={styles.retryTxt}>
                 {texts.retry || "Retry"}
               </ThemedText>
@@ -545,7 +585,14 @@ export default function CirclesScreen() {
             </ThemedText>
           </View>
         ) : (
-          <View style={styles.grid}>{filtered.map(renderCircle)}</View>
+          <>
+            <View style={styles.grid}>{filtered.map(renderCircle)}</View>
+            {loadingMore && (
+              <View style={{ paddingVertical: 20, alignItems: "center" }}>
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              </View>
+            )}
+          </>
         )}
       </ScrollView>
 

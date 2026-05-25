@@ -101,7 +101,8 @@ export const DatabaseService = {
 export const getUser = (id: string) => DatabaseService.getUser(id);
 export const updateUser = (id: string, updates: Partial<User>) =>
   DatabaseService.updateUser(id, updates);
-export const getCircles = () => DatabaseService.getCircles();
+export const getCircles = (page?: number, limit?: number) =>
+  DatabaseService.getCircles(page, limit);
 export const getUserCircles = (userId: string) =>
   DatabaseService.getUserCircles(userId);
 export const createCircle = (circle: Omit<Circle, "id" | "creationdate">) =>

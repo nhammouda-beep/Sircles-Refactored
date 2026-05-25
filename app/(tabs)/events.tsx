@@ -8,6 +8,7 @@ import {
   Modal,
   TextInput,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Linking from "expo-linking";
@@ -67,6 +68,12 @@ export default function EventsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [pendingRsvp, setPendingRsvp] = useState<Set<string>>(new Set());
+
+  // Pagination
+  const PAGE_SIZE = 30;
+  const [eventsPage, setEventsPage] = useState(0);
+  const [hasMoreEvents, setHasMoreEvents] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [circles, setCircles] = useState<{ id: string; name: string }[]>([]);
   const [deletableEvents, setDeletableEvents] = useState<Set<string>>(
     new Set()
@@ -115,16 +122,30 @@ export default function EventsScreen() {
     }
   }, [user]);
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (page = 0) => {
     if (!user) return;
-    setLoading(true);
+    if (page === 0) setLoading(true);
     try {
-      const { data } = await DatabaseService.getEvents();
-      setEvents((data as any) || []);
+      const { data, hasMore } = await DatabaseService.getEvents(page, PAGE_SIZE);
+      const next = (data as any) || [];
+      if (page === 0) {
+        setEvents(next);
+      } else {
+        setEvents((prev) => [...prev, ...next]);
+      }
+      setHasMoreEvents(hasMore ?? false);
+      setEventsPage(page);
       if (data) await checkDeletableEvents(data as any);
     } finally {
-      setLoading(false);
+      if (page === 0) setLoading(false);
     }
+  };
+
+  const loadMoreEvents = async () => {
+    if (!hasMoreEvents || loadingMore || loading) return;
+    setLoadingMore(true);
+    await fetchEvents(eventsPage + 1);
+    setLoadingMore(false);
   };
 
   const fetchUserCircles = async () => {
@@ -421,12 +442,21 @@ export default function EventsScreen() {
       <ScrollView
         style={styles.eventsList}
         showsVerticalScrollIndicator={false}
+        onScroll={({ nativeEvent }) => {
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const distanceFromBottom =
+            contentSize.height - (layoutMeasurement.height + contentOffset.y);
+          if (distanceFromBottom < 400) loadMoreEvents();
+        }}
+        scrollEventThrottle={250}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={async () => {
               setRefreshing(true);
-              await fetchEvents();
+              setEventsPage(0);
+              setHasMoreEvents(true);
+              await fetchEvents(0);
               lastFetchRef.current = Date.now();
               setRefreshing(false);
             }}
@@ -440,19 +470,26 @@ export default function EventsScreen() {
             <ThemedText style={{ color: SUBTLE }}>No events yet</ThemedText>
           </View>
         ) : (
-          filteredSorted.map((event) => (
-            <EventsListCard
-              key={event.id}
-              event={event as any}
-              isRTL={isRTL}
-              isDeletable={deletableEvents.has(event.id)}
-              isRsvpPending={pendingRsvp.has(event.id)}
-              onPress={setSelectedEvent as any}
-              onEdit={handleEditEvent as any}
-              onDelete={handleDeleteEvent}
-              onRsvp={handleRsvp}
-            />
-          ))
+          <>
+            {filteredSorted.map((event) => (
+              <EventsListCard
+                key={event.id}
+                event={event as any}
+                isRTL={isRTL}
+                isDeletable={deletableEvents.has(event.id)}
+                isRsvpPending={pendingRsvp.has(event.id)}
+                onPress={setSelectedEvent as any}
+                onEdit={handleEditEvent as any}
+                onDelete={handleDeleteEvent}
+                onRsvp={handleRsvp}
+              />
+            ))}
+            {loadingMore && (
+              <View style={{ paddingVertical: 20, alignItems: "center" }}>
+                <ActivityIndicator size="small" color={PRIMARY} />
+              </View>
+            )}
+          </>
         )}
       </ScrollView>
 

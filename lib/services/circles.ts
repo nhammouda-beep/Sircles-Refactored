@@ -1,7 +1,9 @@
 import { supabase } from "../supabase";
 
 export const CircleService = {
-  async getCircles() {
+  async getCircles(page = 0, limit = 30) {
+    const from = page * limit;
+    const to = from + limit - 1;
     const { data, error } = await supabase
       .from("circles")
       .select(
@@ -16,8 +18,10 @@ export const CircleService = {
         )
       `
       )
-      .order("creationdate", { ascending: false });
-    return { data, error };
+      .order("creationdate", { ascending: false })
+      .range(from, to);
+    const hasMore = (data?.length || 0) === limit;
+    return { data, error, hasMore };
   },
 
   async getCircleInterests(circleId: string) {
