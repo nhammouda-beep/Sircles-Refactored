@@ -43,6 +43,8 @@ export function ActionMenu({
       onRequestClose={onClose}
     >
       <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel="Close menu"
         style={styles.overlay}
         activeOpacity={1}
         onPress={onClose}
@@ -61,6 +63,8 @@ export function ActionMenu({
             items.map((item, idx) => (
               <TouchableOpacity
                 key={idx}
+                accessibilityRole="button"
+                accessibilityLabel={item.label}
                 style={styles.item}
                 onPress={() => {
                   onClose();

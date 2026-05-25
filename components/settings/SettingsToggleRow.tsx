@@ -55,6 +55,8 @@ export function SettingsToggleRow({
         </View>
       </View>
       <Switch
+        accessibilityLabel={label}
+        accessibilityHint={description}
         value={value}
         onValueChange={onValueChange}
         trackColor={{ false: colors.border, true: colors.primary }}

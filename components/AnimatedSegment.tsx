@@ -89,6 +89,8 @@ export function AnimatedSegment({
         return (
           <TouchableOpacity
             key={o.key}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
             style={[styles.segmentBtn, { height }]}
             activeOpacity={0.9}
             onPress={() => onChange(o.key)}

@@ -73,6 +73,9 @@ export function AdminMemberCard({
       <View style={circleCardStyles.adminMemberActions}>
         {canRemove && (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`Remove ${member.name}`}
+            accessibilityHint="Removes this member from the circle"
             style={[circleCardStyles.adminActionButton, { backgroundColor: CIRCLE_COLORS.danger }]}
             onPress={() => onRemove(member.id, member.name)}
           >
@@ -83,6 +86,13 @@ export function AdminMemberCard({
 
         {canToggleAdmin && (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={
+              member.isAdmin
+                ? `Remove admin from ${member.name}`
+                : `Make ${member.name} an admin`
+            }
+            accessibilityState={{ selected: member.isAdmin }}
             style={[
               circleCardStyles.adminActionButton,
               {

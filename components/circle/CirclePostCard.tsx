@@ -78,6 +78,8 @@ export function CirclePostCard({
           <View style={styles.postEditActions}>
             {isAuthor && (
               <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Edit post"
                 style={styles.postActionButton}
                 onPress={() => onEdit(post.id, post.content)}
               >
@@ -85,6 +87,10 @@ export function CirclePostCard({
               </TouchableOpacity>
             )}
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Delete post"
+              accessibilityHint="Permanently deletes this post"
+              accessibilityState={{ disabled: isDeleting }}
               style={[
                 styles.postActionButton,
                 isDeleting && styles.disabledButton,
@@ -111,7 +117,13 @@ export function CirclePostCard({
       )}
 
       <View style={styles.postInteractionActions}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => onLike(post.id)}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={`${post.userLiked ? "Unlike" : "Like"} post (${post.likes_count || 0} ${(post.likes_count || 0) === 1 ? "like" : "likes"})`}
+          accessibilityState={{ selected: !!post.userLiked }}
+          style={styles.actionButton}
+          onPress={() => onLike(post.id)}
+        >
           <IconSymbol
             name={post.userLiked ? "heart.fill" : "heart"}
             size={20}
@@ -127,6 +139,8 @@ export function CirclePostCard({
           </ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={`View comments (${post.comments_count || post.comments?.length || 0})`}
           style={styles.actionButton}
           onPress={() => router.push(`/post/${post.id}`)}
         >

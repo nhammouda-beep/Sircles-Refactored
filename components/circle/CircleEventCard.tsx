@@ -59,6 +59,9 @@ export function CircleEventCard({
     const active = currentStatus === status;
     return (
       <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={`${label}, ${count}`}
+        accessibilityState={{ selected: active }}
         style={[
           styles.rsvpButton,
           {
@@ -95,7 +98,11 @@ export function CircleEventCard({
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <ThemedText style={styles.eventLocation}>📍 </ThemedText>
               {event.location_url ? (
-                <TouchableOpacity onPress={() => Linking.openURL(event.location_url!)}>
+                <TouchableOpacity
+                  accessibilityRole="link"
+                  accessibilityLabel={`Open location: ${event.location}`}
+                  onPress={() => Linking.openURL(event.location_url!)}
+                >
                   <ThemedText
                     style={[
                       styles.eventLocation,
@@ -113,12 +120,20 @@ export function CircleEventCard({
         </View>
         <View style={styles.eventActions}>
           {canEdit && (
-            <TouchableOpacity style={styles.actionButton} onPress={() => onEdit(event)}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Edit event"
+              style={styles.actionButton}
+              onPress={() => onEdit(event)}
+            >
               <IconSymbol name="pencil" size={18} color={CIRCLE_COLORS.primary} />
             </TouchableOpacity>
           )}
           {canDelete && (
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Delete event"
+              accessibilityHint="Permanently deletes this event"
               style={styles.actionButton}
               onPress={() => onDelete(event.id)}
             >

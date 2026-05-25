@@ -25,6 +25,8 @@ export function Avatar({ uri, name, size = 40, style }: Props) {
 
   return (
     <View
+      accessibilityRole="image"
+      accessibilityLabel={`Avatar for ${name || "user"}`}
       style={[
         styles.container,
         { width: size, height: size, borderRadius: size / 2 },

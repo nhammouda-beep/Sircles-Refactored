@@ -84,7 +84,11 @@ export function EventsFilterSheet({
             <ThemedText type="subtitle" style={{ color: text }}>
               Filters
             </ThemedText>
-            <TouchableOpacity onPress={onClose}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Close filters"
+              onPress={onClose}
+            >
               <IconSymbol name="xmark" size={22} color={text} />
             </TouchableOpacity>
           </View>
@@ -152,12 +156,14 @@ export function EventsFilterSheet({
 
           <View style={styles.actions}>
             <TouchableOpacity
+              accessibilityRole="button"
               style={[styles.btn, styles.clearBtn]}
               onPress={onClear}
             >
               <ThemedText>Clear</ThemedText>
             </TouchableOpacity>
             <TouchableOpacity
+              accessibilityRole="button"
               style={[styles.btn, { backgroundColor: primary }]}
               onPress={onClose}
             >
@@ -183,6 +189,8 @@ function Chip({
 }) {
   return (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
       onPress={onPress}
       style={[
         styles.chip,
@@ -216,7 +224,13 @@ function Toggle({
   tintColor: string;
 }) {
   return (
-    <TouchableOpacity onPress={onToggle} style={styles.toggle}>
+    <TouchableOpacity
+      accessibilityRole="switch"
+      accessibilityLabel={label}
+      accessibilityState={{ checked: value }}
+      onPress={onToggle}
+      style={styles.toggle}
+    >
       <View
         style={[
           styles.toggleTrack,

@@ -76,6 +76,9 @@ export function EventsListCard({
     const active = event.userRsvpStatus === status;
     return (
       <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={`${label}, ${count}`}
+        accessibilityState={{ selected: active, disabled: !!isRsvpPending }}
         style={[
           styles.rsvpBtn,
           {
@@ -101,6 +104,9 @@ export function EventsListCard({
 
   return (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={`Event: ${event.title}${event.circleName ? `, in ${event.circleName}` : ""}`}
+      accessibilityHint="Opens event details"
       style={styles.card}
       onPress={() => onPress(event)}
     >
@@ -170,7 +176,11 @@ export function EventsListCard({
         <View style={styles.metaRow}>
           <IconSymbol name="location" size={16} color={COLORS.subtle} />
           {event.location_url ? (
-            <TouchableOpacity onPress={() => Linking.openURL(event.location_url!)}>
+            <TouchableOpacity
+              accessibilityRole="link"
+              accessibilityLabel={`Open location: ${event.location}`}
+              onPress={() => Linking.openURL(event.location_url!)}
+            >
               <ThemedText
                 style={[
                   styles.metaText,
@@ -214,6 +224,8 @@ export function EventsListCard({
         </View>
 
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="View event details"
           onPress={() => onPress(event)}
           style={styles.moreLinkWrap}
         >
@@ -226,12 +238,17 @@ export function EventsListCard({
       {isDeletable && (
         <View style={styles.cardActions}>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Edit event"
             style={styles.iconBtn}
             onPress={() => onEdit(event)}
           >
             <IconSymbol name="pencil" size={16} color={COLORS.primary} />
           </TouchableOpacity>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Delete event"
+            accessibilityHint="Permanently deletes this event"
             style={styles.iconBtn}
             onPress={() => onDelete(event.id)}
           >

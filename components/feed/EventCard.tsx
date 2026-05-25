@@ -59,6 +59,9 @@ export function EventCard({
         </View>
         {isOwner && (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Event options"
+            accessibilityHint="Opens menu with event actions"
             onPress={() => onMenu(event.id)}
             style={feedStyles.menuBtn}
           >

@@ -57,7 +57,11 @@ export function CircleDetailHeader({
 
   return (
     <View style={[styles.header, { backgroundColor: surfaceColor }]}>
-      <TouchableOpacity onPress={() => router.back()}>
+      <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        onPress={() => router.back()}
+      >
         <IconSymbol name="chevron.left" size={24} color={textColor} />
       </TouchableOpacity>
       <ThemedText type="defaultSemiBold" style={styles.headerTitle}>
@@ -66,6 +70,8 @@ export function CircleDetailHeader({
       <View style={styles.headerActions}>
         {showJoin && (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityState={{ disabled: loading }}
             style={[styles.button, { backgroundColor: CIRCLE_COLORS.primary }]}
             onPress={onJoin}
             disabled={loading}
@@ -79,6 +85,8 @@ export function CircleDetailHeader({
 
         {showPending && (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityState={{ disabled: true }}
             style={[styles.button, { backgroundColor: CIRCLE_COLORS.warning }]}
             disabled
           >
@@ -89,6 +97,8 @@ export function CircleDetailHeader({
 
         {showLeave && (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityState={{ disabled: loading }}
             style={[styles.button, { backgroundColor: CIRCLE_COLORS.danger }]}
             onPress={onLeave}
             disabled={loading}
@@ -100,6 +110,7 @@ export function CircleDetailHeader({
 
         {showMessages && (
           <TouchableOpacity
+            accessibilityRole="button"
             style={[styles.button, { backgroundColor: "#0EA5E9" }]}
             onPress={() => router.push(`/(tabs)/messages?circleId=${circle.id}`)}
           >
@@ -110,6 +121,8 @@ export function CircleDetailHeader({
 
         {showEdit && (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityState={{ disabled: loading }}
             style={[styles.button, { backgroundColor: CIRCLE_COLORS.primary }]}
             onPress={onEdit}
             disabled={loading}
@@ -121,6 +134,10 @@ export function CircleDetailHeader({
 
         {showDelete && (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Delete circle"
+            accessibilityHint="Permanently deletes this circle"
+            accessibilityState={{ disabled: loading }}
             style={[styles.iconOnlyButton, { backgroundColor: CIRCLE_COLORS.danger }]}
             onPress={onDelete}
             disabled={loading}

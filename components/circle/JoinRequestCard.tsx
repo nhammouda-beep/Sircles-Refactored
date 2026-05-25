@@ -50,12 +50,16 @@ export function JoinRequestCard({ request, surfaceColor, isRTL, onAction }: Prop
       </View>
       <View style={circleCardStyles.requestActions}>
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={`Accept join request from ${request.users.name}`}
           style={[circleCardStyles.requestButton, { backgroundColor: CIRCLE_COLORS.primary }]}
           onPress={() => onAction(request.id, "accept")}
         >
           <ThemedText style={circleCardStyles.requestButtonText}>Accept</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={`Reject join request from ${request.users.name}`}
           style={[circleCardStyles.requestButton, { backgroundColor: CIRCLE_COLORS.danger }]}
           onPress={() => onAction(request.id, "reject")}
         >

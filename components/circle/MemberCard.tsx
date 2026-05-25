@@ -53,6 +53,9 @@ export function MemberCard({
       </View>
       {canRemove && (
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={`Remove ${member.name}`}
+          accessibilityHint="Removes this member from the circle"
           style={circleCardStyles.removeButton}
           onPress={() => onRemove(member.id, member.name)}
         >

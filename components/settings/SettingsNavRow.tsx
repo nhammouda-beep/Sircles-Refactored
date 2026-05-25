@@ -28,6 +28,9 @@ export function SettingsNavRow({
 }: Props) {
   return (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={description}
       style={[styles.settingItem, isRTL && styles.settingItemRTL]}
       onPress={onPress}
     >

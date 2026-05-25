@@ -48,6 +48,8 @@ export function ConfirmDialog({
 
           <View style={styles.footer}>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityState={{ disabled: loading }}
               style={[styles.button, styles.cancelButton]}
               onPress={onCancel}
               disabled={loading}
@@ -56,6 +58,8 @@ export function ConfirmDialog({
             </TouchableOpacity>
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityState={{ disabled: loading }}
               style={[
                 styles.button,
                 { backgroundColor: destructive ? "#EF4444" : "#198F4B" },

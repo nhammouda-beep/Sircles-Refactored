@@ -28,6 +28,8 @@ export function CircleTabBar({
   const renderTab = (key: CircleTab, label: string) => (
     <TouchableOpacity
       key={key}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: activeTab === key }}
       style={[
         styles.tab,
         activeTab === key && { backgroundColor: CIRCLE_COLORS.primary },

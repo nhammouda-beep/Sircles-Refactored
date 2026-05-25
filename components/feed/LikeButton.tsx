@@ -59,6 +59,9 @@ export function LikeButton({
 
   return (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={`${liked ? "Unlike" : "Like"} post (${count} ${count === 1 ? "like" : "likes"})`}
+      accessibilityState={{ selected: liked, disabled: !!disabled }}
       style={[feedStyles.actionBtn, { position: "relative" }]}
       onPress={handlePress}
       disabled={disabled}

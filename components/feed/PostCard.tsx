@@ -60,6 +60,9 @@ export function PostCard({
 
         {isOwner && (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Post options"
+            accessibilityHint="Opens menu with post actions"
             onPress={() => onMenu(post.id)}
             style={feedStyles.menuBtn}
           >
@@ -88,6 +91,8 @@ export function PostCard({
           />
 
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`View comments (${post.comments_count || 0})`}
             style={feedStyles.actionBtn}
             onPress={() => router.push(`/post/${post.id}`)}
           >
