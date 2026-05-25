@@ -24,6 +24,7 @@ import { EventsListCard } from "@/components/events/EventsListCard";
 import { EventsFilterSheet } from "@/components/events/EventsFilterSheet";
 import { useDebounced } from "@/hooks/useDebounced";
 import { useFocusEffect } from "expo-router";
+import { useSirclesTheme } from "@/contexts/ThemeContext";
 
 interface Event {
   id: string;
@@ -52,12 +53,13 @@ type RSVPFilter = "any" | "going" | "maybe" | "not_going" | "none";
 export default function EventsScreen() {
   const { texts, isRTL } = useLanguage();
   const { user } = useAuth();
+  const { palette } = useSirclesTheme();
 
-  const PRIMARY = "#198F4B";
-  const BG = "#FFFFFF";
-  const TEXT = "#0F172A";
-  const SUBTLE = "#6B7280";
-  const BORDER = "#E5E7EB";
+  const PRIMARY = palette.primary;
+  const BG = palette.bg;
+  const TEXT = palette.text;
+  const SUBTLE = palette.subtle;
+  const BORDER = palette.border;
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);

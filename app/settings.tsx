@@ -17,6 +17,7 @@ import { SettingsToggleRow } from "@/components/settings/SettingsToggleRow";
 import { SettingsNavRow } from "@/components/settings/SettingsNavRow";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { PasswordChangeModal } from "@/components/settings/PasswordChangeModal";
+import { useSirclesTheme } from "@/contexts/ThemeContext";
 
 // لوحة ألوان متوافقة مع اللقطات
 const palette = {
@@ -45,6 +46,7 @@ const handleLogout = async () => {
 };
 export default function SettingsScreen() {
   const { texts, language, toggleLanguage, isRTL } = useLanguage();
+  const { resolved: themeResolved, setMode: setThemeMode } = useSirclesTheme();
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -53,8 +55,7 @@ export default function SettingsScreen() {
     confirm: "",
   });
 
-  // لا دارك مود هنا. الطابع في الشots فاتح + أخضر
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const isDarkMode = themeResolved === "dark";
 
   const [notifications, setNotifications] = useState({
     messages: true,
@@ -94,9 +95,7 @@ export default function SettingsScreen() {
   };
 
   const toggleTheme = () => {
-    // مجرد تبديل نصي لإبقاء السويتش كما هو لو محتاجه
-    setIsDarkMode(!isDarkMode);
-    Alert.alert("Theme", `Switched to ${!isDarkMode ? "Dark" : "Light"} mode`);
+    setThemeMode(isDarkMode ? "light" : "dark");
   };
 
   const toggleNotification = (key: keyof typeof notifications) => {

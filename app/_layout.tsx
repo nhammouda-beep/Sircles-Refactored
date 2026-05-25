@@ -7,28 +7,42 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider as SirclesThemeProvider, useSirclesTheme } from "@/contexts/ThemeContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { initSentry } from "@/lib/sentry";
 
-import { PaperProvider, MD3LightTheme } from "react-native-paper";
+import { PaperProvider, MD3LightTheme, MD3DarkTheme } from "react-native-paper";
 import { en, registerTranslation } from "react-native-paper-dates";
 
 registerTranslation("en", en);
 initSentry();
 
 const MyCustomLightTheme = {
-  ...MD3LightTheme, 
-  colors: {
-    ...MD3LightTheme.colors,
-    primary: "#198F4B", 
-  },
+  ...MD3LightTheme,
+  colors: { ...MD3LightTheme.colors, primary: "#198F4B" },
 };
 
+const MyCustomDarkTheme = {
+  ...MD3DarkTheme,
+  colors: { ...MD3DarkTheme.colors, primary: "#22C55E" },
+};
+
+function ThemedNavigation({ children }: { children: React.ReactNode }) {
+  const { resolved } = useSirclesTheme();
+  const navTheme =
+    resolved === "dark" ? NavigationDarkTheme : NavigationDefaultTheme;
+  const paperTheme =
+    resolved === "dark" ? MyCustomDarkTheme : MyCustomLightTheme;
+  return (
+    <PaperProvider theme={paperTheme}>
+      <ThemeProvider value={navTheme}>{children}</ThemeProvider>
+    </PaperProvider>
+  );
+}
+
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
@@ -37,15 +51,12 @@ export default function RootLayout() {
     return null;
   }
 
-  const navigationTheme =
-    colorScheme === "dark" ? NavigationDarkTheme : NavigationDefaultTheme;
-
   return (
     <ErrorBoundary>
-    <PaperProvider theme={MyCustomLightTheme}>
+    <SirclesThemeProvider>
       <AuthProvider>
         <LanguageProvider>
-          <ThemeProvider value={navigationTheme}>
+          <ThemedNavigation>
             <Stack>
               {/* ...Your screens... */}
               <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -70,10 +81,10 @@ export default function RootLayout() {
               <Stack.Screen name="interests" options={{ headerShown: false }} />
               <Stack.Screen name="post/[id]" options={{ headerShown: false }} />
             </Stack>
-          </ThemeProvider>
+          </ThemedNavigation>
         </LanguageProvider>
       </AuthProvider>
-    </PaperProvider>
+    </SirclesThemeProvider>
     </ErrorBoundary>
   );
 }

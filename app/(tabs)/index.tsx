@@ -30,6 +30,7 @@ import { HomeCreatePostModal } from "@/components/feed/HomeCreatePostModal";
 import { ActionMenu, type ActionMenuItem } from "@/components/feed/ActionMenu";
 import { EditPostModal } from "@/components/EditPostModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useSirclesTheme } from "@/contexts/ThemeContext";
 
 interface Post {
   id: string;
@@ -52,14 +53,15 @@ interface Post {
 export default function HomeScreen() {
   const { user } = useAuth();
   const { texts } = useLanguage();
+  const { palette } = useSirclesTheme();
 
-  // theme
-  const PRIMARY = "#198F4B";
-  const SURFACE = "#FFFFFF";
-  const BG = "#FFFFFF";
-  const TEXT = "#0F172A";
-  const SUBTLE = "#6B7280";
-  const BORDER = "#E5E7EB";
+  // theme — pulled from ThemeContext (light/dark aware)
+  const PRIMARY = palette.primary;
+  const SURFACE = palette.surface;
+  const BG = palette.bg;
+  const TEXT = palette.text;
+  const SUBTLE = palette.subtle;
+  const BORDER = palette.border;
 
   const tintColor = PRIMARY;
   const backgroundColor = BG;
