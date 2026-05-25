@@ -4,10 +4,7 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  TextInput,
-  Switch,
   Alert,
-  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -16,6 +13,10 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SettingsToggleRow } from "@/components/settings/SettingsToggleRow";
+import { SettingsNavRow } from "@/components/settings/SettingsNavRow";
+import { SettingsSection } from "@/components/settings/SettingsSection";
+import { PasswordChangeModal } from "@/components/settings/PasswordChangeModal";
 
 // لوحة ألوان متوافقة مع اللقطات
 const palette = {
@@ -102,6 +103,33 @@ export default function SettingsScreen() {
     setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const notificationItems = [
+    {
+      key: "messages" as const,
+      icon: "message.fill",
+      label: texts.messageNotifications || "Message Notifications",
+      desc: "Get notified about new messages",
+    },
+    {
+      key: "events" as const,
+      icon: "calendar",
+      label: texts.eventNotifications || "Event Notifications",
+      desc: "Get notified about upcoming events",
+    },
+    {
+      key: "circleUpdates" as const,
+      icon: "person.3.fill",
+      label: texts.circleUpdates || "Circle Updates",
+      desc: "Get notified about circle activities",
+    },
+    {
+      key: "communityPosts" as const,
+      icon: "megaphone.fill",
+      label: texts.communityPosts || "Community Posts",
+      desc: "Get notified about admin posts",
+    },
+  ];
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.bg }]}>
       {/* Header أخضر صلب */}
@@ -131,285 +159,94 @@ export default function SettingsScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Password Settings */}
-        <View
-          style={[
-            styles.section,
-            {
-              backgroundColor: palette.surface,
-              borderColor: palette.border,
-              borderWidth: 1,
-            },
-          ]}
+        <SettingsSection
+          icon="lock"
+          title={texts.passwordSettings || "Password Settings"}
+          isRTL={isRTL}
+          colors={palette}
         >
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="lock" size={20} color={palette.primary} />
-            <ThemedText
-              type="defaultSemiBold"
-              style={[
-                styles.sectionTitle,
-                { color: palette.text },
-                isRTL && styles.rtlText,
-              ]}
-            >
-              {texts.passwordSettings || "Password Settings"}
-            </ThemedText>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.settingItem, isRTL && styles.settingItemRTL]}
+          <SettingsNavRow
+            icon="key.fill"
+            label={texts.changePassword || "Change Password"}
             onPress={() => setShowPasswordModal(true)}
-          >
-            <View style={[styles.settingInfo, isRTL && styles.settingInfoRTL]}>
-              <IconSymbol name="key.fill" size={20} color={palette.primary} />
-              <ThemedText
-                style={[
-                  styles.settingLabel,
-                  { color: palette.text },
-                  isRTL && styles.rtlText,
-                ]}
-              >
-                {texts.changePassword || "Change Password"}
-              </ThemedText>
-            </View>
-            <IconSymbol
-              name={isRTL ? "chevron.left" : "chevron.right"}
-              size={16}
-              color={palette.muted}
-            />
-          </TouchableOpacity>
-        </View>
+            isRTL={isRTL}
+            colors={palette}
+          />
+        </SettingsSection>
 
         {/* Theme Settings */}
-        <View
-          style={[
-            styles.section,
-            {
-              backgroundColor: palette.surface,
-              borderColor: palette.border,
-              borderWidth: 1,
-            },
-          ]}
+        <SettingsSection
+          icon={isDarkMode ? "moon.fill" : "sun.max.fill"}
+          title={texts.themeSettings || "Theme Settings"}
+          isRTL={isRTL}
+          colors={palette}
         >
-          <View style={styles.sectionHeader}>
-            <IconSymbol
-              name={isDarkMode ? "moon.fill" : "sun.max.fill"}
-              size={20}
-              color={palette.primary}
-            />
-            <ThemedText
-              type="defaultSemiBold"
-              style={[
-                styles.sectionTitle,
-                { color: palette.text },
-                isRTL && styles.rtlText,
-              ]}
-            >
-              {texts.themeSettings || "Theme Settings"}
-            </ThemedText>
-          </View>
-
-          <View style={[styles.settingItem, isRTL && styles.settingItemRTL]}>
-            <View style={[styles.settingInfo, isRTL && styles.settingInfoRTL]}>
-              <IconSymbol
-                name={isDarkMode ? "moon.fill" : "sun.max.fill"}
-                size={20}
-                color={palette.primary}
-              />
-              <View>
-                <ThemedText
-                  style={[
-                    styles.settingLabel,
-                    { color: palette.text },
-                    isRTL && styles.rtlText,
-                  ]}
-                >
-                  {texts.darkMode || "Dark Mode"}
-                </ThemedText>
-                <ThemedText
-                  style={[
-                    styles.settingDescription,
-                    { color: palette.muted },
-                    isRTL && styles.rtlText,
-                  ]}
-                >
-                  {isDarkMode ? "Dark theme enabled" : "Light theme enabled"}
-                </ThemedText>
-              </View>
-            </View>
-            <Switch
-              value={isDarkMode}
-              onValueChange={toggleTheme}
-              trackColor={{ false: palette.border, true: palette.primary }}
-              thumbColor={"#FFFFFF"}
-            />
-          </View>
-        </View>
+          <SettingsToggleRow
+            icon={isDarkMode ? "moon.fill" : "sun.max.fill"}
+            label={texts.darkMode || "Dark Mode"}
+            description={isDarkMode ? "Dark theme enabled" : "Light theme enabled"}
+            value={isDarkMode}
+            onValueChange={toggleTheme}
+            isRTL={isRTL}
+            colors={palette}
+          />
+        </SettingsSection>
 
         {/* Language Settings */}
-        <View
-          style={[
-            styles.section,
-            {
-              backgroundColor: palette.surface,
-              borderColor: palette.border,
-              borderWidth: 1,
-            },
-          ]}
+        <SettingsSection
+          icon="globe"
+          title={texts.languageSettings || "Language Settings"}
+          isRTL={isRTL}
+          colors={palette}
         >
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="globe" size={20} color={palette.primary} />
-            <ThemedText
-              type="defaultSemiBold"
-              style={[
-                styles.sectionTitle,
-                { color: palette.text },
-                isRTL && styles.rtlText,
-              ]}
-            >
-              {texts.languageSettings || "Language Settings"}
-            </ThemedText>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.settingItem, isRTL && styles.settingItemRTL]}
+          <SettingsNavRow
+            icon="globe"
+            label={texts.language || "Language"}
+            description={language === "en" ? "English" : "العربية"}
             onPress={toggleLanguage}
-          >
-            <View style={[styles.settingInfo, isRTL && styles.settingInfoRTL]}>
-              <IconSymbol name="globe" size={20} color={palette.primary} />
-              <View>
+            isRTL={isRTL}
+            colors={palette}
+            rightElement={
+              <View
+                style={[
+                  styles.languageToggle,
+                  {
+                    backgroundColor: palette.chipBg,
+                    borderColor: palette.border,
+                    borderWidth: 1,
+                  },
+                ]}
+              >
                 <ThemedText
-                  style={[
-                    styles.settingLabel,
-                    { color: palette.text },
-                    isRTL && styles.rtlText,
-                  ]}
+                  style={[styles.languageToggleText, { color: palette.chipText }]}
                 >
-                  {texts.language || "Language"}
-                </ThemedText>
-                <ThemedText
-                  style={[
-                    styles.settingDescription,
-                    { color: palette.muted },
-                    isRTL && styles.rtlText,
-                  ]}
-                >
-                  {language === "en" ? "English" : "العربية"}
+                  {language === "en" ? "ع" : "EN"}
                 </ThemedText>
               </View>
-            </View>
-            {/* Chip بنفس طابع الشيبس الرمادي */}
-            <View
-              style={[
-                styles.languageToggle,
-                {
-                  backgroundColor: palette.chipBg,
-                  borderColor: palette.border,
-                  borderWidth: 1,
-                },
-              ]}
-            >
-              <ThemedText
-                style={[styles.languageToggleText, { color: palette.chipText }]}
-              >
-                {language === "en" ? "ع" : "EN"}
-              </ThemedText>
-            </View>
-          </TouchableOpacity>
-        </View>
+            }
+          />
+        </SettingsSection>
 
         {/* Notification Settings */}
-        <View
-          style={[
-            styles.section,
-            {
-              backgroundColor: palette.surface,
-              borderColor: palette.border,
-              borderWidth: 1,
-            },
-          ]}
+        <SettingsSection
+          icon="bell"
+          title={texts.notificationSettings || "Notification Settings"}
+          isRTL={isRTL}
+          colors={palette}
         >
-          <View style={styles.sectionHeader}>
-            <IconSymbol name="bell" size={20} color={palette.primary} />
-            <ThemedText
-              type="defaultSemiBold"
-              style={[
-                styles.sectionTitle,
-                { color: palette.text },
-                isRTL && styles.rtlText,
-              ]}
-            >
-              {texts.notificationSettings || "Notification Settings"}
-            </ThemedText>
-          </View>
-
-          {[
-            {
-              key: "messages" as const,
-              icon: "message.fill",
-              label: texts.messageNotifications || "Message Notifications",
-              desc: "Get notified about new messages",
-            },
-            {
-              key: "events" as const,
-              icon: "calendar",
-              label: texts.eventNotifications || "Event Notifications",
-              desc: "Get notified about upcoming events",
-            },
-            {
-              key: "circleUpdates" as const,
-              icon: "person.3.fill",
-              label: texts.circleUpdates || "Circle Updates",
-              desc: "Get notified about circle activities",
-            },
-            {
-              key: "communityPosts" as const,
-              icon: "megaphone.fill",
-              label: texts.communityPosts || "Community Posts",
-              desc: "Get notified about admin posts",
-            },
-          ].map((item) => (
-            <View
+          {notificationItems.map((item) => (
+            <SettingsToggleRow
               key={item.key}
-              style={[styles.settingItem, isRTL && styles.settingItemRTL]}
-            >
-              <View
-                style={[styles.settingInfo, isRTL && styles.settingInfoRTL]}
-              >
-                <IconSymbol
-                  name={item.icon}
-                  size={20}
-                  color={palette.primary}
-                />
-                <View>
-                  <ThemedText
-                    style={[
-                      styles.settingLabel,
-                      { color: palette.text },
-                      isRTL && styles.rtlText,
-                    ]}
-                  >
-                    {item.label}
-                  </ThemedText>
-                  <ThemedText
-                    style={[
-                      styles.settingDescription,
-                      { color: palette.muted },
-                      isRTL && styles.rtlText,
-                    ]}
-                  >
-                    {item.desc}
-                  </ThemedText>
-                </View>
-              </View>
-              <Switch
-                value={notifications[item.key]}
-                onValueChange={() => toggleNotification(item.key)}
-                trackColor={{ false: palette.border, true: palette.primary }}
-                thumbColor={"#FFFFFF"}
-              />
-            </View>
+              icon={item.icon}
+              label={item.label}
+              description={item.desc}
+              value={notifications[item.key]}
+              onValueChange={() => toggleNotification(item.key)}
+              isRTL={isRTL}
+              colors={palette}
+            />
           ))}
-        </View>
+        </SettingsSection>
         <View style={styles.containerLogOut}>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutText}>Logout</Text>
@@ -417,163 +254,16 @@ export default function SettingsScreen() {
         </View>
       </ScrollView>
 
-      {/* Change Password Modal */}
-      <Modal
+      <PasswordChangeModal
         visible={showPasswordModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowPasswordModal(false)}
-      >
-        <View
-          style={[
-            styles.modalOverlay,
-            { backgroundColor: "rgba(17,24,39,0.5)" },
-          ]}
-        >
-          <View
-            style={[
-              styles.modalContent,
-              {
-                backgroundColor: palette.bg,
-                borderColor: palette.border,
-                borderWidth: 1,
-              },
-            ]}
-          >
-            <ThemedText
-              type="subtitle"
-              style={[
-                styles.modalTitle,
-                { color: palette.text },
-                isRTL && styles.rtlText,
-              ]}
-            >
-              {texts.changePassword || "Change Password"}
-            </ThemedText>
-
-            <View style={styles.formField}>
-              <ThemedText
-                style={[
-                  styles.fieldLabel,
-                  { color: palette.muted },
-                  isRTL && styles.rtlText,
-                ]}
-              >
-                {texts.currentPassword || "Current Password"}
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.textInput,
-                  {
-                    backgroundColor: palette.surface,
-                    color: palette.text,
-                    textAlign: isRTL ? "right" : "left",
-                    borderColor: palette.border,
-                    borderWidth: 1,
-                  },
-                ]}
-                placeholder={
-                  texts.enterCurrentPassword || "Enter current password"
-                }
-                placeholderTextColor={palette.muted}
-                secureTextEntry
-                value={passwordData.current}
-                onChangeText={(text) =>
-                  setPasswordData({ ...passwordData, current: text })
-                }
-              />
-            </View>
-
-            <View style={styles.formField}>
-              <ThemedText
-                style={[
-                  styles.fieldLabel,
-                  { color: palette.muted },
-                  isRTL && styles.rtlText,
-                ]}
-              >
-                {texts.newPassword || "New Password"}
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.textInput,
-                  {
-                    backgroundColor: palette.surface,
-                    color: palette.text,
-                    textAlign: isRTL ? "right" : "left",
-                    borderColor: palette.border,
-                    borderWidth: 1,
-                  },
-                ]}
-                placeholder={texts.enterNewPassword || "Enter new password"}
-                placeholderTextColor={palette.muted}
-                secureTextEntry
-                value={passwordData.new}
-                onChangeText={(text) =>
-                  setPasswordData({ ...passwordData, new: text })
-                }
-              />
-            </View>
-
-            <View style={styles.formField}>
-              <ThemedText
-                style={[
-                  styles.fieldLabel,
-                  { color: palette.muted },
-                  isRTL && styles.rtlText,
-                ]}
-              >
-                {texts.confirmPassword || "Confirm Password"}
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.textInput,
-                  {
-                    backgroundColor: palette.surface,
-                    color: palette.text,
-                    textAlign: isRTL ? "right" : "left",
-                    borderColor: palette.border,
-                    borderWidth: 1,
-                  },
-                ]}
-                placeholder={texts.confirmNewPassword || "Confirm new password"}
-                placeholderTextColor={palette.muted}
-                secureTextEntry
-                value={passwordData.confirm}
-                onChangeText={(text) =>
-                  setPasswordData({ ...passwordData, confirm: text })
-                }
-              />
-            </View>
-
-            <View
-              style={[styles.modalActions, isRTL && styles.modalActionsRTL]}
-            >
-              <TouchableOpacity
-                style={[
-                  styles.modalButton,
-                  styles.cancelButton,
-                  { backgroundColor: palette.bg, borderColor: palette.border },
-                ]}
-                onPress={() => setShowPasswordModal(false)}
-              >
-                <ThemedText style={{ color: palette.text }}>
-                  {texts.cancel || "Cancel"}
-                </ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.modalButton,
-                  { backgroundColor: palette.primary },
-                ]}
-                onPress={handlePasswordChange}
-              >
-                <ThemedText style={{ color: "#FFFFFF" }}>{"Change"}</ThemedText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowPasswordModal(false)}
+        onSubmit={handlePasswordChange}
+        passwordData={passwordData}
+        setPasswordData={setPasswordData}
+        isRTL={isRTL}
+        texts={texts}
+        colors={palette}
+      />
     </SafeAreaView>
   );
 }
@@ -593,31 +283,6 @@ const styles = StyleSheet.create({
 
   content: { flex: 1, padding: 16 },
 
-  section: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 16,
-  },
-  sectionTitle: { fontSize: 18, fontWeight: "600" },
-
-  settingItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-  },
-  settingItemRTL: { flexDirection: "row-reverse" },
-  settingInfo: { flexDirection: "row", alignItems: "center", flex: 1, gap: 12 },
-  settingInfoRTL: { flexDirection: "row-reverse" },
-  settingLabel: { fontSize: 16, fontWeight: "600" },
-  settingDescription: { fontSize: 12, marginTop: 2 },
-
   languageToggle: {
     paddingHorizontal: 10,
     height: 28,
@@ -627,45 +292,12 @@ const styles = StyleSheet.create({
   },
   languageToggleText: { fontSize: 12, fontWeight: "700" },
 
-  modalOverlay: { flex: 1, justifyContent: "center", alignItems: "center" },
-  modalContent: {
-    width: "90%",
-    maxHeight: "80%",
-    padding: 20,
-    borderRadius: 12,
-  },
-  modalTitle: { textAlign: "center", marginBottom: 16 },
-
-  formField: { marginBottom: 16 },
-  fieldLabel: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
-
-  textInput: {
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-
-  modalActions: { flexDirection: "row", gap: 12 },
-  modalActionsRTL: { flexDirection: "row-reverse" },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    borderWidth: 1,
-  },
-  cancelButton: {},
-
   rtlText: { textAlign: "right" },
   containerLogOut: {
     flexGrow: 1,
     justifyContent: "space-between",
     padding: 20,
     backgroundColor: "#fff",
-  },
-  logoutContainer: {
-    marginTop: 40,
   },
   logoutButton: {
     backgroundColor: "#E53935",

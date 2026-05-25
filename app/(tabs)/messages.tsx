@@ -24,23 +24,11 @@ import {
   sendMessage,
 } from "@/lib/database";
 import { useDebounced } from "@/hooks/useDebounced";
-
-interface Message {
-  id: string;
-  content: string;
-  senderId: string;
-  senderName?: string;
-  timestamp: string;
-  type: string;
-  attachment?: string;
-}
-interface CircleConversation {
-  id: string;
-  name: string;
-  lastMessage?: string;
-  lastMessageTime?: string;
-  unreadCount: number;
-}
+import {
+  ConversationListItem,
+  CircleConversation,
+} from "@/components/messages/ConversationListItem";
+import { MessageBubble, Message } from "@/components/messages/MessageBubble";
 
 const COLORS = {
   bg: "#F6F7FB",
@@ -213,92 +201,6 @@ export default function MessagesScreen() {
     return d.toLocaleDateString([], { month: "short", day: "numeric" });
   };
 
-  const renderConversationItem = (c: CircleConversation) => (
-    <TouchableOpacity
-      key={c.id}
-      style={styles.chatItem}
-      onPress={() => setSelectedCircle(c.id)}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.chatAvatar, { backgroundColor: COLORS.me }]}>
-        <IconSymbol name="person.3.fill" size={22} color="#fff" />
-      </View>
-      <View style={styles.chatTextBox}>
-        <ThemedText
-          type="defaultSemiBold"
-          style={[styles.chatTitleText, TEXT.primary]}
-          numberOfLines={1}
-        >
-          {c.name}
-        </ThemedText>
-        <ThemedText
-          style={[styles.chatSubtitle, TEXT.secondary]}
-          numberOfLines={1}
-        >
-          {c.lastMessage || "No messages yet"}
-        </ThemedText>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderMessage = (m: Message) => {
-    const mine = m.senderId === user?.id;
-    return (
-      <View
-        key={m.id}
-        style={[
-          styles.messageRow,
-          mine ? styles.rowRight : styles.rowLeft,
-          isRTL && (mine ? styles.rowLeft : styles.rowRight),
-        ]}
-      >
-        <View
-          style={[
-            styles.bubble,
-            mine ? styles.myBubble : styles.otherBubble,
-            mine
-              ? {
-                  borderTopRightRadius: 6,
-                  borderTopLeftRadius: 18,
-                  borderBottomLeftRadius: 18,
-                  marginLeft: 40,
-                }
-              : {
-                  borderTopLeftRadius: 6,
-                  borderTopRightRadius: 18,
-                  borderBottomRightRadius: 18,
-                  marginRight: 40,
-                },
-          ]}
-        >
-          {!mine && (
-            <ThemedText style={[styles.senderName, { color: COLORS.me }]}>
-              {m.senderName}
-            </ThemedText>
-          )}
-          <ThemedText
-            style={[
-              styles.msgText,
-              { color: mine ? COLORS.textLight : COLORS.textDark },
-              isRTL && styles.rtlText,
-            ]}
-          >
-            {m.content}
-          </ThemedText>
-          <ThemedText
-            style={[
-              styles.time,
-              { color: mine ? COLORS.textLight : "#6B7280" },
-              isRTL && styles.rtlText,
-            ]}
-          >
-            {formatMessageTime(m.timestamp)}
-          </ThemedText>
-        </View>
-      </View>
-    );
-  };
-
   // ===== Chats list screen =====
   if (!selectedCircle) {
     return (
@@ -359,7 +261,16 @@ export default function MessagesScreen() {
               </ThemedText>
             </View>
           ) : (
-            filteredConversations.map(renderConversationItem)
+            filteredConversations.map((c) => (
+              <ConversationListItem
+                key={c.id}
+                conversation={c}
+                onPress={setSelectedCircle}
+                avatarBgColor={COLORS.me}
+                textPrimary={TEXT.primary}
+                textSecondary={TEXT.secondary}
+              />
+            ))
           )}
         </ScrollView>
       </SafeAreaView>
@@ -414,7 +325,16 @@ export default function MessagesScreen() {
               </ThemedText>
             </View>
           ) : (
-            messages.map(renderMessage)
+            messages.map((m) => (
+              <MessageBubble
+                key={m.id}
+                message={m}
+                mine={m.senderId === user?.id}
+                isRTL={isRTL}
+                formatTime={formatMessageTime}
+                colors={COLORS}
+              />
+            ))
           )}
         </ScrollView>
 
@@ -464,7 +384,6 @@ export default function MessagesScreen() {
   );
 }
 
-const AV_SIZE = 48;
 const PILL_H = 55;
 const SHIFT = 15;
 
@@ -514,23 +433,6 @@ const styles = StyleSheet.create({
 
   // Chats list
   listContainer: { flex: 1 },
-  chatItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  chatAvatar: {
-    width: AV_SIZE,
-    height: AV_SIZE,
-    borderRadius: AV_SIZE / 2,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  chatTextBox: { flex: 1 },
-  chatTitleText: { fontSize: 16, marginBottom: 2 },
-  chatSubtitle: { fontSize: 13 },
 
   // Chat detail header
   chatHeader: {
@@ -558,15 +460,6 @@ const styles = StyleSheet.create({
   // Messages
   chatContainer: { flex: 1 },
   messagesContainer: { flex: 1, paddingHorizontal: 12, paddingTop: 8 },
-  messageRow: { marginVertical: 4, flexDirection: "row" },
-  rowRight: { justifyContent: "flex-end" },
-  rowLeft: { justifyContent: "flex-start" },
-  bubble: { maxWidth: "78%", paddingHorizontal: 12, paddingVertical: 8 },
-  myBubble: { backgroundColor: COLORS.me },
-  otherBubble: { backgroundColor: COLORS.other },
-  senderName: { fontSize: 11, fontWeight: "600", marginBottom: 2 },
-  msgText: { fontSize: 15, lineHeight: 20 },
-  time: { fontSize: 10, marginTop: 4, alignSelf: "flex-end", opacity: 0.9 },
 
   // Input pill
   inputBar: {

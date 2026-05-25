@@ -3,19 +3,14 @@ import {
   StyleSheet,
   View,
   ScrollView,
-  TouchableOpacity,
-  Modal,
-  TextInput,
   Alert,
   Platform,
 } from "react-native";
-import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 
 import { ThemedText } from "@/components/ThemedText";
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { DatabaseService } from "@/lib/database";
@@ -23,6 +18,10 @@ import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
 import { optimizeImageForUpload } from "@/lib/imageOptimize";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { ProfileAvatarHeader } from "@/components/profile/ProfileAvatarHeader";
+import { ProfileField } from "@/components/profile/ProfileField";
+import { InterestsSection } from "@/components/profile/InterestsSection";
+import { InterestPickerModal } from "@/components/profile/InterestPickerModal";
 
 const COLORS = {
   primary: "#2b7a4b",
@@ -137,7 +136,7 @@ export default function ProfileScreen() {
         return;
       }
 
-      const raw = data.publicUrl; // يُخزَّن في DB
+      const raw = data.publicUrl; // يُخزَّن في DB
       const view = `${raw}?t=${Date.now()}`; // يُعرض مع cache-buster
 
       await DatabaseService.updateUserAvatar(user.id, raw);
@@ -288,60 +287,36 @@ export default function ProfileScreen() {
         contentContainerStyle={styles.pageContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.hero}>
-          <ThemedText style={styles.headerTitle}>Your Profile</ThemedText>
-          <TouchableOpacity
-            onPress={() => router.push("/settings")}
-            style={styles.headerGear}
-          >
-            <Ionicons name="settings-outline" size={18} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+        <ProfileAvatarHeader
+          onSettingsPress={() => router.push("/settings")}
+          avatarUrl={avatarUrl}
+          fallbackAvatarUrl={userProfile?.avatar_url}
+          uploading={uploading}
+          onPickImage={pickImage}
+          name={userProfile?.name || "User"}
+          meta={(userProfile?.gender || "Male") + " • Circle 27"}
+          primaryColor={COLORS.primary}
+          textColor={COLORS.text}
+          mutedColor={COLORS.muted}
+        />
 
         <View style={styles.centerColumn}>
-          <TouchableOpacity
-            onPress={pickImage}
-            disabled={uploading}
-            style={styles.avatarWrap}
-          >
-            <View style={styles.avatarGreen}>
-              {avatarUrl || userProfile?.avatar_url ? (
-                <Image
-                  source={{ uri: avatarUrl || userProfile?.avatar_url || undefined }}
-                  style={styles.avatarImg}
-                />
-              ) : (
-                <View style={[styles.avatarImg, styles.avatarPlaceholder]}>
-                  <ThemedText style={{ fontSize: 28 }}>👤</ThemedText>
-                </View>
-              )}
-            </View>
-            <View style={styles.editAvatarBtn}>
-              <IconSymbol name="pencil" size={14} color="#FFF" />
-            </View>
-          </TouchableOpacity>
-
-          <ThemedText style={styles.nameText}>
-            {userProfile?.name || "User"}
-          </ThemedText>
-          <ThemedText style={styles.metaText}>
-            {(userProfile?.gender || "Male") + " • Circle 27"}
-          </ThemedText>
-
           <View style={[styles.blockCard, SHADOW]}>
-            <Field
+            <ProfileField
               label="Your Email"
               value={user?.email || "example123@gmail.com"}
               icon={
                 <MaterialIcons name="email" size={18} color={COLORS.muted} />
               }
+              colors={COLORS}
             />
-            <Field
+            <ProfileField
               label="Phone Number"
               value={userProfile?.phone || "+20 1200001000"}
               icon={<Ionicons name="call" size={18} color={COLORS.muted} />}
+              colors={COLORS}
             />
-            <Field
+            <ProfileField
               label="Address"
               value={fullAddress || "Apt 8, Building 8, Block B"}
               icon={
@@ -351,309 +326,59 @@ export default function ProfileScreen() {
                   color={COLORS.muted}
                 />
               }
+              colors={COLORS}
             />
           </View>
 
-          <SectionWithEdit
+          <InterestsSection
             title="Interests"
+            groupedInterests={userInterests}
+            emptyText={texts.notInterested || "No interests added yet"}
             onEdit={() => setShowInterestModal(true)}
-          >
-            {Object.keys(userInterests).length === 0 ? (
-              <ThemedText style={styles.emptyText}>
-                {texts.notInterested || "No interests added yet"}
-              </ThemedText>
-            ) : (
-              Object.entries(userInterests).map(([cat, list]) => (
-                <View key={cat} style={{ marginBottom: 10 }}>
-                  <ThemedText style={styles.catTitle}>{cat}</ThemedText>
-                  <View style={styles.tagsRow}>
-                    {list.map((interest: any) => (
-                      <View key={interest.id} style={styles.tag}>
-                        <ThemedText style={styles.tagText}>
-                          {interest.title}
-                        </ThemedText>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              ))
-            )}
-          </SectionWithEdit>
+            colors={COLORS}
+          />
 
-          <SectionWithEdit
+          <InterestsSection
             title="Looking For"
+            groupedInterests={userLookFor}
+            emptyText="No looking for preferences added yet"
             onEdit={() => setShowLookForModal(true)}
-          >
-            {Object.keys(userLookFor).length === 0 ? (
-              <ThemedText style={styles.emptyText}>
-                No looking for preferences added yet
-              </ThemedText>
-            ) : (
-              Object.entries(userLookFor).map(([cat, list]) => (
-                <View key={cat} style={{ marginBottom: 10 }}>
-                  <ThemedText style={styles.catTitle}>{cat}</ThemedText>
-                  <View style={styles.tagsRow}>
-                    {list.map((interest: any) => (
-                      <View key={interest.id} style={styles.tag}>
-                        <ThemedText style={styles.tagText}>
-                          {interest.title}
-                        </ThemedText>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              ))
-            )}
-          </SectionWithEdit>
+            colors={COLORS}
+          />
         </View>
       </ScrollView>
 
-      {/* Modals */}
-      <Modal
+      <InterestPickerModal
         visible={showInterestModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowInterestModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, SHADOW]}>
-            <ThemedText type="subtitle" style={styles.modalTitle}>
-              {texts.interests || "Edit Interests"}
-            </ThemedText>
-            <ScrollView style={{ maxHeight: 420 }}>
-              {Object.entries(availableInterests).map(
-                ([category, interests]) => (
-                  <View key={category} style={{ marginBottom: 16 }}>
-                    <ThemedText style={styles.catTitle}>{category}</ThemedText>
-                    <View style={styles.optionGrid}>
-                      {(interests as any[]).map((interest: any) => {
-                        const selected = Object.values(userInterests)
-                          .flat()
-                          .some((i: any) => i.id === interest.id);
-                        return (
-                          <TouchableOpacity
-                            key={interest.id}
-                            onPress={() => toggleInterest(interest)}
-                            style={[
-                              styles.optionBtn,
-                              {
-                                backgroundColor: selected
-                                  ? COLORS.primary
-                                  : "transparent",
-                                borderColor: COLORS.primary,
-                              },
-                            ]}
-                          >
-                            <ThemedText
-                              style={[
-                                styles.optionText,
-                                { color: selected ? "#FFF" : COLORS.text },
-                              ]}
-                            >
-                              {interest.title}
-                            </ThemedText>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  </View>
-                )
-              )}
-            </ScrollView>
-            <TouchableOpacity
-              style={styles.modalPrimary}
-              onPress={() => setShowInterestModal(false)}
-            >
-              <ThemedText style={{ color: "#FFF", fontWeight: "600" }}>
-                Done
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        title={texts.interests || "Edit Interests"}
+        availableInterests={availableInterests}
+        selectedInterests={userInterests}
+        onToggle={toggleInterest}
+        onClose={() => setShowInterestModal(false)}
+        colors={COLORS}
+      />
 
-      <Modal
+      <InterestPickerModal
         visible={showLookForModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowLookForModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, SHADOW]}>
-            <ThemedText type="subtitle" style={styles.modalTitle}>
-              Edit Looking For
-            </ThemedText>
-            <ScrollView style={{ maxHeight: 420 }}>
-              {Object.entries(availableInterests).map(
-                ([category, interests]) => (
-                  <View key={category} style={{ marginBottom: 16 }}>
-                    <ThemedText style={styles.catTitle}>{category}</ThemedText>
-                    <View style={styles.optionGrid}>
-                      {(interests as any[]).map((interest: any) => {
-                        const selected = Object.values(userLookFor)
-                          .flat()
-                          .some((i: any) => i.id === interest.id);
-                        return (
-                          <TouchableOpacity
-                            key={interest.id}
-                            onPress={() => toggleLookFor(interest)}
-                            style={[
-                              styles.optionBtn,
-                              {
-                                backgroundColor: selected
-                                  ? COLORS.primary
-                                  : "transparent",
-                                borderColor: COLORS.primary,
-                              },
-                            ]}
-                          >
-                            <ThemedText
-                              style={[
-                                styles.optionText,
-                                { color: selected ? "#FFF" : COLORS.text },
-                              ]}
-                            >
-                              {interest.title}
-                            </ThemedText>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  </View>
-                )
-              )}
-            </ScrollView>
-            <TouchableOpacity
-              style={styles.modalPrimary}
-              onPress={() => setShowLookForModal(false)}
-            >
-              <ThemedText style={{ color: "#FFF", fontWeight: "600" }}>
-                Done
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        title="Edit Looking For"
+        availableInterests={availableInterests}
+        selectedInterests={userLookFor}
+        onToggle={toggleLookFor}
+        onClose={() => setShowLookForModal(false)}
+        colors={COLORS}
+      />
     </SafeAreaView>
   );
 }
 
-const Field = ({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: string;
-  icon?: React.ReactNode;
-}) => {
-  return (
-    <View style={{ marginBottom: 12 }}>
-      <ThemedText style={styles.fieldLabel}>{label}</ThemedText>
-      <View style={styles.inputWrap}>
-        <TextInput
-          editable={false}
-          value={value}
-          style={styles.input}
-          pointerEvents="none"
-        />
-        <View style={styles.inputIconRight}>{icon}</View>
-      </View>
-    </View>
-  );
-};
-
-const SectionWithEdit = ({ title, onEdit, children }: any) => (
-  <View style={[styles.sectionCard, SHADOW]}>
-    <View style={styles.sectionHeader}>
-      <ThemedText style={styles.sectionTitle}>{title}</ThemedText>
-      <TouchableOpacity onPress={onEdit} style={styles.editIconBtn}>
-        <IconSymbol name="pencil" size={14} color="#FFF" />
-      </TouchableOpacity>
-    </View>
-    <View style={styles.sectionBody}>{children}</View>
-  </View>
-);
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.pageBg },
   pageContent: { paddingBottom: 24 },
-  hero: {
-    width: "100%",
-    height: 120,
-    backgroundColor: COLORS.primary,
-    borderBottomLeftRadius: 22,
-    borderBottomRightRadius: 22,
-    justifyContent: "flex-end",
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  headerTitle: {
-    color: "#FFF",
-    fontSize: 14,
-    fontWeight: "700",
-    position: "absolute",
-    top: 15,
-    left: 16,
-  },
-  headerGear: {
-    position: "absolute",
-    right: 16,
-    top: 14,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   centerColumn: {
     width: "100%",
     maxWidth: 420,
     alignSelf: "center",
     paddingHorizontal: 16,
-  },
-  avatarWrap: { alignSelf: "center", marginTop: -46 },
-  avatarGreen: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarImg: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    backgroundColor: "#FFF",
-  },
-  avatarPlaceholder: { alignItems: "center", justifyContent: "center" },
-  editAvatarBtn: {
-    position: "absolute",
-    right: -2,
-    bottom: -2,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.primary,
-  },
-  nameText: {
-    marginTop: 12,
-    fontSize: 16,
-    fontWeight: "700",
-    color: COLORS.text,
-    textAlign: "center",
-  },
-  metaText: {
-    marginTop: 4,
-    fontSize: 12,
-    fontWeight: "400",
-    color: COLORS.muted,
-    textAlign: "center",
-    marginBottom: 12,
   },
   blockCard: {
     backgroundColor: COLORS.white,
@@ -663,116 +388,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
     width: "100%",
-  },
-  fieldLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: COLORS.text,
-    marginBottom: 8,
-  },
-  inputWrap: {
-    position: "relative",
-    backgroundColor: COLORS.fieldBg,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: COLORS.fieldBorder,
-    height: 46,
-    justifyContent: "center",
-  },
-  input: {
-    height: 46,
-    color: COLORS.text,
-    paddingHorizontal: 12,
-    paddingRight: 44,
-    fontSize: 14,
-  },
-  inputIconRight: {
-    position: "absolute",
-    right: 12,
-    top: 0,
-    bottom: 0,
-    justifyContent: "center",
-  },
-  sectionCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    width: "100%",
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  sectionTitle: { fontSize: 13, fontWeight: "700", color: COLORS.text },
-  editIconBtn: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sectionBody: { backgroundColor: "#F6F7F8", borderRadius: 12, padding: 12 },
-  catTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: COLORS.muted,
-    marginBottom: 8,
-  },
-  tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  tag: {
-    backgroundColor: COLORS.chipBg,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  tagText: { fontSize: 12, fontWeight: "600", color: COLORS.chipText },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-  },
-  modalContent: {
-    width: "100%",
-    maxWidth: 480,
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 16,
-  },
-  modalTitle: {
-    textAlign: "center",
-    marginBottom: 12,
-    fontWeight: "700",
-    color: COLORS.text,
-  },
-  modalPrimary: {
-    marginTop: 8,
-    height: 44,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.primary,
-  },
-  optionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  optionBtn: {
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    borderColor: COLORS.primary,
-  },
-  optionText: { fontSize: 12, fontWeight: "600" },
-  emptyText: {
-    color: COLORS.muted,
-    fontSize: 13,
-    textAlign: "center",
-    marginVertical: 8,
   },
 });
