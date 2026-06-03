@@ -34,6 +34,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { supabase } from "@/lib/supabase";
 import { StorageService } from "@/lib/storage";
 import EventModal from "@/components/EventModal";
+import { useSirclesTheme } from "@/contexts/ThemeContext";
 
 interface Circle {
   id: string;
@@ -104,12 +105,13 @@ export default function CircleScreen() {
 
   const { user } = useAuth();
   const { texts, isRTL } = useLanguage();
+  const { palette } = useSirclesTheme();
 
-  const backgroundColor = PALETTE.background;
-  const surfaceColor = PALETTE.surface;
-  const tintColor = PALETTE.tint;
-  const textColor = PALETTE.text;
-  const successColor = PALETTE.success;
+  const backgroundColor = palette.bg;
+  const surfaceColor = palette.surface;
+  const tintColor = palette.primary;
+  const textColor = palette.text;
+  const successColor = palette.success;
 
   if (!circleId || circleId === "undefined") {
     return (

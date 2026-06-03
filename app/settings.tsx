@@ -46,7 +46,22 @@ const handleLogout = async () => {
 };
 export default function SettingsScreen() {
   const { texts, language, toggleLanguage, isRTL } = useLanguage();
-  const { resolved: themeResolved, setMode: setThemeMode } = useSirclesTheme();
+  const { resolved: themeResolved, setMode: setThemeMode, palette: themePalette } = useSirclesTheme();
+
+  // Build a theme-aware palette for child components; keep keys compatible with `palette` shape
+  const themedPalette = {
+    ...palette,
+    primary: themePalette.primary,
+    primaryDark: palette.primaryDark,
+    bg: themePalette.bg,
+    surface: themePalette.surface,
+    text: themePalette.text,
+    muted: themePalette.subtle,
+    border: themePalette.border,
+    chipBg: themeResolved === "dark" ? themePalette.border : palette.chipBg,
+    chipText: themePalette.text,
+    success: themePalette.success,
+  };
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -130,9 +145,9 @@ export default function SettingsScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: palette.bg }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themedPalette.bg }]}>
       {/* Header أخضر صلب */}
-      <View style={[styles.header, { backgroundColor: palette.primary }]}>
+      <View style={[styles.header, { backgroundColor: themedPalette.primary }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
@@ -162,14 +177,14 @@ export default function SettingsScreen() {
           icon="lock"
           title={texts.passwordSettings || "Password Settings"}
           isRTL={isRTL}
-          colors={palette}
+          colors={themedPalette}
         >
           <SettingsNavRow
             icon="key.fill"
             label={texts.changePassword || "Change Password"}
             onPress={() => setShowPasswordModal(true)}
             isRTL={isRTL}
-            colors={palette}
+            colors={themedPalette}
           />
         </SettingsSection>
 
@@ -178,7 +193,7 @@ export default function SettingsScreen() {
           icon={isDarkMode ? "moon.fill" : "sun.max.fill"}
           title={texts.themeSettings || "Theme Settings"}
           isRTL={isRTL}
-          colors={palette}
+          colors={themedPalette}
         >
           <SettingsToggleRow
             icon={isDarkMode ? "moon.fill" : "sun.max.fill"}
@@ -187,7 +202,7 @@ export default function SettingsScreen() {
             value={isDarkMode}
             onValueChange={toggleTheme}
             isRTL={isRTL}
-            colors={palette}
+            colors={themedPalette}
           />
         </SettingsSection>
 
@@ -196,7 +211,7 @@ export default function SettingsScreen() {
           icon="globe"
           title={texts.languageSettings || "Language Settings"}
           isRTL={isRTL}
-          colors={palette}
+          colors={themedPalette}
         >
           <SettingsNavRow
             icon="globe"
@@ -204,20 +219,20 @@ export default function SettingsScreen() {
             description={language === "en" ? "English" : "العربية"}
             onPress={toggleLanguage}
             isRTL={isRTL}
-            colors={palette}
+            colors={themedPalette}
             rightElement={
               <View
                 style={[
                   styles.languageToggle,
                   {
-                    backgroundColor: palette.chipBg,
-                    borderColor: palette.border,
+                    backgroundColor: themedPalette.chipBg,
+                    borderColor: themedPalette.border,
                     borderWidth: 1,
                   },
                 ]}
               >
                 <ThemedText
-                  style={[styles.languageToggleText, { color: palette.chipText }]}
+                  style={[styles.languageToggleText, { color: themedPalette.chipText }]}
                 >
                   {language === "en" ? "ع" : "EN"}
                 </ThemedText>
@@ -231,7 +246,7 @@ export default function SettingsScreen() {
           icon="bell"
           title={texts.notificationSettings || "Notification Settings"}
           isRTL={isRTL}
-          colors={palette}
+          colors={themedPalette}
         >
           {notificationItems.map((item) => (
             <SettingsToggleRow
@@ -242,11 +257,11 @@ export default function SettingsScreen() {
               value={notifications[item.key]}
               onValueChange={() => toggleNotification(item.key)}
               isRTL={isRTL}
-              colors={palette}
+              colors={themedPalette}
             />
           ))}
         </SettingsSection>
-        <View style={styles.containerLogOut}>
+        <View style={[styles.containerLogOut, { backgroundColor: themedPalette.bg }]}>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
@@ -261,7 +276,7 @@ export default function SettingsScreen() {
         setPasswordData={setPasswordData}
         isRTL={isRTL}
         texts={texts}
-        colors={palette}
+        colors={themedPalette}
       />
     </SafeAreaView>
   );

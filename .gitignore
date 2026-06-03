@@ -37,3 +37,6 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+.vercel
+figma-screens/
+scripts/figma-frames.js

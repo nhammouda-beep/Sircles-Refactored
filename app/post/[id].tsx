@@ -19,6 +19,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { DatabaseService } from "@/lib/database";
 import { Avatar } from "@/components/Avatar";
+import { useSirclesTheme } from "@/contexts/ThemeContext";
 
 /* =========================
    DESIGN TOKENS (edit here)
@@ -114,6 +115,20 @@ export default function PostScreen() {
   const { id } = useLocalSearchParams();
   const { user, userProfile } = useAuth();
   const { texts, isRTL } = useLanguage();
+  const { palette, resolved } = useSirclesTheme();
+
+  // Theme-aware tokens — replace UI.colors at use sites
+  const T = {
+    bg: palette.bg,
+    surface: palette.surface,
+    text: palette.text,
+    subtle: palette.subtle,
+    border: palette.border,
+    primary: palette.primary,
+    danger: palette.danger,
+    inputBg: resolved === "dark" ? palette.surface : UI.colors.inputMintBg,
+    inputBorder: resolved === "dark" ? palette.border : UI.colors.inputMintBorder,
+  };
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -319,9 +334,9 @@ export default function PostScreen() {
   if (loading) {
     return (
       <SafeAreaView
-        style={[styles.container, { backgroundColor: UI.colors.background }]}
+        style={[styles.container, { backgroundColor: T.bg }]}
       >
-        <View style={styles.centeredContainer}>
+        <View style={[styles.centeredContainer, { backgroundColor: T.bg }]}>
           <ThemedText>{texts.loading || "Loading..."}</ThemedText>
         </View>
       </SafeAreaView>
@@ -331,12 +346,12 @@ export default function PostScreen() {
   if (!post) {
     return (
       <SafeAreaView
-        style={[styles.container, { backgroundColor: UI.colors.background }]}
+        style={[styles.container, { backgroundColor: T.bg }]}
       >
-        <View style={styles.centeredContainer}>
+        <View style={[styles.centeredContainer, { backgroundColor: T.bg }]}>
           <ThemedText>Post not found</ThemedText>
           <TouchableOpacity
-            style={[styles.ctaButton]}
+            style={[styles.ctaButton, { backgroundColor: T.primary }]}
             onPress={() => router.back()}
             hitSlop={UI.hitSlop}
           >
@@ -349,16 +364,16 @@ export default function PostScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: UI.colors.background }]}
+      style={[styles.container, { backgroundColor: T.bg }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <SafeAreaView style={styles.container}>
         {/* Header */}
-        <View style={[styles.header]}>
+        <View style={[styles.header, { backgroundColor: T.surface, borderBottomColor: T.border }]}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={UI.hitSlop}>
-            <IconSymbol name="chevron.left" size={24} color={UI.colors.text} />
+            <IconSymbol name="chevron.left" size={24} color={T.text} />
           </TouchableOpacity>
-          <ThemedText type="defaultSemiBold" style={styles.headerTitle}>
+          <ThemedText type="defaultSemiBold" style={[styles.headerTitle, { color: T.text }]}>
             Post
           </ThemedText>
 
@@ -369,14 +384,14 @@ export default function PostScreen() {
                 style={styles.headerIconBtn}
                 hitSlop={UI.hitSlop}
               >
-                <IconSymbol name="pencil" size={20} color={UI.colors.text} />
+                <IconSymbol name="pencil" size={20} color={T.text} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleDeletePost}
                 style={styles.headerIconBtn}
                 hitSlop={UI.hitSlop}
               >
-                <IconSymbol name="trash" size={20} color={UI.colors.danger} />
+                <IconSymbol name="trash" size={20} color={T.danger} />
               </TouchableOpacity>
             </View>
           )}
@@ -428,8 +443,8 @@ export default function PostScreen() {
           )}
         </View>
 
-        <ScrollView style={styles.content}>
-          <View style={[styles.postCard]}>
+        <ScrollView style={[styles.content, { backgroundColor: T.bg }]}>
+          <View style={[styles.postCard, { backgroundColor: T.surface, borderColor: T.border }]}>
             {/* Post Header */}
             <View style={[styles.postHeader, isRTL && styles.postHeaderRTL]}>
               <View style={[styles.authorInfo, isRTL && styles.authorInfoRTL]}>
@@ -442,11 +457,11 @@ export default function PostScreen() {
                 <View style={styles.authorDetails}>
                   <ThemedText
                     type="defaultSemiBold"
-                    style={{ color: UI.colors.text }}
+                    style={{ color: T.text }}
                   >
                     {post.author?.name || "Unknown User"}
                   </ThemedText>
-                  <ThemedText style={[styles.postTime]}>
+                  <ThemedText style={[styles.postTime, { color: T.subtle }]}>
                     {new Date(post.creationdate).toLocaleDateString()}
                   </ThemedText>
                   {post.circle && (
@@ -454,7 +469,7 @@ export default function PostScreen() {
                       onPress={() => router.push(`/circle/${post.circle!.id}`)}
                       hitSlop={UI.hitSlop}
                     >
-                      <ThemedText style={[styles.circleLink]}>
+                      <ThemedText style={[styles.circleLink, { color: T.primary }]}>
                         in {post.circle.name}
                       </ThemedText>
                     </TouchableOpacity>
@@ -467,26 +482,29 @@ export default function PostScreen() {
             <View style={styles.postContentContainer}>
               {isEditingPost ? (
                 <TextInput
-                  style={[styles.postContentInput]}
+                  style={[
+                    styles.postContentInput,
+                    { backgroundColor: T.surface, borderColor: T.border, color: T.text },
+                  ]}
                   value={editPostContent}
                   onChangeText={setEditPostContent}
                   placeholder="What's on your mind?"
-                  placeholderTextColor={UI.colors.mutedIcon}
+                  placeholderTextColor={T.subtle}
                   multiline
                   textAlignVertical="top"
                   autoFocus
                 />
               ) : isDeletingPost ? (
                 <View style={styles.deleteConfirmationContainer}>
-                  <ThemedText style={styles.deleteConfirmationText}>
+                  <ThemedText style={[styles.deleteConfirmationText, { color: T.danger }]}>
                     Are you sure you want to delete this post?
                   </ThemedText>
-                  <ThemedText style={styles.deleteWarningText}>
+                  <ThemedText style={[styles.deleteWarningText, { color: T.subtle }]}>
                     This action cannot be undone.
                   </ThemedText>
                 </View>
               ) : (
-                <ThemedText style={styles.postContent}>
+                <ThemedText style={[styles.postContent, { color: T.text }]}>
                   {post.content}
                 </ThemedText>
               )}
@@ -498,7 +516,7 @@ export default function PostScreen() {
             )}
 
             {/* Post Stats */}
-            <View style={styles.postStats}>
+            <View style={[styles.postStats, { borderTopColor: T.border }]}>
               <TouchableOpacity
                 style={styles.statItem}
                 onPress={handleLikePost}
@@ -507,11 +525,12 @@ export default function PostScreen() {
                 <IconSymbol
                   name={post.userLiked ? "heart.fill" : "heart"}
                   size={16}
-                  color={post.userLiked ? UI.colors.like : UI.colors.text}
+                  color={post.userLiked ? UI.colors.like : T.text}
                 />
                 <ThemedText
                   style={[
                     styles.statText,
+                    { color: T.subtle },
                     post.userLiked && { color: UI.colors.like },
                   ]}
                 >
@@ -523,9 +542,9 @@ export default function PostScreen() {
                 <IconSymbol
                   name="bubble.left"
                   size={16}
-                  color={UI.colors.mutedIcon}
+                  color={T.subtle}
                 />
-                <ThemedText style={styles.statText}>
+                <ThemedText style={[styles.statText, { color: T.subtle }]}>
                   {comments.length} comments
                 </ThemedText>
               </View>
@@ -533,8 +552,8 @@ export default function PostScreen() {
           </View>
 
           {/* Comments */}
-          <View style={styles.commentsSection}>
-            <ThemedText style={styles.sectionTitle}>
+          <View style={[styles.commentsSection, { backgroundColor: T.surface, borderColor: T.border }]}>
+            <ThemedText style={[styles.sectionTitle, { color: T.text }]}>
               Comments ({comments.length})
             </ThemedText>
 
@@ -550,11 +569,18 @@ export default function PostScreen() {
 
                 <View style={styles.mintInputWrapper}>
                   <TextInput
-                    style={styles.mintInput}
+                    style={[
+                      styles.mintInput,
+                      {
+                        backgroundColor: T.inputBg,
+                        borderColor: T.inputBorder,
+                        color: T.text,
+                      },
+                    ]}
                     value={newComment}
                     onChangeText={setNewComment}
                     placeholder="Type a comment..."
-                    placeholderTextColor={UI.colors.inputMintPlaceholder}
+                    placeholderTextColor={T.subtle}
                     multiline
                     maxLength={500}
                   />
@@ -563,6 +589,7 @@ export default function PostScreen() {
                     style={[
                       styles.mintSendBtn,
                       sendPos,
+                      { backgroundColor: T.primary },
                       !newComment.trim() && styles.mintSendBtnDisabled,
                     ]}
                     onPress={handleCreateComment}
@@ -597,14 +624,14 @@ export default function PostScreen() {
                     />
                     <View style={styles.commentContent}>
                       <View style={styles.commentHeader}>
-                        <ThemedText style={styles.commentAuthor}>
+                        <ThemedText style={[styles.commentAuthor, { color: T.text }]}>
                           {comment.author?.name || "Unknown User"}
                         </ThemedText>
-                        <ThemedText style={styles.commentTime}>
+                        <ThemedText style={[styles.commentTime, { color: T.subtle }]}>
                           {formatCommentTime(comment.creationdate)}
                         </ThemedText>
                       </View>
-                      <ThemedText style={styles.commentText}>
+                      <ThemedText style={[styles.commentText, { color: T.text }]}>
                         {comment.text}
                       </ThemedText>
                     </View>
@@ -630,7 +657,7 @@ export default function PostScreen() {
                           color={
                             deleteLoading === comment.id
                               ? "#BDBDBD"
-                              : UI.colors.danger
+                              : T.danger
                           }
                         />
                       </TouchableOpacity>
@@ -643,12 +670,12 @@ export default function PostScreen() {
                 <IconSymbol
                   name="bubble.left"
                   size={48}
-                  color="rgba(15,23,42,0.2)"
+                  color={T.subtle}
                 />
-                <ThemedText style={styles.emptyText}>
+                <ThemedText style={[styles.emptyText, { color: T.subtle }]}>
                   No comments yet
                 </ThemedText>
-                <ThemedText style={styles.emptySubText}>
+                <ThemedText style={[styles.emptySubText, { color: T.subtle }]}>
                   Be the first to share your thoughts!
                 </ThemedText>
               </View>

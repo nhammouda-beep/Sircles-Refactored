@@ -22,6 +22,7 @@ import { ProfileAvatarHeader } from "@/components/profile/ProfileAvatarHeader";
 import { ProfileField } from "@/components/profile/ProfileField";
 import { InterestsSection } from "@/components/profile/InterestsSection";
 import { InterestPickerModal } from "@/components/profile/InterestPickerModal";
+import { useSirclesTheme } from "@/contexts/ThemeContext";
 
 const COLORS = {
   primary: "#2b7a4b",
@@ -51,6 +52,22 @@ const SHADOW = Platform.select({
 export default function ProfileScreen() {
   const { texts } = useLanguage();
   const { user, userProfile, updateUserProfile, loading } = useAuth();
+  const { palette, resolved } = useSirclesTheme();
+
+  // Theme-aware colors object — overrides the module-level COLORS at runtime
+  const themedColors = {
+    ...COLORS,
+    primary: palette.primary,
+    pageBg: palette.bg,
+    white: palette.surface,
+    text: palette.text,
+    muted: palette.subtle,
+    fieldBg: resolved === "dark" ? palette.border : COLORS.fieldBg,
+    fieldBorder: palette.border,
+    chipBg: resolved === "dark" ? palette.border : COLORS.chipBg,
+    chipText: palette.text,
+    cardBorder: palette.border,
+  };
 
   const [showInterestModal, setShowInterestModal] = useState(false);
   const [showLookForModal, setShowLookForModal] = useState(false);
@@ -254,7 +271,7 @@ export default function ProfileScreen() {
 
   if (loading || !user) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: themedColors.pageBg }]}>
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
@@ -282,7 +299,7 @@ export default function ProfileScreen() {
       : "");
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themedColors.pageBg }]}>
       <ScrollView
         contentContainerStyle={styles.pageContent}
         showsVerticalScrollIndicator={false}
@@ -295,26 +312,32 @@ export default function ProfileScreen() {
           onPickImage={pickImage}
           name={userProfile?.name || "User"}
           meta={(userProfile?.gender || "Male") + " • Circle 27"}
-          primaryColor={COLORS.primary}
-          textColor={COLORS.text}
-          mutedColor={COLORS.muted}
+          primaryColor={themedColors.primary}
+          textColor={themedColors.text}
+          mutedColor={themedColors.muted}
         />
 
         <View style={styles.centerColumn}>
-          <View style={[styles.blockCard, SHADOW]}>
+          <View
+            style={[
+              styles.blockCard,
+              SHADOW,
+              { backgroundColor: themedColors.white, borderColor: themedColors.cardBorder },
+            ]}
+          >
             <ProfileField
               label="Your Email"
               value={user?.email || "example123@gmail.com"}
               icon={
-                <MaterialIcons name="email" size={18} color={COLORS.muted} />
+                <MaterialIcons name="email" size={18} color={themedColors.muted} />
               }
-              colors={COLORS}
+              colors={themedColors}
             />
             <ProfileField
               label="Phone Number"
               value={userProfile?.phone || "+20 1200001000"}
-              icon={<Ionicons name="call" size={18} color={COLORS.muted} />}
-              colors={COLORS}
+              icon={<Ionicons name="call" size={18} color={themedColors.muted} />}
+              colors={themedColors}
             />
             <ProfileField
               label="Address"
@@ -323,10 +346,10 @@ export default function ProfileScreen() {
                 <Ionicons
                   name="location-sharp"
                   size={18}
-                  color={COLORS.muted}
+                  color={themedColors.muted}
                 />
               }
-              colors={COLORS}
+              colors={themedColors}
             />
           </View>
 
@@ -335,7 +358,7 @@ export default function ProfileScreen() {
             groupedInterests={userInterests}
             emptyText={texts.notInterested || "No interests added yet"}
             onEdit={() => setShowInterestModal(true)}
-            colors={COLORS}
+            colors={themedColors}
           />
 
           <InterestsSection
@@ -343,7 +366,7 @@ export default function ProfileScreen() {
             groupedInterests={userLookFor}
             emptyText="No looking for preferences added yet"
             onEdit={() => setShowLookForModal(true)}
-            colors={COLORS}
+            colors={themedColors}
           />
         </View>
       </ScrollView>
@@ -355,7 +378,7 @@ export default function ProfileScreen() {
         selectedInterests={userInterests}
         onToggle={toggleInterest}
         onClose={() => setShowInterestModal(false)}
-        colors={COLORS}
+        colors={themedColors}
       />
 
       <InterestPickerModal
@@ -365,7 +388,7 @@ export default function ProfileScreen() {
         selectedInterests={userLookFor}
         onToggle={toggleLookFor}
         onClose={() => setShowLookForModal(false)}
-        colors={COLORS}
+        colors={themedColors}
       />
     </SafeAreaView>
   );

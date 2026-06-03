@@ -35,6 +35,7 @@ import { useDebounced } from "@/hooks/useDebounced";
 import { optimizeImageForUpload } from "@/lib/imageOptimize";
 import { AnimatedSegment } from "@/components/AnimatedSegment";
 import { CreateCircleModal } from "@/components/circles/CreateCircleModal";
+import { useSirclesTheme } from "@/contexts/ThemeContext";
 
 interface Circle {
   id: string;
@@ -68,6 +69,19 @@ const COLORS = {
 export default function CirclesScreen() {
   const { user, userProfile } = useAuth();
   const { texts, isRTL } = useLanguage();
+  const { palette, resolved } = useSirclesTheme();
+
+  // Theme-aware overrides — derived from palette
+  const TC = {
+    bg: palette.bg,
+    surface: palette.surface,
+    text: palette.text,
+    subtle: palette.subtle,
+    border: palette.border,
+    primary: palette.primary,
+    danger: palette.danger,
+    control: resolved === "dark" ? palette.border : "#EEF2F6",
+  };
 
   const [circles, setCircles] = useState<Circle[]>([]);
   const [myCircles, setMyCircles] = useState<Circle[]>([]);
@@ -405,7 +419,7 @@ export default function CirclesScreen() {
     return (
       <TouchableOpacity
         key={circle.id}
-        style={styles.card}
+        style={[styles.card, { backgroundColor: TC.surface }]}
         onPress={() => router.push(`/circle/${circle.id}`)}
         activeOpacity={0.9}
       >
@@ -417,7 +431,7 @@ export default function CirclesScreen() {
               handleDeleteCircle(circle.id, circle.name);
             }}
           >
-            <IconSymbol name="trash" size={16} color={COLORS.danger} />
+            <IconSymbol name="trash" size={16} color={TC.danger} />
           </TouchableOpacity>
         )}
 
@@ -434,17 +448,17 @@ export default function CirclesScreen() {
             <IconSymbol
               name={circle.privacy === "private" ? "lock.fill" : "globe"}
               size={14}
-              color={COLORS.textMuted}
+              color={TC.subtle}
             />
-            <ThemedText style={styles.metaText}>
+            <ThemedText style={[styles.metaText, { color: TC.subtle }]}>
               {circle.privacy === "private"
                 ? texts.private || "Private"
                 : texts.public || "Public"}
             </ThemedText>
           </View>
           <View style={styles.metaGroup}>
-            <IconSymbol name="person.3" size={14} color={COLORS.textMuted} />
-            <ThemedText style={styles.metaText}>
+            <IconSymbol name="person.3" size={14} color={TC.subtle} />
+            <ThemedText style={[styles.metaText, { color: TC.subtle }]}>
               {circle.memberCount || 0}
             </ThemedText>
           </View>
@@ -452,11 +466,11 @@ export default function CirclesScreen() {
 
         <ThemedText
           type="defaultSemiBold"
-          style={[styles.title, isRTL && styles.rtl]}
+          style={[styles.title, { color: TC.text }, isRTL && styles.rtl]}
         >
           {circle.name}
         </ThemedText>
-        <ThemedText style={[styles.sub, isRTL && styles.rtl]}>
+        <ThemedText style={[styles.sub, { color: TC.subtle }, isRTL && styles.rtl]}>
           {circle.description || "No description"}
         </ThemedText>
 
@@ -483,16 +497,16 @@ export default function CirclesScreen() {
               onPress={() => router.push(`/circle/${circle.id}`)}
               style={styles.openTextBtn}
             >
-              <ThemedText style={styles.openTxt}>Open</ThemedText>
+              <ThemedText style={[styles.openTxt, { color: TC.subtle }]}>Open</ThemedText>
               <IconSymbol
                 name="square.and.arrow.up"
                 size={14}
-                color={COLORS.textMuted}
+                color={TC.subtle}
               />
             </TouchableOpacity>
           ) : !hasPending ? (
             <TouchableOpacity
-              style={styles.joinBtn}
+              style={[styles.joinBtn, { backgroundColor: TC.primary }]}
               onPress={() =>
                 handleJoinLeave(circle.id, false, circle.name, circle.privacy)
               }
@@ -508,14 +522,14 @@ export default function CirclesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: TC.bg }]}>
       {/* Header */}
-      <View style={styles.headerWrap}>
-        <ThemedText type="title" style={styles.headerTitle}>
+      <View style={[styles.headerWrap, { backgroundColor: TC.bg }]}>
+        <ThemedText type="title" style={[styles.headerTitle, { color: TC.text }]}>
           {texts.circles || "Circles"}
         </ThemedText>
         <TouchableOpacity
-          style={styles.addFab}
+          style={[styles.addFab, { backgroundColor: TC.primary }]}
           onPress={() => {
             setShowCreateModal(true);
             loadInterests();
@@ -526,16 +540,16 @@ export default function CirclesScreen() {
       </View>
 
       {/* Search */}
-      <View style={styles.searchWrap}>
-        <IconSymbol name="magnifyingglass" size={16} color={COLORS.textMuted} />
+      <View style={[styles.searchWrap, { backgroundColor: TC.control }]}>
+        <IconSymbol name="magnifyingglass" size={16} color={TC.subtle} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: TC.text }]}
           placeholder={texts.search || "Search Circles"}
-          placeholderTextColor={COLORS.textMuted + "AA"}
+          placeholderTextColor={TC.subtle}
           value={query}
           onChangeText={setQuery}
           underlineColorAndroid="transparent"
-          selectionColor={COLORS.primary} // اختياري لتغيير لون المؤشر/التحديد
+          selectionColor={TC.primary} // اختياري لتغيير لون المؤشر/التحديد
         />
       </View>
 
@@ -570,7 +584,10 @@ export default function CirclesScreen() {
         ) : error ? (
           <View style={styles.centerPad}>
             <ThemedText style={styles.emptyText}>{error}</ThemedText>
-            <TouchableOpacity style={styles.retryBtn} onPress={() => loadCircles(0)}>
+            <TouchableOpacity
+              style={[styles.retryBtn, { backgroundColor: TC.primary }]}
+              onPress={() => loadCircles(0)}
+            >
               <ThemedText style={styles.retryTxt}>
                 {texts.retry || "Retry"}
               </ThemedText>
@@ -589,7 +606,7 @@ export default function CirclesScreen() {
             <View style={styles.grid}>{filtered.map(renderCircle)}</View>
             {loadingMore && (
               <View style={{ paddingVertical: 20, alignItems: "center" }}>
-                <ActivityIndicator size="small" color={COLORS.primary} />
+                <ActivityIndicator size="small" color={TC.primary} />
               </View>
             )}
           </>

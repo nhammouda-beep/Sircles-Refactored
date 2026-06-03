@@ -29,6 +29,7 @@ import {
   CircleConversation,
 } from "@/components/messages/ConversationListItem";
 import { MessageBubble, Message } from "@/components/messages/MessageBubble";
+import { useSirclesTheme } from "@/contexts/ThemeContext";
 
 const COLORS = {
   bg: "#F6F7FB",
@@ -59,10 +60,28 @@ export default function MessagesScreen() {
   const { circleId } = useLocalSearchParams();
   const { user } = useAuth();
   const { texts, isRTL } = useLanguage();
+  const { palette, resolved } = useSirclesTheme();
 
-  const backgroundColor = COLORS.bg;
-  const surfaceColor = COLORS.surface;
-  const textColor = COLORS.textDark;
+  const backgroundColor = palette.bg;
+  const surfaceColor = palette.surface;
+  const textColor = palette.text;
+
+  // Themed colors for message bubbles + pill input
+  const themedMessageColors = {
+    ...COLORS,
+    me: palette.primary,
+    other: resolved === "dark" ? palette.border : COLORS.other,
+    textDark: palette.text,
+    textLight: "#FFFFFF",
+    divider: palette.border,
+    hint: palette.subtle,
+    pillBg: resolved === "dark" ? palette.surface : COLORS.pillBg,
+    pillText: palette.primary,
+  };
+  const themedText = {
+    primary: { color: palette.text },
+    secondary: { color: palette.subtle },
+  };
 
   const [conversations, setConversations] = useState<CircleConversation[]>([]);
   const [selectedCircle, setSelectedCircle] = useState<string | null>(null);
@@ -205,7 +224,12 @@ export default function MessagesScreen() {
   if (!selectedCircle) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor }]}>
-        <View style={[styles.listHeader, { backgroundColor: surfaceColor }]}>
+        <View
+          style={[
+            styles.listHeader,
+            { backgroundColor: surfaceColor, borderBottomColor: palette.border },
+          ]}
+        >
           <TouchableOpacity style={styles.headerBtn}>
             <IconSymbol
               name={isRTL ? "chevron.right" : "chevron.left"}
@@ -215,7 +239,7 @@ export default function MessagesScreen() {
           </TouchableOpacity>
           <ThemedText
             type="defaultSemiBold"
-            style={[styles.listTitle, TEXT.primary]}
+            style={[styles.listTitle, themedText.primary]}
           >
             Chats
           </ThemedText>
@@ -223,16 +247,21 @@ export default function MessagesScreen() {
         </View>
 
         <View style={styles.searchWrap}>
-          <View style={styles.searchPill}>
-            <IconSymbol name="magnifyingglass" size={16} color={"#9AA3B2"} />
+          <View
+            style={[
+              styles.searchPill,
+              { backgroundColor: resolved === "dark" ? palette.border : "#EFF1F7" },
+            ]}
+          >
+            <IconSymbol name="magnifyingglass" size={16} color={palette.subtle} />
             <TextInput
               style={[
                 styles.searchInput,
                 styles.focusNone,
-                { textAlign: isRTL ? "right" : "left" },
+                { color: palette.text, textAlign: isRTL ? "right" : "left" },
               ]}
               placeholder="Search"
-              placeholderTextColor={"#A5ACB8"}
+              placeholderTextColor={palette.subtle}
               value={query}
               onChangeText={setQuery}
               returnKeyType="search"
@@ -251,12 +280,12 @@ export default function MessagesScreen() {
         >
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ThemedText style={TEXT.secondary}>Loading...</ThemedText>
+              <ThemedText style={themedText.secondary}>Loading...</ThemedText>
             </View>
           ) : filteredConversations.length === 0 ? (
             <View style={styles.emptyContainer}>
               <IconSymbol name="message" size={56} color={`${textColor}33`} />
-              <ThemedText style={[styles.emptyText, TEXT.secondary]}>
+              <ThemedText style={[styles.emptyText, themedText.secondary]}>
                 No chats
               </ThemedText>
             </View>
@@ -266,9 +295,9 @@ export default function MessagesScreen() {
                 key={c.id}
                 conversation={c}
                 onPress={setSelectedCircle}
-                avatarBgColor={COLORS.me}
-                textPrimary={TEXT.primary}
-                textSecondary={TEXT.secondary}
+                avatarBgColor={palette.primary}
+                textPrimary={themedText.primary}
+                textSecondary={themedText.secondary}
               />
             ))
           )}
@@ -284,7 +313,12 @@ export default function MessagesScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor }]}>
-      <View style={[styles.chatHeader, { backgroundColor: surfaceColor }]}>
+      <View
+        style={[
+          styles.chatHeader,
+          { backgroundColor: surfaceColor, borderBottomColor: palette.border },
+        ]}
+      >
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => setSelectedCircle(null)}
@@ -297,7 +331,7 @@ export default function MessagesScreen() {
         </TouchableOpacity>
         <ThemedText
           type="defaultSemiBold"
-          style={[styles.chatTitle, TEXT.primary, isRTL && styles.rtlText]}
+          style={[styles.chatTitle, themedText.primary, isRTL && styles.rtlText]}
         >
           {selectedConversation?.name || "Chat"}
         </ThemedText>
@@ -320,7 +354,7 @@ export default function MessagesScreen() {
           {messages.length === 0 ? (
             <View style={styles.emptyMessagesContainer}>
               <IconSymbol name="message" size={64} color={`${textColor}40`} />
-              <ThemedText style={[styles.emptyText, TEXT.secondary]}>
+              <ThemedText style={[styles.emptyText, themedText.secondary]}>
                 No messages yet
               </ThemedText>
             </View>
@@ -332,7 +366,7 @@ export default function MessagesScreen() {
                 mine={m.senderId === user?.id}
                 isRTL={isRTL}
                 formatTime={formatMessageTime}
-                colors={COLORS}
+                colors={themedMessageColors}
               />
             ))
           )}
@@ -340,7 +374,7 @@ export default function MessagesScreen() {
 
         {/* Input pill */}
         <View style={styles.inputBar}>
-          <View style={styles.pill}>
+          <View style={[styles.pill, { backgroundColor: themedMessageColors.pillBg }]}>
             <TextInput
               style={[
                 styles.pillInput,
@@ -350,16 +384,16 @@ export default function MessagesScreen() {
                   ios: styles.vCenterIOS,
                   web: styles.vCenterWeb,
                 }),
-                { textAlign: isRTL ? "right" : "left" },
+                { color: palette.text, textAlign: isRTL ? "right" : "left" },
               ]}
               placeholder={texts.typeMessage || "Type a message..."}
-              placeholderTextColor={COLORS.pillText + "AA"}
+              placeholderTextColor={palette.subtle}
               value={newMessage}
               onChangeText={setNewMessage}
               multiline
               numberOfLines={1}
               maxLength={500}
-              selectionColor={COLORS.pillText}
+              selectionColor={themedMessageColors.pillText}
               underlineColorAndroid="transparent"
             />
             <TouchableOpacity
@@ -374,7 +408,7 @@ export default function MessagesScreen() {
               <IconSymbol
                 name="paperplane.fill"
                 size={18}
-                color={COLORS.pillText}
+                color={themedMessageColors.pillText}
               />
             </TouchableOpacity>
           </View>
