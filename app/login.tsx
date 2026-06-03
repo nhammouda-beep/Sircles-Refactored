@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Platform, useWindowDimensions } from "react-native";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -7,316 +6,457 @@ import {
   TouchableOpacity,
   Alert,
   SafeAreaView,
-  Image,
-  Animated,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { useThemeColor } from "@/hooks/useThemeColor";
-
-const COLORS = {
-  green: "#198F4B",
-  text: "#000000",
-  subtext: "#797979",
-  underline: "#000000",
-  error: "#D32F2F",
-};
-
-import type { KeyboardTypeOptions } from "react-native";
-
-type FloatingInputProps = {
-  label: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  color?: string;
-  underline?: string;
-  secureTextEntry?: boolean;
-  showToggle?: boolean;
-  onToggleSecure?: () => void;
-  autoCapitalize?: "none" | "sentences" | "words" | "characters";
-  keyboardType?: KeyboardTypeOptions;
-  errorText?: string | null;
-};
-
-const FloatingInput = ({
-  label,
-  value,
-  onChangeText,
-  color = COLORS.text,
-  underline = COLORS.underline,
-  secureTextEntry = false,
-  showToggle = false,
-  onToggleSecure,
-  autoCapitalize = "none",
-  keyboardType = "default",
-  errorText = null,
-}: FloatingInputProps) => {
-  const [focused, setFocused] = useState(false);
-  const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
-  const { width } = useWindowDimensions();
-
-  const baseLabel = width > 400 ? 15 : 14;
-  const smallLabel = baseLabel - 1;
-
-  useEffect(() => {
-    Animated.timing(anim, {
-      toValue: focused || !!value ? 1 : 0,
-      duration: 160,
-      useNativeDriver: false,
-    }).start();
-  }, [focused, value]);
-
-  const labelTop = anim.interpolate({ inputRange: [0, 1], outputRange: [20, 2] });
-  const labelSize = anim.interpolate({ inputRange: [0, 1], outputRange: [baseLabel, smallLabel] });
-
-  const underlineColor = errorText ? COLORS.error : underline;
-
-  return (
-    <View style={{ marginBottom: errorText ? 8 : 24 }}>
-      <View style={{ justifyContent: "center" }}>
-        <Animated.Text
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            left: 0,
-            top: labelTop,
-            fontSize: labelSize,
-            fontWeight: "500",
-            color: errorText ? COLORS.error : "#000000ff",
-            backgroundColor: "#fff",
-            paddingHorizontal: 4,
-            zIndex: 1,
-          }}
-        >
-          {label}
-        </Animated.Text>
-
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <TextInput
-            style={[styles.inputBase, errorText && { color: COLORS.error }]}
-            value={value}
-            onChangeText={onChangeText}
-            secureTextEntry={secureTextEntry}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            autoCapitalize={autoCapitalize}
-            keyboardType={keyboardType}
-            autoCorrect={false}
-            autoComplete={secureTextEntry ? "new-password" : "off"}
-            importantForAutofill="no"
-            selectionColor={COLORS.green}
-          />
-
-          {showToggle ? (
-            <TouchableOpacity
-              accessibilityLabel="toggle password visibility"
-              onPress={onToggleSecure}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name={secureTextEntry ? "eye" : "eye-off"} size={18} color="#000" />
-            </TouchableOpacity>
-          ) : null}
-        </View>
-
-        <View style={{ height: 1, backgroundColor: underlineColor, marginTop: 6 }} />
-      </View>
-
-      {errorText ? (
-        <ThemedText style={{ color: COLORS.error, fontSize: 12, marginTop: 6 }}>
-          {errorText}
-        </ThemedText>
-      ) : null}
-    </View>
-  );
-};
+import { useFigmaTheme } from "@/theme/useFigmaTheme";
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
+  const { palette, spacing, radii, type, shadow } = useFigmaTheme();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // field errors
   const [emailErr, setEmailErr] = useState<string | null>(null);
   const [passErr, setPassErr] = useState<string | null>(null);
   const [formErr, setFormErr] = useState<string | null>(null);
 
-  const backgroundColor = useThemeColor({}, "background");
-
-  const { width, height } = useWindowDimensions();
-  const isSmallH = height < 700 || width < 360;
-  const isTablet = width >= 768;
-  const isSmallPhone = width <= 375 || height <= 740;
-
-  const homeIconSize = width >= 420 ? 60 : width >= 360 ? 56 : 52;
-  const brandSize = width >= 420 ? 50 : width >= 360 ? 46 : 42;
-  const tagSize = width >= 420 ? 20 : width >= 360 ? 18 : 16;
-
-  const baseRatio = 0.77;
-  const imgW = isTablet
-    ? Math.min(width * 0.70, 640)
-    : isSmallPhone
-    ? Math.min(width * 0.80, 330)
-    : Math.min(width * 0.92, 420);
-  const imgH = imgW * baseRatio;
-
-  const imgLeft = isTablet
-    ? -Math.max(0.12 * width, 60)
-    : isSmallPhone
-    ? -Math.max(0.08 * width, 36)
-    : -Math.max(0.14 * width, 56);
-
-  const imgBottom = isTablet
-    ? -Math.max(0.04 * height, 20)
-    : isSmallPhone
-    ? -Math.max(0.07 * height, 26)
-    : -Math.max(0.05 * height, 22);
-
-  const contentPadBottom = isTablet
-    ? Math.min(Math.max(imgH * 0.55, 180), 300)
-    : isSmallPhone
-    ? Math.min(Math.max(imgH * 0.60, 160), 260)
-    : Math.min(Math.max(imgH * 0.55, 160), 240);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [pwFocused, setPwFocused] = useState(false);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 
   const validate = () => {
     let ok = true;
     setFormErr(null);
-
     const e = email.trim();
-    const p = password;
+    if (!e) { setEmailErr("Email is required"); ok = false; }
+    else if (!emailRegex.test(e)) { setEmailErr("Invalid email format"); ok = false; }
+    else setEmailErr(null);
 
-    if (!e) {
-      setEmailErr("Email is required");
-      ok = false;
-    } else if (!emailRegex.test(e)) {
-      setEmailErr("Invalid email format");
-      ok = false;
-    } else {
-      setEmailErr(null);
-    }
-
-    if (!p) {
-      setPassErr("Password is required");
-      ok = false;
-    } else if (p.length < 6) {
-      setPassErr("Password must be at least 6 characters");
-      ok = false;
-    } else {
-      setPassErr(null);
-    }
+    if (!password) { setPassErr("Password is required"); ok = false; }
+    else if (password.length < 6) { setPassErr("Password must be at least 6 characters"); ok = false; }
+    else setPassErr(null);
 
     return ok;
   };
 
   const handleLogin = async () => {
-    if (!validate()) {
-      if (!email.trim() && !password) {
-        Alert.alert("Required", "Please enter your email and password");
-      }
-      return;
-    }
-
+    if (!validate()) return;
     setLoading(true);
     try {
       const { error } = await signIn(email.trim(), password);
       if (error) {
         const msg = normalizeAuthError(error);
         setFormErr(msg);
-        Alert.alert("Sign-in error", msg);
       } else {
-     router.replace("/first-time-setup");
+        router.replace("/first-time-setup");
       }
-    } catch (e: any) {
+    } catch {
       setFormErr("Unexpected error. Please try again.");
-      Alert.alert("Error", "Unexpected error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const inputBorder = (focused: boolean, err: string | null) =>
+    err ? palette.danger : focused ? palette.primary : palette.border;
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
-      <ThemedView style={[styles.content, { paddingBottom: contentPadBottom }]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.houseIcon}>
-            <Ionicons name="home" size={homeIconSize} color={COLORS.text} />
-          </View>
-          <ThemedText style={[styles.brandTitle, { fontSize: brandSize }]}>Sircles</ThemedText>
-          <ThemedText style={[styles.tagline, { fontSize: tagSize }]}>
-            Your Community, Your Space
-          </ThemedText>
-        </View>
-
-        {/* Form */}
-        <View style={styles.form}>
-          <FloatingInput
-            label="Email"
-            value={email}
-            onChangeText={(t) => {
-              setEmail(t);
-              if (emailErr) setEmailErr(null);
-              if (formErr) setFormErr(null);
-            }}
-            underline={COLORS.underline}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            errorText={emailErr}
-          />
-
-          <FloatingInput
-            label="Password"
-            value={password}
-            onChangeText={(t) => {
-              setPassword(t);
-              if (passErr) setPassErr(null);
-              if (formErr) setFormErr(null);
-            }}
-            secureTextEntry={!showPassword}
-            showToggle
-            onToggleSecure={() => setShowPassword((p) => !p)}
-            underline={COLORS.underline}
-            errorText={passErr}
-          />
-
-          {formErr ? (
-            <ThemedText style={{ color: COLORS.error, fontSize: 12, marginTop: -6, marginBottom: 12 }}>
-              {formErr}
-            </ThemedText>
-          ) : null}
-
-          <TouchableOpacity style={styles.forgotBtn}>
-            <ThemedText style={styles.forgotText}>Forgot Password?</ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
+    <SafeAreaView style={[styles.container, { backgroundColor: palette.bg }]}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: spacing["3xl"] }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View
             style={[
-              styles.signInButton,
-              { marginTop: isSmallH ? 28 : 40 },
-              (loading || !email.trim() || !password) && { opacity: 0.7 },
+              styles.headerBar,
+              { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
             ]}
-            onPress={handleLogin}
-            disabled={loading || !email.trim() || !password}
           >
-            <ThemedText style={styles.signInText}>
-              {loading ? "Signing in..." : "Sign in"}
+            <View style={{ width: 40 }} />
+            <ThemedText
+              style={[
+                type.h3,
+                { color: palette.text, textAlign: "center", flex: 1 },
+              ]}
+            >
+              Sircles
             </ThemedText>
-          </TouchableOpacity>
-        </View>
+            <View style={{ width: 40 }} />
+          </View>
 
-        <View pointerEvents="none" style={[styles.illustration, { left: imgLeft, bottom: imgBottom }]}>
-          <Image
-            source={require("../assets/images/login-illustration.png")}
-            style={{ width: imgW, height: imgH, resizeMode: "contain" }}
-          />
-        </View>
-      </ThemedView>
+          {/* Hero card */}
+          <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.sm }}>
+            <View
+              style={[
+                styles.heroCard,
+                {
+                  borderRadius: radii.xl,
+                  backgroundColor: palette.primary,
+                  ...shadow.md,
+                  shadowColor: palette.primary,
+                },
+              ]}
+            >
+              <Image
+                source={require("../assets/images/login-illustration.png")}
+                style={[StyleSheet.absoluteFillObject, { opacity: 0.18 }]}
+                contentFit="cover"
+              />
+              <View style={styles.heroOverlay} />
+              <View
+                style={{
+                  padding: spacing.xl,
+                  paddingTop: spacing["2xl"],
+                  paddingBottom: spacing["2xl"],
+                }}
+              >
+                <ThemedText
+                  style={[
+                    type.h1,
+                    { color: palette.primaryOn, marginBottom: spacing.xs },
+                  ]}
+                >
+                  Welcome back
+                </ThemedText>
+                <ThemedText
+                  style={[
+                    type.body,
+                    { color: "rgba(255,255,255,0.88)" },
+                  ]}
+                >
+                  Your community, your space.
+                </ThemedText>
+              </View>
+            </View>
+          </View>
+
+          {/* Form card */}
+          <View
+            style={[
+              styles.formCard,
+              {
+                marginHorizontal: spacing.lg,
+                marginTop: spacing.xl,
+                borderRadius: radii.xl,
+                backgroundColor: palette.surface,
+                borderColor: palette.border,
+                padding: spacing.xl,
+              },
+            ]}
+          >
+            <ThemedText
+              style={[
+                type.smallBold,
+                {
+                  color: palette.textMuted,
+                  marginBottom: spacing.sm,
+                  letterSpacing: 0.4,
+                },
+              ]}
+            >
+              EMAIL
+            </ThemedText>
+            <View
+              style={[
+                styles.inputWrap,
+                {
+                  borderColor: inputBorder(emailFocused, emailErr),
+                  borderRadius: radii.lg,
+                  backgroundColor: palette.surface,
+                },
+              ]}
+            >
+              <Ionicons
+                name="mail-outline"
+                size={18}
+                color={palette.textMuted}
+                style={{ marginRight: spacing.sm }}
+              />
+              <TextInput
+                style={[
+                  styles.input,
+                  { color: palette.text, fontSize: type.body.fontSize },
+                ]}
+                placeholder="you@example.com"
+                placeholderTextColor={palette.textSubtle}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoCorrect={false}
+                value={email}
+                onChangeText={(t) => {
+                  setEmail(t);
+                  if (emailErr) setEmailErr(null);
+                  if (formErr) setFormErr(null);
+                }}
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
+                accessibilityLabel="Email address"
+              />
+            </View>
+            {emailErr ? (
+              <ThemedText
+                style={[
+                  type.small,
+                  { color: palette.danger, marginTop: spacing.xs },
+                ]}
+              >
+                {emailErr}
+              </ThemedText>
+            ) : null}
+
+            <ThemedText
+              style={[
+                type.smallBold,
+                {
+                  color: palette.textMuted,
+                  marginTop: spacing.lg,
+                  marginBottom: spacing.sm,
+                  letterSpacing: 0.4,
+                },
+              ]}
+            >
+              PASSWORD
+            </ThemedText>
+            <View
+              style={[
+                styles.inputWrap,
+                {
+                  borderColor: inputBorder(pwFocused, passErr),
+                  borderRadius: radii.lg,
+                  backgroundColor: palette.surface,
+                },
+              ]}
+            >
+              <Ionicons
+                name="lock-closed-outline"
+                size={18}
+                color={palette.textMuted}
+                style={{ marginRight: spacing.sm }}
+              />
+              <TextInput
+                style={[
+                  styles.input,
+                  { color: palette.text, fontSize: type.body.fontSize },
+                ]}
+                placeholder="••••••••"
+                placeholderTextColor={palette.textSubtle}
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={(t) => {
+                  setPassword(t);
+                  if (passErr) setPassErr(null);
+                  if (formErr) setFormErr(null);
+                }}
+                onFocus={() => setPwFocused(true)}
+                onBlur={() => setPwFocused(false)}
+                accessibilityLabel="Password"
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword((p) => !p)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  showPassword ? "Hide password" : "Show password"
+                }
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={18}
+                  color={palette.textMuted}
+                />
+              </TouchableOpacity>
+            </View>
+            {passErr ? (
+              <ThemedText
+                style={[
+                  type.small,
+                  { color: palette.danger, marginTop: spacing.xs },
+                ]}
+              >
+                {passErr}
+              </ThemedText>
+            ) : null}
+
+            {formErr ? (
+              <View
+                style={{
+                  marginTop: spacing.md,
+                  padding: spacing.md,
+                  borderRadius: radii.md,
+                  backgroundColor: palette.dangerSoft,
+                }}
+              >
+                <ThemedText style={[type.small, { color: palette.danger }]}>
+                  {formErr}
+                </ThemedText>
+              </View>
+            ) : null}
+
+            <TouchableOpacity
+              style={{
+                alignSelf: "flex-end",
+                marginTop: spacing.md,
+              }}
+              onPress={() => Alert.alert("Forgot Password", "Coming soon")}
+              accessibilityRole="button"
+              accessibilityLabel="Forgot password"
+            >
+              <ThemedText style={[type.smallBold, { color: palette.primary }]}>
+                Forgot password?
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                {
+                  marginTop: spacing.xl,
+                  backgroundColor: palette.primary,
+                  borderRadius: radii.lg,
+                  paddingVertical: spacing.md + 2,
+                  opacity: loading || !email.trim() || !password ? 0.7 : 1,
+                  ...shadow.sm,
+                },
+              ]}
+              onPress={handleLogin}
+              disabled={loading || !email.trim() || !password}
+              accessibilityRole="button"
+              accessibilityLabel="Sign in"
+              accessibilityState={{
+                disabled: loading || !email.trim() || !password,
+              }}
+            >
+              <ThemedText
+                style={[type.button, { color: palette.primaryOn }]}
+              >
+                {loading ? "Signing in..." : "Sign in"}
+              </ThemedText>
+            </TouchableOpacity>
+
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: spacing.xl,
+              }}
+            >
+              <View
+                style={{ flex: 1, height: 1, backgroundColor: palette.border }}
+              />
+              <ThemedText
+                style={[
+                  type.caption,
+                  {
+                    color: palette.textSubtle,
+                    marginHorizontal: spacing.md,
+                    letterSpacing: 1,
+                  },
+                ]}
+              >
+                OR
+              </ThemedText>
+              <View
+                style={{ flex: 1, height: 1, backgroundColor: palette.border }}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.secondaryButton,
+                {
+                  marginTop: spacing.lg,
+                  borderRadius: radii.lg,
+                  borderColor: palette.border,
+                  backgroundColor: palette.surface,
+                  paddingVertical: spacing.md + 2,
+                },
+              ]}
+              onPress={() => Alert.alert("SSO", "Coming soon")}
+              accessibilityRole="button"
+              accessibilityLabel="Continue with SSO"
+            >
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={18}
+                color={palette.text}
+                style={{ marginRight: spacing.sm }}
+              />
+              <ThemedText style={[type.button, { color: palette.text }]}>
+                Continue with SSO
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+
+          {/* Footer */}
+          <View
+            style={{
+              alignItems: "center",
+              marginTop: spacing["2xl"],
+              gap: spacing.md,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <ThemedText style={[type.small, { color: palette.textMuted }]}>
+                New to Sircles?{" "}
+              </ThemedText>
+              <TouchableOpacity
+                onPress={() => router.push("/signup" as any)}
+                accessibilityRole="link"
+                accessibilityLabel="Create an account"
+              >
+                <ThemedText
+                  style={[type.smallBold, { color: palette.primary }]}
+                >
+                  Create an account
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.xs + 2,
+                borderRadius: radii.pill,
+                backgroundColor: palette.successSoft,
+              }}
+            >
+              <Ionicons
+                name="lock-closed"
+                size={12}
+                color={palette.success}
+                style={{ marginRight: spacing.xs }}
+              />
+              <ThemedText
+                style={[
+                  type.caption,
+                  { color: palette.success, letterSpacing: 0.6 },
+                ]}
+              >
+                ENCRYPTED CONNECTION
+              </ThemedText>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -324,95 +464,60 @@ export default function LoginScreen() {
 function normalizeAuthError(error: any): string {
   const msg = (error?.message || "").toLowerCase();
   const code = (error?.code || error?.status || "").toString().toLowerCase();
-
-  if (code.includes("invalid_credentials") || msg.includes("invalid login credentials")) {
+  if (code.includes("invalid_credentials") || msg.includes("invalid login credentials"))
     return "Email or password is incorrect";
-  }
-  if (code.includes("auth/invalid-credential") || msg.includes("invalid-credential")) {
+  if (code.includes("auth/invalid-credential") || msg.includes("invalid-credential"))
     return "Email or password is incorrect";
-  }
-  if (code.includes("auth/user-not-found") || msg.includes("user not found")) {
+  if (code.includes("auth/user-not-found") || msg.includes("user not found"))
     return "User not found";
-  }
-  if (code.includes("auth/wrong-password") || msg.includes("wrong password")) {
+  if (code.includes("auth/wrong-password") || msg.includes("wrong password"))
     return "Wrong password";
-  }
-  if (code.includes("auth/too-many-requests") || msg.includes("too many")) {
+  if (code.includes("auth/too-many-requests") || msg.includes("too many"))
     return "Too many attempts. Try again later.";
-  }
-  if (code.includes("network") || msg.includes("network")) {
+  if (code.includes("network") || msg.includes("network"))
     return "Network issue. Check your connection and try again.";
-  }
   return "Could not sign in. Check your credentials and try again.";
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  content: {
-    flex: 1,
-    paddingHorizontal: 28,
-    paddingTop: 40,
-    backgroundColor: "#fff",
+  container: { flex: 1 },
+  headerBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
   },
-  header: { alignItems: "center", marginTop: 10, marginBottom: 36 },
-  houseIcon: {
-    marginTop: 50,
-    width: 100,
-    height: 100,
+  heroCard: {
+    overflow: "hidden",
+    minHeight: 180,
+    justifyContent: "flex-end",
+  },
+  heroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(15, 23, 42, 0.25)",
+  },
+  formCard: {
+    borderWidth: 1,
+  },
+  inputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderWidth: 1,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 0,
+  },
+  primaryButton: {
     alignItems: "center",
     justifyContent: "center",
   },
-  brandTitle: {
-    fontWeight: "800",
-    color: "#2d5a3d",
-    marginTop: 8,
-    marginBottom: 40,
-  },
-  tagline: { color: COLORS.text, fontWeight: "600" },
-  form: { marginTop: 10 },
-
-  inputBase: {
-    fontSize: 12,
-    paddingVertical: 10,
-    paddingTop: 26,
-    paddingBottom: 8,
-    flex: 1,
-    backgroundColor: "transparent",
-    color: "#4d4d4dff",
-    borderWidth: 0,
-    borderColor: "transparent",
-    ...Platform.select({
-      web: {
-        outlineStyle: "none",
-        outlineWidth: 0,
-        outlineColor: "transparent",
-        boxShadow: "0 0 0px 1000px #fff inset",
-        appearance: "none",
-      } as any,
-      default: {},
-    }),
-  },
-
-  forgotBtn: { alignItems: "flex-end", marginTop: -10, marginBottom: 24 },
-  forgotText: { fontSize: 12, color: COLORS.subtext },
-  signInButton: {
-    backgroundColor: COLORS.green,
-    borderRadius: 14,
+  secondaryButton: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  signInText: { color: "#fff", fontSize: 18, fontWeight: "700" },
-
-  illustration: {
-    position: "absolute",
-    alignItems: "flex-start",
-    width: "100%",
-    paddingLeft: 12,
+    borderWidth: 1,
   },
 });

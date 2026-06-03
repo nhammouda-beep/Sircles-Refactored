@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/ThemedText";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useFigmaTheme } from "@/theme/useFigmaTheme";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -37,7 +37,7 @@ type Category = "all" | "event" | "interactions";
 export default function NotificationsScreen() {
   const { user } = useAuth();
   const { texts, isRTL } = useLanguage();
-  const textColor = useThemeColor({}, "text");
+  const { palette, spacing, radii, type, shadow } = useFigmaTheme();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,16 +46,15 @@ export default function NotificationsScreen() {
   const [category, setCategory] = useState<Category>("all");
 
   const getCategoryForType = (
-    type: string
+    t: string
   ): "event" | "interactions" | "announcement" => {
-    const t = (type || "").toLowerCase();
-    if (t.includes("event") || t === "event") return "event";
-    if (t.includes("like") || t.includes("comment") || t.includes("message"))
+    const x = (t || "").toLowerCase();
+    if (x.includes("event") || x === "event") return "event";
+    if (x.includes("like") || x.includes("comment") || x.includes("message"))
       return "interactions";
     return "announcement";
   };
 
-  // عدّادات غير المقروء فقط (المطلوب للبادج)
   const unreadCounts = {
     event: notifications.filter(
       (n) => !n.read && getCategoryForType(n.type) === "event"
@@ -71,11 +70,10 @@ export default function NotificationsScreen() {
       setLoading(true);
       const { data, error } = await getUserNotifications(user.id);
       if (error) {
-        console.error("Error loading notifications:", error);
         Alert.alert("Error", "Failed to load notifications");
         return;
       }
-      const formatted: Notification[] =
+      setNotifications(
         data?.map((n: any) => ({
           id: n.id,
           type: n.type || "general",
@@ -84,10 +82,8 @@ export default function NotificationsScreen() {
           creationdate: n.creationdate,
           linkedItemId: n.linkeditemid || undefined,
           linkedItemType: n.linkeditemtype || undefined,
-        })) || [];
-      setNotifications(formatted);
-    } catch (e) {
-      console.error("Error loading notifications:", e);
+        })) || []
+      );
     } finally {
       setLoading(false);
     }
@@ -99,149 +95,183 @@ export default function NotificationsScreen() {
     setRefreshing(false);
   };
 
-  const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      const { error } = await markNotificationAsRead(notificationId);
-      if (error) {
-        console.error("Error marking notification as read:", error);
-        return;
-      }
+  const handleMarkAsRead = async (id: string) => {
+    const { error } = await markNotificationAsRead(id);
+    if (!error)
       setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
-    } catch (e) {
-      console.error("Error marking notification as read:", e);
-    }
   };
 
   const handleMarkAllAsRead = async () => {
     if (!user?.id) return;
-    try {
-      const { error } = await markAllNotificationsAsRead(user.id);
-      if (error) {
-        console.error("Error marking all notifications as read:", error);
-        Alert.alert("Error", "Failed to mark all notifications as read");
-        return;
-      }
+    const { error } = await markAllNotificationsAsRead(user.id);
+    if (!error)
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    } catch (e) {
-      console.error("Error marking all notifications as read:", e);
-    }
   };
 
   useEffect(() => {
     loadNotifications();
   }, [user]);
 
-  const getNotificationIcon = (type: string) => {
-    const t = (type || "").toLowerCase();
-    if (t.includes("circle_join")) return "person.badge.plus";
-    if (t.includes("circle_invite")) return "person.3.fill";
-    if (t.includes("event")) return "calendar";
-    if (t.includes("message")) return "message.fill";
-    if (t.includes("like")) return "heart.fill";
-    if (t.includes("comment")) return "bubble.left.fill";
+  const getIcon = (t: string) => {
+    const x = (t || "").toLowerCase();
+    if (x.includes("circle_join")) return "person.badge.plus";
+    if (x.includes("circle_invite")) return "person.3.fill";
+    if (x.includes("event")) return "calendar";
+    if (x.includes("message")) return "message.fill";
+    if (x.includes("like")) return "heart.fill";
+    if (x.includes("comment")) return "bubble.left.fill";
     return "bell.fill";
   };
 
-  const formatNotificationTime = (creationdate: string) => {
-    const date = new Date(creationdate);
-    const now = new Date();
-    const diffInMinutes = (now.getTime() - date.getTime()) / (1000 * 60);
-    const diffInHours = diffInMinutes / 60;
-    const diffInDays = diffInHours / 24;
-    if (diffInMinutes < 1) return texts.justNow || "Just now";
-    if (diffInMinutes < 60) return `${Math.floor(diffInMinutes)}m`;
-    if (diffInHours < 24) return `${Math.floor(diffInHours)}h`;
-    if (diffInDays < 7) return `${Math.floor(diffInDays)}d`;
-    return date.toLocaleDateString();
+  const formatTime = (creationdate: string) => {
+    const d = new Date(creationdate);
+    const diffMin = (Date.now() - d.getTime()) / (1000 * 60);
+    if (diffMin < 1) return texts.justNow || "Just now";
+    if (diffMin < 60) return `${Math.floor(diffMin)}m`;
+    const diffH = diffMin / 60;
+    if (diffH < 24) return `${Math.floor(diffH)}h`;
+    const diffD = diffH / 24;
+    if (diffD < 7) return `${Math.floor(diffD)}d`;
+    return d.toLocaleDateString();
   };
 
-  const handleNotificationPress = async (notification: Notification) => {
-    try {
-      if (!notification.read) await handleMarkAsRead(notification.id);
-      const target = getNavigationTarget(notification);
-      if (!target) return;
-      if (target.params?.tab) {
-        router.push(`/circle/${target.params.id}?tab=${target.params.tab}`);
-      } else if (target.screen === "post/[id]") {
-        router.push(`/post/${target.params.id}`);
-      } else if (target.screen === "event/[id]") {
-        router.push(`/event/${target.params.id}`);
-      }
-    } catch (e) {
-      console.error("Error handling notification press:", e);
-    }
+  const handlePress = async (n: Notification) => {
+    if (!n.read) await handleMarkAsRead(n.id);
+    const target = getNavigationTarget(n);
+    if (!target) return;
+    if (target.params?.tab)
+      router.push(`/circle/${target.params.id}?tab=${target.params.tab}`);
+    else if (target.screen === "post/[id]")
+      router.push(`/post/${target.params.id}`);
+    else if (target.screen === "event/[id]")
+      router.push(`/event/${target.params.id}`);
   };
 
-  // فلترة: الاعلان يظهر في All فقط
   const filtered = notifications.filter((n) => {
     const cat = getCategoryForType(n.type);
     const passRead = filter === "all" || !n.read;
-    const passCategory = category === "all" ? true : cat === category;
-    return passRead && passCategory;
+    const passCat = category === "all" ? true : cat === category;
+    return passRead && passCat;
   });
-
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const Chip = ({
+    label,
+    active,
+    onPress,
+  }: {
+    label: string;
+    active: boolean;
+    onPress: () => void;
+  }) => (
+    <TouchableOpacity
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      style={{
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xs + 2,
+        borderRadius: radii.pill,
+        backgroundColor: active ? palette.primary : palette.surfaceMuted,
+        borderWidth: 1,
+        borderColor: active ? palette.primary : palette.border,
+        marginRight: spacing.sm,
+      }}
+    >
+      <ThemedText
+        style={[
+          type.smallBold,
+          { color: active ? palette.primaryOn : palette.text },
+        ]}
+      >
+        {label}
+      </ThemedText>
+    </TouchableOpacity>
+  );
 
   const renderNotification = (n: Notification) => {
     const isRead = n.read;
-    const baseGreen = "#00692C";
-    const paleGreen = "#E7F7EE";
-    const iconBG = isRead ? "#EEF1F4" : paleGreen;
-
     return (
       <TouchableOpacity
         key={n.id}
+        onPress={() => handlePress(n)}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel={`${n.content}, ${formatTime(n.creationdate)}${
+          isRead ? "" : ", unread"
+        }`}
         style={[
-          styles.notificationItem,
-          { backgroundColor: isRead ? "#F9FAFB" : paleGreen },
+          styles.card,
+          {
+            marginHorizontal: spacing.lg,
+            marginBottom: spacing.md,
+            borderRadius: radii.lg,
+            backgroundColor: palette.surface,
+            borderColor: isRead ? palette.border : palette.primary + "33",
+            padding: spacing.md,
+            ...shadow.sm,
+          },
         ]}
-        onPress={() => handleNotificationPress(n)}
       >
         <View
           style={[
-            styles.notificationContent,
-            isRTL && styles.notificationContentRTL,
+            styles.cardInner,
+            isRTL && { flexDirection: "row-reverse" },
           ]}
         >
-          <View style={[styles.iconContainer, { backgroundColor: iconBG }]}>
+          <View
+            style={[
+              styles.iconBubble,
+              {
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: isRead
+                  ? palette.surfaceMuted
+                  : palette.primarySoft,
+                marginRight: isRTL ? 0 : spacing.md,
+                marginLeft: isRTL ? spacing.md : 0,
+              },
+            ]}
+          >
             <IconSymbol
-              name={getNotificationIcon(n.type)}
-              size={20}
-              color={baseGreen}
-              style={{ opacity: isRead ? 0.85 : 1 }}
+              name={getIcon(n.type)}
+              size={18}
+              color={palette.primary}
             />
           </View>
-
-          <View style={styles.textContainer}>
+          <View style={{ flex: 1 }}>
             <ThemedText
               style={[
-                styles.notificationText,
-                isRead ? styles.mutedText : styles.unreadText,
-                isRTL && styles.rtlText,
+                isRead
+                  ? { ...type.body, color: palette.textMuted }
+                  : { ...type.bodyBold, color: palette.text },
+                isRTL && { textAlign: "right" },
               ]}
             >
               {n.content}
             </ThemedText>
-
             <View
               style={[
-                styles.notificationFooter,
-                isRTL && styles.notificationFooterRTL,
+                styles.metaRow,
+                isRTL && { flexDirection: "row-reverse" },
               ]}
             >
               <ThemedText
-                style={[styles.notificationTime, isRead && styles.mutedTime]}
+                style={[type.caption, { color: palette.textSubtle }]}
               >
-                {formatNotificationTime(n.creationdate)}
+                {formatTime(n.creationdate)}
               </ThemedText>
-
-              {isRead ? (
-                <View style={styles.readPill} />
-              ) : (
+              {!isRead && (
                 <View
-                  style={[styles.unreadDot, { backgroundColor: baseGreen }]}
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: palette.primary,
+                  }}
                 />
               )}
             </View>
@@ -252,311 +282,227 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: "#FFFFFF" }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: palette.bg }]}
+    >
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <IconSymbol name="chevron.left" size={22} color="#000" />
+      <View
+        style={[
+          styles.header,
+          {
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.md,
+            backgroundColor: palette.bg,
+          },
+        ]}
+      >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <IconSymbol name="chevron.left" size={22} color={palette.text} />
         </TouchableOpacity>
-
-        <ThemedText style={styles.headerTitle}>
+        <ThemedText style={[type.h3, { color: palette.text }]}>
           {texts.notifications || "Notifications"}
         </ThemedText>
-
-        <TouchableOpacity onPress={() => console.log("Menu pressed")}>
-          <IconSymbol name="ellipsis" size={24} color="#000" />
+        <TouchableOpacity
+          onPress={handleMarkAllAsRead}
+          accessibilityRole="button"
+          accessibilityLabel="Mark all as read"
+        >
+          <ThemedText style={[type.smallBold, { color: palette.primary }]}>
+            Read all
+          </ThemedText>
         </TouchableOpacity>
       </View>
 
       {/* Tabs: All / Unread */}
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity onPress={() => setFilter("all")}>
-          <ThemedText
-            style={[styles.tabText, filter === "all" && styles.activeTabText]}
-          >
-            {texts.all || "All"}
-          </ThemedText>
-          {filter === "all" && <View style={styles.activeLine} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setFilter("unread")}>
-          <View style={styles.unreadContainer}>
-            <ThemedText
-              style={[
-                styles.tabText,
-                filter === "unread" && styles.activeTabText,
-              ]}
+      <View
+        style={[
+          styles.tabRow,
+          {
+            paddingHorizontal: spacing.lg,
+            gap: spacing["2xl"],
+            borderBottomColor: palette.border,
+          },
+        ]}
+      >
+        {(["all", "unread"] as const).map((k) => {
+          const active = filter === k;
+          const label =
+            k === "all" ? texts.all || "All" : texts.unread || "Unread";
+          return (
+            <TouchableOpacity
+              key={k}
+              onPress={() => setFilter(k)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              style={{ paddingVertical: spacing.md }}
             >
-              {texts.unread || "Unread"}
-            </ThemedText>
-            {unreadCount > 0 && (
-              <View style={styles.unreadBadge}>
-                <ThemedText style={styles.unreadBadgeText}>
-                  {unreadCount}
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <ThemedText
+                  style={[
+                    type.smallBold,
+                    {
+                      color: active ? palette.primary : palette.textMuted,
+                    },
+                  ]}
+                >
+                  {label}
                 </ThemedText>
+                {k === "unread" && unreadCount > 0 && (
+                  <View
+                    style={{
+                      marginLeft: spacing.xs,
+                      paddingHorizontal: 6,
+                      paddingVertical: 1,
+                      borderRadius: radii.pill,
+                      backgroundColor: palette.primary,
+                    }}
+                  >
+                    <ThemedText
+                      style={[
+                        type.caption,
+                        { color: palette.primaryOn },
+                      ]}
+                    >
+                      {unreadCount}
+                    </ThemedText>
+                  </View>
+                )}
               </View>
-            )}
-          </View>
-          {filter === "unread" && <View style={styles.activeLine} />}
-        </TouchableOpacity>
+              {active && (
+                <View
+                  style={{
+                    height: 2,
+                    backgroundColor: palette.primary,
+                    marginTop: spacing.sm,
+                    borderRadius: 1,
+                  }}
+                />
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {/* Category filter: Event / Interactions / All */}
-      <View style={styles.filterSection}>
-        <View style={styles.filterTabs}>
-          <TouchableOpacity
-            style={[
-              styles.filterTab,
-              category === "event" && styles.activeFilterTab,
-            ]}
-            onPress={() => setCategory("event")}
-          >
-            <ThemedText
-              style={[
-                styles.filterTabText,
-                category === "event" && styles.activeFilterTabText,
-              ]}
-            >
-              Event{unreadCounts.event ? ` (${unreadCounts.event})` : ""}
-            </ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.filterTab,
-              category === "interactions" && styles.activeFilterTab,
-            ]}
-            onPress={() => setCategory("interactions")}
-          >
-            <ThemedText
-              style={[
-                styles.filterTabText,
-                category === "interactions" && styles.activeFilterTabText,
-              ]}
-            >
-              Interactions
-              {unreadCounts.interactions
-                ? ` (${unreadCounts.interactions})`
-                : ""}
-            </ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.filterTab,
-              category === "all" && styles.activeFilterTab,
-            ]}
-            onPress={() => setCategory("all")}
-          >
-            <ThemedText
-              style={[
-                styles.filterTabText,
-                category === "all" && styles.activeFilterTabText,
-              ]}
-            >
-              All
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.markAsReadWrapper}>
-          <TouchableOpacity onPress={handleMarkAllAsRead}>
-            <ThemedText style={styles.markAsReadText}>
-              Mark all as read
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
+      {/* Category chips */}
+      <View
+        style={{
+          flexDirection: "row",
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.md,
+        }}
+      >
+        <Chip
+          label="All"
+          active={category === "all"}
+          onPress={() => setCategory("all")}
+        />
+        <Chip
+          label={`Events${unreadCounts.event ? ` (${unreadCounts.event})` : ""}`}
+          active={category === "event"}
+          onPress={() => setCategory("event")}
+        />
+        <Chip
+          label={`Interactions${
+            unreadCounts.interactions ? ` (${unreadCounts.interactions})` : ""
+          }`}
+          active={category === "interactions"}
+          onPress={() => setCategory("interactions")}
+        />
       </View>
 
       {/* List */}
       <ScrollView
-        style={styles.content}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingTop: spacing.sm, paddingBottom: spacing["3xl"] }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
       >
         {loading ? (
-          <View style={styles.loadingContainer}>
-            <ThemedText>{texts.loading || "Loading..."}</ThemedText>
+          <View style={styles.empty}>
+            <ThemedText style={[type.body, { color: palette.textMuted }]}>
+              {texts.loading || "Loading..."}
+            </ThemedText>
           </View>
         ) : filtered.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <IconSymbol name="bell" size={64} color={textColor + "40"} />
-            <ThemedText style={styles.emptyText}>
+          <View style={styles.empty}>
+            <IconSymbol name="bell" size={56} color={palette.border} />
+            <ThemedText
+              style={[
+                type.h3,
+                {
+                  color: palette.text,
+                  marginTop: spacing.lg,
+                  textAlign: "center",
+                },
+              ]}
+            >
               {filter === "unread"
-                ? texts.noUnreadNotifications || "No unread notifications"
+                ? texts.noUnreadNotifications || "All caught up"
                 : texts.noNotifications || "No notifications yet"}
             </ThemedText>
-            <ThemedText style={styles.emptySubText}>
+            <ThemedText
+              style={[
+                type.small,
+                {
+                  color: palette.textMuted,
+                  marginTop: spacing.xs,
+                  textAlign: "center",
+                  paddingHorizontal: spacing["3xl"],
+                },
+              ]}
+            >
               {texts.notificationsWillAppear ||
-                "Notifications will appear here when you have updates"}
+                "Updates from your circles will appear here."}
             </ThemedText>
           </View>
         ) : (
-          <View style={styles.notificationsList}>
-            {filtered.map(renderNotification)}
-          </View>
+          filtered.map(renderNotification)
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const baseGreen = "#00692C";
-const paleGreen = "#E7F7EE";
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
-
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
-  headerTitle: {
-    fontSize: 19,
-    fontWeight: "bold",
-    color: "#000",
-    textAlign: "center",
-    flex: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 16,
-  },
-
-  // tabs
-  tabsContainer: {
+  tabRow: {
     flexDirection: "row",
-    gap: 24,
-    paddingHorizontal: 40,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E5E5",
-    backgroundColor: "#fff",
   },
-  tabText: { fontSize: 14, color: "#999", fontWeight: "500" },
-  activeTabText: { color: "#000", fontWeight: "600" },
-  activeLine: {
-    height: 2,
-    backgroundColor: "#22A757",
-    marginTop: 10,
-    borderRadius: 2,
-  },
-  unreadContainer: { flexDirection: "row", alignItems: "center", gap: 4 },
-  unreadBadge: {
-    backgroundColor: "#D6F5DD",
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-  },
-  unreadBadgeText: { fontSize: 12, color: "#2E7D32", fontWeight: "600" },
-
-  // filter
-  filterSection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: "#fff",
-  },
-  filterTabs: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-  filterTab: {
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: "#F6F6F6",
-  },
-  activeFilterTab: {
-    backgroundColor: paleGreen,
+  card: {
     borderWidth: 1,
-    borderColor: baseGreen + "33",
   },
-  filterTabText: { fontSize: 13, color: "#000", fontWeight: "500" },
-  activeFilterTabText: { color: baseGreen, fontWeight: "700" },
-
-  markAsReadWrapper: { alignItems: "flex-end" },
-  markAsReadText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: baseGreen,
-    paddingVertical: 16,
+  cardInner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
   },
-
-  // list
-  content: { flex: 1 },
-  loadingContainer: {
-    flex: 1,
+  iconBubble: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 40,
   },
-  notificationsList: { paddingVertical: 8 },
-  notificationItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  notificationContent: { flexDirection: "row", alignItems: "flex-start" },
-  notificationContentRTL: { flexDirection: "row-reverse" },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  textContainer: { flex: 1 },
-
-  notificationText: { fontSize: 14, lineHeight: 20, marginBottom: 4 },
-  unreadText: { color: "#111", fontWeight: "600" },
-  mutedText: { color: "#374151", fontWeight: "500", opacity: 0.9 },
-
-  notificationFooter: {
+  metaRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginTop: 6,
   },
-  notificationFooterRTL: { flexDirection: "row-reverse" },
-  notificationTime: { fontSize: 12, color: "#6B7280", opacity: 0.7 },
-  mutedTime: { opacity: 0.6, color: "#8A94A6" },
-
-  unreadDot: { width: 8, height: 8, borderRadius: 4 },
-  readPill: {
-    width: 18,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#E6E8EC",
-  },
-
-  emptyContainer: {
+  empty: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 60,
-    paddingHorizontal: 20,
-    gap: 16,
+    paddingVertical: 80,
+    paddingHorizontal: 24,
   },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: "600",
-    opacity: 0.6,
-    textAlign: "center",
-  },
-  emptySubText: {
-    fontSize: 14,
-    opacity: 0.5,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  rtlText: { textAlign: "right" },
 });
